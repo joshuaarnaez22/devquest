@@ -16,7 +16,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:pillars": "echo 'not implemented \u2014 lands in M2'",
-    "level:test": "echo 'not implemented \u2014 lands in M4'",
+    "level:test": "VITE_LEVEL_TEST=1 vite --open",
     "level:validate": "echo 'not implemented \u2014 lands in M4'",
     "assets:build": "node tools/atlas/build-atlas.mjs",
     "assets:verify": "node tools/atlas/check-budget.mjs && node tools/atlas/check-density.mjs && node tools/atlas/check-palette.mjs",

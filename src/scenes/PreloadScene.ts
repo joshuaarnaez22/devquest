@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Depth } from '@config/Depth';
+import { isLevelTest } from '@platform/Env';
 
 /**
  * PreloadScene — phase-1 assets, progress bar.
@@ -8,6 +9,7 @@ import { Depth } from '@config/Depth';
  */
 export class PreloadScene extends Phaser.Scene {
   private bar: Phaser.GameObjects.Rectangle | undefined;
+  private finished = false;
 
   constructor() {
     super('Preload');
@@ -31,19 +33,24 @@ export class PreloadScene extends Phaser.Scene {
       if (this.bar) this.bar.width = 160 * value;
     });
 
-    this.load.on('complete', () => {
+    const finish = (): void => {
+      if (this.finished) return;
+      this.finished = true;
       if (this.bar) this.bar.width = 160;
       console.warn('ready');
-    });
+      if (isLevelTest()) {
+        this.scene.start('Game');
+      }
+    };
+
+    this.load.on('complete', finish);
 
     this.load.start();
-    this.time.delayedCall(100, () => {
-      if (this.bar) this.bar.width = 160;
-      console.warn('ready');
-    });
+    this.time.delayedCall(100, finish);
   }
 
   shutdown(): void {
     this.bar = undefined;
+    this.finished = false;
   }
 }

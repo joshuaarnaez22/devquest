@@ -6,7 +6,7 @@ Four heroes, five worlds, five bosses. Each boss unlocks one section of a develo
 
 ## Status
 
-Spike 00 (feel probe) complete. **M0 Foundation** complete — see [`docs/audits/milestone-M0.md`](docs/audits/milestone-M0.md). **M1 Feel Prototype** in progress — next session **M1-S05** (`M1-T5` test scene · Checkpoint A) in [`plans/M01-feel-prototype/plan.md`](plans/M01-feel-prototype/plan.md).
+Spike 00 (feel probe) complete. **M0 Foundation** complete — see [`docs/audits/milestone-M0.md`](docs/audits/milestone-M0.md). **M1 Feel Prototype** in progress — Checkpoint A live (`npm run level:test`). Next: **M1-S06** (`M1-T6` gravity/jump) in [`plans/M01-feel-prototype/plan.md`](plans/M01-feel-prototype/plan.md).
 
 ## Quick start
 
@@ -16,6 +16,14 @@ npm run dev
 ```
 
 Open http://127.0.0.1:5173 — Boot → Preload loading bar → `ready` in the console.
+
+Feel-test grey box (Checkpoint A):
+
+```bash
+npm run level:test
+```
+
+Moves with **A/D** (or arrows). Debug readout top-left.
 
 ## Commands
 

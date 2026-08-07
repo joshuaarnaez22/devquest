@@ -1,5 +1,6 @@
 import * as Browser from './Browser';
 import * as Clock from './Clock';
+import * as DebugBitmapFont from './DebugBitmapFont';
 import * as Env from './Env';
 import * as Fullscreen from './Fullscreen';
 import * as GamepadAdapter from './GamepadAdapter';
@@ -14,4 +15,5 @@ export const Platform = {
   GamepadAdapter,
   Keyboard,
   Browser,
+  DebugBitmapFont,
 } as const;

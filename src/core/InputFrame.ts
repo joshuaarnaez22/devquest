@@ -21,3 +21,9 @@ export interface InputFrame {
   readonly device: InputDevice;
   readonly gamepadKind: GamepadKind | null;
 }
+
+/** Anything that exposes the current frame (e.g. InputSystem). */
+export interface InputFrameSource {
+  readonly frame: InputFrame;
+}
+
