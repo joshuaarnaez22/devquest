@@ -376,7 +376,7 @@ devquest/
 ├── docs/                             # this documentation set
 ├── eslint.config.js
 ├── vite.config.ts
-├── tsconfig.json                     # include: src, tools, e2e, vite/vitest/playwright configs
+├── tsconfig.json                     # include: src, tools, e2e, test, vite/vitest/playwright configs
 ├── vitest.config.ts
 ├── playwright.config.ts
 └── package.json
@@ -1452,10 +1452,12 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
   },
   // e2e/ must be included so Playwright specs pick up ES2022 + DOM libs
   // (otherwise the editor falls back to ES5 and async/await errors on Promise).
+  // test/ holds Vitest shims (e.g. Phaser stub for Node).
   "include": [
     "src",
     "tools",
     "e2e",
+    "test",
     "vitest.config.ts",
     "vite.config.ts",
     "playwright.config.ts"

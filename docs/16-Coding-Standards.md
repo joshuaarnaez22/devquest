@@ -142,10 +142,12 @@ Six rules that are never waived, in any circumstance:
   },
   // Playwright specs live at repo-root e2e/. Including them here is required so
   // the IDE/tsc use ES2022 + DOM (not the default ES5 lib) for async tests.
+  // test/ holds Vitest shims (Phaser stub for Node — real Phaser needs a window).
   "include": [
     "src",
     "tools",
     "e2e",
+    "test",
     "vitest.config.ts",
     "vite.config.ts",
     "playwright.config.ts"

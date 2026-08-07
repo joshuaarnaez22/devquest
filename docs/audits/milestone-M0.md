@@ -27,7 +27,7 @@ prints `ready`. Exactly one runtime dependency (`phaser`).
 - BitmapText deferred until font atlas (M3); Preload uses bar + `console.warn('ready')`.
 - GitHub Pages deploy requires repo Pages settings enabled once.
 - Staging/`develop` branch protection is a manual GitHub settings step.
-- `tsconfig.json` `include` covers `e2e/` (and Vite/Vitest/Playwright configs) so Playwright specs typecheck under ES2022 + DOM, not the editor’s ES5 default.
+- `tsconfig.json` `include` covers `e2e/` and `test/` (plus Vite/Vitest/Playwright configs) so Playwright specs and Vitest shims typecheck under ES2022 + DOM, not the editor’s ES5 default.
 
 ## Next
 
