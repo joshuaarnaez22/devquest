@@ -6,7 +6,7 @@ Four heroes, five worlds, five bosses. Each boss unlocks one section of a develo
 
 ## Status
 
-Spike 00 (feel probe) complete. **M0 Foundation** complete — see [`docs/audits/milestone-M0.md`](docs/audits/milestone-M0.md). Next: **M1 Feel Prototype** (`plans/M01-feel-prototype/plan.md`).
+Spike 00 (feel probe) complete. **M0 Foundation** complete — see [`docs/audits/milestone-M0.md`](docs/audits/milestone-M0.md). **M1 Feel Prototype** in progress — next session **M1-S02** (`M1-T2` InputSystem) in [`plans/M01-feel-prototype/plan.md`](plans/M01-feel-prototype/plan.md).
 
 ## Quick start
 

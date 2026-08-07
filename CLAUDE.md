@@ -11,11 +11,11 @@ Where this file and a doc disagree, the doc wins.
 ## Status
 
 ```
-PHASE:      M0 complete — Boot/Preload + toolchain
-NEXT:       plans/M01-feel-prototype/plan.md (5 wk)
+PHASE:      M1 Feel Prototype — in progress · next session M1-S02 (M1-T2 InputSystem)
+NEXT:       plans/M01-feel-prototype/plan.md (5 wk · 23 sessions · S01 done)
 THEN:       plans/M02-combat-feel/plan.md
 OPEN P0/P1: 0
-NOTES:      docs/audits/milestone-M0.md · spike notes in plans/spike-00/results.md
+NOTES:      docs/audits/milestone-M0.md · spike notes in plans/spike-00/results.md · sessions in M1 plan
 ```
 
 Update this block at every milestone close.

@@ -183,6 +183,8 @@ flowchart LR
 
 **Theme:** movement. No art. Grey rectangles. The most important milestone in the project.
 
+**Work queue:** 23 sessions (`M1-S01`…`M1-S23`) in `plans/M01-feel-prototype/plan.md` — one session per sitting; stop at ▶ checkpoints.
+
 | Week | Work                                                                             |
 | ---- | -------------------------------------------------------------------------------- |
 | 1    | `PlayerController`: run, accel/decel, gravity, jump. `InputSystem` with keyboard |
@@ -751,8 +753,8 @@ Maintained at the top of this document, updated at every milestone close:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- CURRENT: M1 Feel Prototype · not started
- SHIPPED: Spike 00 · M0 Foundation (2026-08-07)
+ CURRENT: M1 Feel Prototype · in progress · next M1-S02 / M1-T2 · S01 done
+ SHIPPED: Spike 00 · M0 Foundation (2026-08-07) · tag v0.0.1
  NEXT GATE: M1 · 2026-10-02
  SLACK: +0 weeks (baseline)
  CUT LINES: A pending (Mar 26) · B pending (May 28)

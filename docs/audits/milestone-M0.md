@@ -32,4 +32,5 @@ prints `ready`. Exactly one runtime dependency (`phaser`).
 ## Next
 
 Expand `plans/M02-combat-feel/plan.md` remains deferred until M1 closes (expansion rule:
-expand next-but-one at each gate). Proceed to M1 Feel Prototype.
+expand next-but-one at each gate). M1 is session-chunked (`M1-S01`…`M1-S23`); start at
+**M1-S01** / `M1-T1` in `plans/M01-feel-prototype/plan.md`. Tag `v0.0.1` is present.

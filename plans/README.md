@@ -16,7 +16,7 @@ Each milestone lives in its own folder: `plans/<id>/plan.md` (plus extras like r
 | -------------------------------------------------------------------- | ------------------- | -------- | ---------- | ---------------------------------------- |
 | [spike-00/plan.md](spike-00/plan.md)                                 | Feel probe (pre-M0) | 1 day    | 🔵 Full    | ✅ Done — [results](spike-00/results.md) |
 | [M00-foundation/plan.md](M00-foundation/plan.md)                     | M0 Foundation       | 3 wk     | 🔵 Full    | ✅ Done — [audit](../docs/audits/milestone-M0.md) |
-| [M01-feel-prototype/plan.md](M01-feel-prototype/plan.md)             | M1 Feel Prototype   | 5 wk     | 🔵 Full    | ⬜ Not started                           |
+| [M01-feel-prototype/plan.md](M01-feel-prototype/plan.md)             | M1 Feel Prototype   | 5 wk     | 🔵 Full    | 🔄 In progress · next **M1-S02** (`M1-T2`) · S01 done |
 | [M02-combat-feel/plan.md](M02-combat-feel/plan.md)                   | M2 Combat Feel      | 4 wk     | 🔵 Full    | ⬜ Not started                           |
 | [M03-vertical-slice/plan.md](M03-vertical-slice/plan.md)             | M3 Vertical Slice   | 5 wk     | 🔵 Full    | ⬜ Not started                           |
 | [M04-frameworks/plan.md](M04-frameworks/plan.md)                     | M4 Frameworks       | 4 wk     | 🔵 Full    | ⬜ Not started                           |
@@ -57,18 +57,22 @@ The outline plans (M7–M10) are all the same shape — build a world — and
 
 ```mermaid
 flowchart LR
-    A[Open the plan] --> B[Pick the next unblocked task]
+    A[Open the plan] --> B[Pick the next unblocked session]
     B --> C[Read the doc sections it cites]
     C --> D[Implement]
     D --> E[Run the task's verification]
     E --> F{Passes?}
     F -->|No| D
-    F -->|Yes| G[Commit, tick the box]
-    G --> H{Tasks remain?}
+    F -->|Yes| G[Commit, tick the session]
+    G --> H{Sessions remain?}
     H -->|Yes| B
     H -->|No| I[Run the milestone gate]
     I --> J[Write the review, expand the next-but-one plan]
 ```
+
+**Sessions beat milestones.** A full milestone plan (especially M1) is a queue, not a
+single piece of work. Prefer one session per sitting. M1 defines `M1-S01`…`M1-S23` in
+[M01-feel-prototype/plan.md](M01-feel-prototype/plan.md); stop at each ▶ checkpoint and play.
 
 **Task IDs are stable.** `M2-T7` means milestone 2, task 7, forever. Commit messages
 and issues reference them. Tasks are never renumbered; a cut task is struck through

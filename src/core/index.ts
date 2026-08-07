@@ -1,6 +1,8 @@
 export { assert } from '@core/Assert';
 export { EventBus } from '@core/EventBus';
 export type { GameEventMap, GameEventName } from '@core/GameEvents';
+export { NullHitStop } from '@core/HitStopScale';
+export type { HitStopScale } from '@core/HitStopScale';
 export { log } from '@core/Logger';
 export { ObjectPool } from '@core/ObjectPool';
 export type { Poolable, PoolStats } from '@core/ObjectPool';

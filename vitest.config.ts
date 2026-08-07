@@ -8,6 +8,8 @@ const src = path.resolve(root, 'src');
 export default defineConfig({
   resolve: {
     alias: {
+      // Phaser needs a DOM; unit tests use a stub (Entity hit-stop seam, etc.)
+      phaser: path.join(root, 'test/shims/phaser.ts'),
       '@config': path.join(src, 'config'),
       '@platform': path.join(src, 'platform'),
       '@core': path.join(src, 'core'),

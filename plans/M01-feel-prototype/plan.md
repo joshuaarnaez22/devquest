@@ -1,7 +1,9 @@
 # M1 — Feel Prototype
 
+**Status:** 🔄 In progress · next **M1-S02** (`M1-T2`) · S01 done
 **Duration:** 5 weeks (~150 h) · **Dates:** 2026-08-31 → 2026-10-02 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M1 · **Risk:** 🔴 **HIGH — tuning paralysis**
+**Next:** [M02-combat-feel/plan.md](../M02-combat-feel/plan.md) (after exit gate)
 
 ---
 
@@ -27,15 +29,54 @@ becomes a backlog item with a measured description of what feels off.
 
 ## Preconditions
 
-- [ ] M0 exit gate passed, `v0.0.1` tagged
-- [ ] spike-00 findings available — the S0-T6 written answers are the starting point for tuning
-- [ ] Any constant deltas discovered in the spike already applied to `GameConstants.ts`
+- [x] M0 exit gate passed, `v0.0.1` tagged — [audit](../../docs/audits/milestone-M0.md) · tag `v0.0.1`
+- [x] spike-00 findings available — [S0-T6 answers](../spike-00/results.md) are the starting point for tuning
+- [x] Any constant deltas discovered in the spike already applied to `GameConstants.ts` — spike kept doc defaults; no delta required
 
 ---
 
-## Week 1 — Entity, input, and horizontal movement (~30 h)
+## Sessions (do not run M1 in one shot)
 
-### M1-T1 — `Entity` base class · 4 h
+**One session = one sitting = one task** (except S20, which is five day-sessions inside T20).
+Commit when that session’s Verify passes. Do not start the next session in the same breath
+unless you are mid-flow and unblocked. Task IDs stay stable; session IDs are only a work
+queue.
+
+**Rule:** stop at each ▶ checkpoint and play before continuing.
+
+| Session | Task | ~h | Done when |
+| ------- | ---- | -- | --------- |
+| [x] **M1-S01** | M1-T1 Entity | 4 | Unit test: scaled delta / frozen entity |
+| [ ] **M1-S02** | M1-T2 InputSystem | 8 | Input-to-physics ≤ 1 frame instrumented |
+| [ ] **M1-S03** | M1-T3 SystemRegistry | 3 | Systems update in `SYSTEM_ORDER` |
+| [ ] **M1-S04** | M1-T4 Horizontal move | 10 | Max speed + turn boost measured (may span 2 sittings) |
+| [ ] **M1-S05** | M1-T5 Test scene | 5 | ▶ **Checkpoint A** — `level:test` grey box runs L/R |
+| [ ] **M1-S06** | M1-T6 Gravity + jump | 8 | Full-hold peak 32.0 ± 0.5 px |
+| [ ] **M1-S07** | M1-T7 Variable jump | 4 | Hold / early release / tap heights |
+| [ ] **M1-S08** | M1-T8 Coyote + buffer | 6 | ≥ 98% ledge success over 1,000 attempts |
+| [ ] **M1-S09** | M1-T9 Player FSM | 8 | Transitions + `LAND` duration === 0 |
+| [ ] **M1-S10** | M1-T10 Animator seam | 4 | ▶ **Checkpoint B** — jump + tint-per-state |
+| [ ] **M1-S11** | M1-T11 Dash | 8 | Distance + cooldown-from-start |
+| [ ] **M1-S12** | M1-T12 Wall slide/jump | 8 | Clears `SHAFT`; input lock holds |
+| [ ] **M1-S13** | M1-T13 Four heroes | 6 | JSON vs §5.2; `F1`–`F4` swap |
+| [ ] **M1-S14** | M1-T14 Ninja air jump | 4 | Fast-fall air jump = apex height |
+| [ ] **M1-S15** | M1-T15 Camera | 4 | ▶ **Checkpoint C** — camera + all heroes |
+| [ ] **M1-S16** | M1-T16 Squash/stretch | 6 | Distinct jump / fall / land deformation |
+| [ ] **M1-S17** | M1-T17 Dust VFX | 8 | 60 s movement, zero heap growth |
+| [ ] **M1-S18** | M1-T18 Debug overlay | 6 | Sparkline + pools + frame-step live |
+| [ ] **M1-S19** | M1-T19 Pillar tests | 6 | ▶ **Checkpoint D** — `test:pillars` green in CI |
+| [ ] **M1-S20** | M1-T20 Tuning only | 20 | Five day-sessions (see T20); **no features** |
+| [ ] **M1-S21** | M1-T21 Latency capture | 4 | p99 ≤ 50 ms (240 fps phone) |
+| [ ] **M1-S22** | M1-T22 Constants lock | 2 | ADR-023 + `check-constants` green |
+| [ ] **M1-S23** | M1-T23 Buffer | 4 | Overrun only — tests, not features |
+
+**Start here:** open this plan → **M1-S02** → read docs cited by T2 → implement → Verify → commit → stop.
+
+---
+
+## Week 1 — Entity, input, and horizontal movement (~30 h) · sessions S01–S05
+
+### M1-T1 — `Entity` base class · 4 h · _session: S01_
 
 `src/entities/Entity.ts`. Deliberately thin — this is the _only_ project-authored class
 between `Phaser.GameObjects.Sprite` and a concrete entity (`docs/03-Technical-Architecture.md` P2).
@@ -58,7 +99,7 @@ Hit stop does not exist until M2, so `scaledDelta` returns `rawDelta` via a null
 
 ---
 
-### M1-T2 — `InputSystem` · 8 h · _depends: T1_
+### M1-T2 — `InputSystem` · 8 h · _session: S02_ · _depends: T1_
 
 `src/systems/InputSystem.ts`. Produces the immutable `InputFrame`
 (`docs/13-UI-UX.md` §5.2) — the single source of input truth for everything downstream.
@@ -81,7 +122,7 @@ consumed it. Must be ≤ 1 frame. This is Pillar 1's primary numeric target.
 
 ---
 
-### M1-T3 — `SystemRegistry` wiring + `SYSTEM_ORDER` · 3 h · _depends: T2_
+### M1-T3 — `SystemRegistry` wiring + `SYSTEM_ORDER` · 3 h · _session: S03_ · _depends: T2_
 
 `src/config/SystemOrder.ts` with the full array from `docs/03-Technical-Architecture.md` §8.3.
 M1 populates `input` and `camera`; the rest are registered as no-ops so the order is visible
@@ -94,7 +135,7 @@ is the thing this prevents.
 
 ---
 
-### M1-T4 — `PlayerController` horizontal · 10 h · _depends: T2_
+### M1-T4 — `PlayerController` horizontal · 10 h · _session: S04_ · _depends: T2_
 
 `src/entities/player/PlayerController.ts`, per `docs/06-Characters.md` §5.1.
 
@@ -107,7 +148,7 @@ under the 1.8× boost is measurably snappier than a standing start.
 
 ---
 
-### M1-T5 — Test scene and debug readout · 5 h · _depends: T4_
+### M1-T5 — Test scene and debug readout · 5 h · _session: S05_ · _depends: T4_ · ▶ Checkpoint A
 
 `src/scenes/GameScene.ts` (minimal) and a grey-box test level built from
 `src/config/LevelMetrics.ts` — every gap and ledge in the vocabulary, labelled, with soft floors.
@@ -119,9 +160,9 @@ last jump height. This is the instrument for the next four weeks; build it prope
 
 ---
 
-## Week 2 — Vertical movement (~30 h)
+## Week 2 — Vertical movement (~30 h) · sessions S06–S10
 
-### M1-T6 — Gravity and jump · 8 h · _depends: T4_
+### M1-T6 — Gravity and jump · 8 h · _session: S06_ · _depends: T4_
 
 Asymmetric gravity per `docs/06-Characters.md` §5.1: base 900, ×1.35 falling, ×0.70 within
 ±40 px/s of apex, terminal 300.
@@ -132,7 +173,7 @@ pre-step velocity.
 
 ---
 
-### M1-T7 — Variable jump height · 4 h · _depends: T6_
+### M1-T7 — Variable jump height · 4 h · _session: S07_ · _depends: T6_
 
 `vy *= 0.45` on release while rising, guarded by a `jumpCutApplied` flag that resets per jump.
 
@@ -145,7 +186,7 @@ is what makes vertical navigation expressive.
 
 ---
 
-### M1-T8 — Coyote time and jump buffer · 6 h · _depends: T6_
+### M1-T8 — Coyote time and jump buffer · 6 h · _session: S08_ · _depends: T6_
 
 | Mechanic | Implementation                                                                                                                                       |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -157,7 +198,7 @@ a ledge. Success rate ≥ 98% inside the window, 0% outside it. This is a Pillar
 
 ---
 
-### M1-T9 — Player FSM · 8 h · _depends: T6, T7, T8_
+### M1-T9 — Player FSM · 8 h · _session: S09_ · _depends: T6, T7, T8_
 
 `src/entities/player/PlayerStates.ts` — every state and transition from
 `docs/06-Characters.md` §6.1, using the shared `StateMachine` from M0.
@@ -178,7 +219,7 @@ illegal ones. `LAND` duration asserted to be 0.
 
 ---
 
-### M1-T10 — `PlayerAnimator` seam · 4 h · _depends: T9_
+### M1-T10 — `PlayerAnimator` seam · 4 h · _session: S10_ · _depends: T9_ · ▶ Checkpoint B
 
 `src/entities/player/PlayerAnimator.ts`. No sprites yet — it swaps the grey box's tint per state,
 which is enough to verify the state machine visually.
@@ -190,9 +231,9 @@ receives `Readonly<PlayerSnapshot>` and has no body access. The ESLint rule from
 
 ---
 
-## Week 3 — Dash, walls, and the four heroes (~30 h)
+## Week 3 — Dash, walls, and the four heroes (~30 h) · sessions S11–S15
 
-### M1-T11 — Dash · 8 h · _depends: T9_
+### M1-T11 — Dash · 8 h · _session: S11_ · _depends: T9_
 
 Per `docs/06-Characters.md` §5.5. Velocity locked, gravity suspended, horizontal input ignored,
 jump input **buffered** and fired on dash end.
@@ -207,7 +248,7 @@ Air dash: one per airborne period, refreshed on landing.
 
 ---
 
-### M1-T12 — Wall slide and wall jump · 8 h · _depends: T11_
+### M1-T12 — Wall slide and wall jump · 8 h · _session: S12_ · _depends: T11_
 
 All four heroes, differing slide speeds (ADR-011). Wall jump: `vy = jumpVelocity × 0.95`,
 `vx = −wallDir × 150`, **120 ms horizontal input lock**.
@@ -222,7 +263,7 @@ does not re-attach within the lock window.
 
 ---
 
-### M1-T13 — Four character configurations · 6 h · _depends: T11, T12_
+### M1-T13 — Four character configurations · 6 h · _session: S13_ · _depends: T11, T12_
 
 `public/assets/data/characters/{knight,samurai,ninja,wizard}.json` — the movement blocks only.
 Combat, abilities, and animations come in M2 and M6.
@@ -237,7 +278,7 @@ Every value from `docs/06-Characters.md` §5.2, exactly.
 
 ---
 
-### M1-T14 — Ninja double jump · 4 h · _depends: T13_
+### M1-T14 — Ninja double jump · 4 h · _session: S14_ · _depends: T13_
 
 The only hero-specific movement code in M1. Lives in the FSM's `AIR_JUMP` state, driven by
 `CharacterMovement.airJumps` — **not** by a `characterId` check.
@@ -249,7 +290,7 @@ fast produces a weak, inconsistent arc — the classic double-jump bug.
 
 ---
 
-### M1-T15 — Camera · 4 h · _depends: T9_
+### M1-T15 — Camera · 4 h · _session: S15_ · _depends: T9_ · ▶ Checkpoint C
 
 `src/systems/CameraSystem.ts` per `docs/04-Art-Direction.md` §10.2: lerp 0.12, deadzone 48 × 32,
 follow offset −12 (bias upward — players jump more than they fall), `roundPixels`, look-ahead
@@ -264,9 +305,9 @@ Trauma-based shake is scaffolded but unused until M2.
 
 ---
 
-## Week 4 — Feedback and polish (~30 h)
+## Week 4 — Feedback and polish (~30 h) · sessions S16–S19
 
-### M1-T16 — Squash and stretch · 6 h · _depends: T9_
+### M1-T16 — Squash and stretch · 6 h · _session: S16_ · _depends: T9_
 
 `src/entities/ProceduralAnim.ts`, values from `docs/14-Animation-Standards.md` §8.1.
 
@@ -277,7 +318,7 @@ squash-and-stretch bug. Max deformation ±25%.
 
 ---
 
-### M1-T17 — Dust VFX and `VfxSystem` skeleton · 8 h · _depends: T16_
+### M1-T17 — Dust VFX and `VfxSystem` skeleton · 8 h · _session: S17_ · _depends: T16_
 
 `src/systems/VfxSystem.ts` + `src/systems/ParticleSystem.ts`, pooled from M0's `ObjectPool`.
 Grey placeholder shapes — real sprites are M3.
@@ -291,7 +332,7 @@ Run dust, jump dust, land dust (three impact tiers), skid dust, dash afterimages
 
 ---
 
-### M1-T18 — Debug overlay · 6 h · _depends: T15, T17_
+### M1-T18 — Debug overlay · 6 h · _session: S18_ · _depends: T15, T17_
 
 `src/systems/DebugSystem.ts`. `Ctrl+Shift+D`, ships in production (`docs/01-Vision.md` §6.2).
 
@@ -306,7 +347,7 @@ is absent from the prod bundle.
 
 ---
 
-### M1-T19 — Pillar 1 automated tests · 6 h · _depends: T8, T11_
+### M1-T19 — Pillar 1 automated tests · 6 h · _session: S19_ · _depends: T8, T11_ · ▶ Checkpoint D
 
 `npm run test:pillars`, the Pillar 1 subset from `docs/02-Game-Pillars.md` §6.3:
 
@@ -324,9 +365,9 @@ Wire into CI as a required gate.
 
 ---
 
-## Week 5 — Tuning only (~30 h)
+## Week 5 — Tuning only (~30 h) · sessions S20–S23
 
-### M1-T20 — Tuning · 20 h · **no new features**
+### M1-T20 — Tuning · 20 h · _session: S20_ · **no new features**
 
 **Week 5 adds nothing.** It measures, adjusts, and re-measures.
 
@@ -346,7 +387,7 @@ week-5 activity.
 
 ---
 
-### M1-T21 — Latency measurement · 4 h
+### M1-T21 — Latency measurement · 4 h · _session: S21_
 
 The one target that cannot be automated: input-to-_visible_-response at p99 ≤ 50 ms.
 
@@ -359,7 +400,7 @@ touching the controller.
 
 ---
 
-### M1-T22 — Constants lock · 2 h
+### M1-T22 — Constants lock · 2 h · _session: S22_
 
 1. Final values into `src/config/GameConstants.ts`
 2. Mirror into `docs/00-README.md` §5.3
@@ -370,7 +411,7 @@ touching the controller.
 
 ---
 
-### M1-T23 — Buffer · 4 h
+### M1-T23 — Buffer · 4 h · _session: S23_
 
 Overrun only. If unused, add tests. **Do not add features.**
 
@@ -398,7 +439,12 @@ Overrun only. If unused, add tests. **Do not add features.**
 - [ ] **Constants LOCKED, ADR-023 written**
 - [ ] Pillar 1 audit: all five falsification tests pass
 
-Then: tag `v0.1.0`, write `docs/audits/milestone-M1.md`, **expand `plans/M03-vertical-slice/plan.md` to 🔵 Full**.
+Then (post-gate, after all exit boxes):
+
+- [ ] tag `v0.1.0`
+- [ ] write `docs/audits/milestone-M1.md`
+- [ ] expand `plans/M03-vertical-slice/plan.md` to 🔵 Full
+- [ ] expand `plans/M02-combat-feel/plan.md` to 🔵 Full — deferred from M0 (next-but-one at M0 gate)
 
 ---
 

@@ -16,6 +16,7 @@ export default tseslint.config(
       'eslint.config.js',
       '**/*.mjs',
       'e2e/**',
+      'test/shims/**',
     ],
   },
   js.configs.recommended,
