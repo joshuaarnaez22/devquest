@@ -11,8 +11,8 @@ Where this file and a doc disagree, the doc wins.
 ## Status
 
 ```
-PHASE:      M1 Feel Prototype — in progress · next session M1-S03 (M1-T3 SystemRegistry)
-NEXT:       plans/M01-feel-prototype/plan.md (5 wk · 23 sessions · S01–S02 done)
+PHASE:      M1 Feel Prototype — in progress · next session M1-S04 (M1-T4 PlayerController)
+NEXT:       plans/M01-feel-prototype/plan.md (5 wk · 23 sessions · S01–S03 done)
 THEN:       plans/M02-combat-feel/plan.md
 OPEN P0/P1: 0
 NOTES:      docs/audits/milestone-M0.md · spike notes in plans/spike-00/results.md · sessions in M1 plan

@@ -197,7 +197,7 @@ function readOnePad(bindings: InputBindings, pad: Gamepad): PadRead {
 
 /**
  * Samples keyboard + gamepad every frame into an immutable {@link InputFrame}.
- * Position 1 in `SYSTEM_ORDER_GAMEPLAY` once T3 wires the registry.
+ * Position 1 in `SYSTEM_ORDER_GAMEPLAY` (`createGameplayRegistry`).
  */
 export class InputSystem implements System {
   readonly id = 'input';
