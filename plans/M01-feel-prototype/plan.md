@@ -1,6 +1,6 @@
 # M1 — Feel Prototype
 
-**Status:** 🔄 In progress · next **M1-S02** (`M1-T2`) · S01 done
+**Status:** 🔄 In progress · next **M1-S03** (`M1-T3`) · S01–S02 done
 **Duration:** 5 weeks (~150 h) · **Dates:** 2026-08-31 → 2026-10-02 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M1 · **Risk:** 🔴 **HIGH — tuning paralysis**
 **Next:** [M02-combat-feel/plan.md](../M02-combat-feel/plan.md) (after exit gate)
@@ -47,7 +47,7 @@ queue.
 | Session | Task | ~h | Done when |
 | ------- | ---- | -- | --------- |
 | [x] **M1-S01** | M1-T1 Entity | 4 | Unit test: scaled delta / frozen entity |
-| [ ] **M1-S02** | M1-T2 InputSystem | 8 | Input-to-physics ≤ 1 frame instrumented |
+| [x] **M1-S02** | M1-T2 InputSystem | 8 | Input-to-physics ≤ 1 frame instrumented |
 | [ ] **M1-S03** | M1-T3 SystemRegistry | 3 | Systems update in `SYSTEM_ORDER` |
 | [ ] **M1-S04** | M1-T4 Horizontal move | 10 | Max speed + turn boost measured (may span 2 sittings) |
 | [ ] **M1-S05** | M1-T5 Test scene | 5 | ▶ **Checkpoint A** — `level:test` grey box runs L/R |
@@ -70,7 +70,7 @@ queue.
 | [ ] **M1-S22** | M1-T22 Constants lock | 2 | ADR-023 + `check-constants` green |
 | [ ] **M1-S23** | M1-T23 Buffer | 4 | Overrun only — tests, not features |
 
-**Start here:** open this plan → **M1-S02** → read docs cited by T2 → implement → Verify → commit → stop.
+**Start here:** open this plan → **M1-S03** → read docs cited by T3 → implement → Verify → commit → stop.
 
 ---
 
