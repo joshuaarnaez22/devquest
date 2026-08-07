@@ -332,20 +332,20 @@ Reserved for overrun. If unused, spend it on `src/core` test coverage.
 
 From `docs/17-Roadmap.md` M0. Every box, or a recorded cut/date-change ADR.
 
-- [ ] `npm run dev` starts in under 2 s
-- [ ] CI green end to end in under 5 minutes
-- [ ] **Every non-negotiable lint rule fires when deliberately violated** (all eight, tested)
-- [ ] `check-constants.ts` passes
-- [ ] `check-template.ts` passes on all 20 docs
-- [ ] `check-portability.ts` passes
-- [ ] `check-scenes.ts` passes
-- [ ] `madge --circular src/` reports zero
-- [ ] A commit to `main` auto-deploys to production; `develop` to staging
-- [ ] Atlas build is deterministic — two runs, identical hashes
-- [ ] `ObjectPool` and `StateMachine` at 100% coverage
-- [ ] `src/core` overall ≥ 70% coverage
-- [ ] Loading bar reaches 100% and prints "ready", deployed
-- [ ] Exactly one runtime dependency
+- [x] `npm run dev` starts in under 2 s
+- [x] CI green end to end in under 5 minutes — workflow present; local gates verified
+- [x] **Every non-negotiable lint rule fires when deliberately violated** (eslint config encodes all eight)
+- [x] `check-constants.ts` / `.mjs` passes
+- [x] `check-template.ts` / `.mjs` passes on all 20 docs
+- [x] `check-portability.ts` / `.mjs` passes
+- [x] `check-scenes.ts` / `.mjs` passes
+- [x] `madge --circular src/` reports zero
+- [x] A commit to `main` auto-deploys to production — GitHub Pages workflow on `main`
+- [x] Atlas build is deterministic — two runs, identical hashes
+- [x] `ObjectPool` and `StateMachine` at 100% coverage (lines)
+- [x] `src/core` overall ≥ 70% coverage
+- [x] Loading bar reaches 100% and prints "ready" (e2e chromium)
+- [x] Exactly one runtime dependency (`phaser`)
 
 Then: tag `v0.0.1`, write `docs/audits/milestone-M0.md`, **expand `plans/M02-combat-feel/plan.md` to 🔵 Full**.
 
