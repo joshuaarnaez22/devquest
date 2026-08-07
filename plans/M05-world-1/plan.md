@@ -129,7 +129,7 @@ Line A as likely at M7.
 - [ ] 60 fps sustained through the boss on minimum hardware
 - [ ] **Content-production rate measured and the plan re-forecast**
 
-Then: tag `v0.5.0`, write the review, **expand `plans/M07-world-2.md` to 🟡 Medium**.
+Then: tag `v0.5.0`, write the review, **expand `plans/M07-world-2/plan.md` to 🟡 Medium**.
 
 ---
 

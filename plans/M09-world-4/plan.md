@@ -2,7 +2,7 @@
 
 **Duration:** 5 weeks (~150 h) · **Dates:** 2027-04-26 → 2027-05-28 · **Detail:** ⚪ Outline
 **Roadmap:** `docs/17-Roadmap.md` M9 · **Risk:** 🟡 MEDIUM
-**Expand to 🟡 Medium at the M7 gate. Template: [M05-world-1.md](M05-world-1.md).**
+**Expand to 🟡 Medium at the M7 gate. Template: [M05-world-1/plan.md](../M05-world-1/plan.md).**
 
 **Five weeks, not four.** Beam puzzles are slow to author and slower to verify — every puzzle must
 be solvable by all four heroes, which is four playthroughs per room.
@@ -103,4 +103,4 @@ Standard world gate plus:
 - [ ] Deletion Test run (M9 is a scheduled run) and passes under 2 hours
 - [ ] **Cut Line B decision made and recorded as an ADR**
 
-Then: tag `v0.9.0`, **expand `plans/M11-polish-accessibility.md` to 🔵 Full**.
+Then: tag `v0.9.0`, **expand `plans/M11-polish-accessibility/plan.md` to 🔵 Full**.

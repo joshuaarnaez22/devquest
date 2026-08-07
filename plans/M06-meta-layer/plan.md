@@ -135,7 +135,7 @@ Record the result and the elapsed time in `docs/audits/deletion-test-m6.md`.
 - [ ] `check-cutlines.ts` passes at all three cut lines
 - [ ] Time to interactive ≤ 8 s throttled
 
-Then: tag `v0.6.0`, write the review, **expand `plans/M08-world-3.md` to 🟡 Medium**.
+Then: tag `v0.6.0`, write the review, **expand `plans/M08-world-3/plan.md` to 🟡 Medium**.
 
 ---
 

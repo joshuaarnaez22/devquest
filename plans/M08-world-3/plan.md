@@ -2,7 +2,7 @@
 
 **Duration:** 4 weeks (~120 h) · **Dates:** 2027-03-29 → 2027-04-23 · **Detail:** ⚪ Outline
 **Roadmap:** `docs/17-Roadmap.md` M8 · **Risk:** 🟡 MEDIUM — the light mask is the only novel rendering feature
-**Expand to 🟡 Medium at the M6 gate. Template: [M05-world-1.md](M05-world-1.md).**
+**Expand to 🟡 Medium at the M6 gate. Template: [M05-world-1/plan.md](../M05-world-1/plan.md).**
 
 ---
 
@@ -87,4 +87,4 @@ Standard world gate plus:
 - [ ] **If Cut Line A invoked:** all five portfolio sections reachable, `check-cutlines.ts` green,
       full accessibility pass, and this build is shippable
 
-Then: tag `v0.8.0`, **expand `plans/M10-world-5.md` to 🟡 Medium**.
+Then: tag `v0.8.0`, **expand `plans/M10-world-5/plan.md` to 🟡 Medium**.

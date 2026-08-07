@@ -328,7 +328,7 @@ a cut-line signal.**
 - [ ] Pillar 3 audit: all five falsification tests pass
 - [ ] **Art-cost report complete, variance recorded**
 
-Then: tag `v0.3.0`, write `docs/audits/milestone-M3.md`, **expand `plans/M05-world-1.md` to 🔵 Full**.
+Then: tag `v0.3.0`, write `docs/audits/milestone-M3.md`, **expand `plans/M05-world-1/plan.md` to 🔵 Full**.
 
 ---
 

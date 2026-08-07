@@ -347,7 +347,7 @@ From `docs/17-Roadmap.md` M0. Every box, or a recorded cut/date-change ADR.
 - [ ] Loading bar reaches 100% and prints "ready", deployed
 - [ ] Exactly one runtime dependency
 
-Then: tag `v0.0.1`, write `docs/audits/milestone-M0.md`, **expand `plans/M02-combat-feel.md` to 🔵 Full**.
+Then: tag `v0.0.1`, write `docs/audits/milestone-M0.md`, **expand `plans/M02-combat-feel/plan.md` to 🔵 Full**.
 
 ---
 

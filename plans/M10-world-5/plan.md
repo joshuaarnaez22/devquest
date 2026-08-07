@@ -2,7 +2,7 @@
 
 **Duration:** 5 weeks (~150 h) · **Dates:** 2027-05-31 → 2027-07-02 · **Detail:** ⚪ Outline
 **Roadmap:** `docs/17-Roadmap.md` M10 · **Risk:** 🟠 MEDIUM-HIGH — the castle tileset
-**Expand to 🟡 Medium at the M8 gate. Template: [M05-world-1.md](M05-world-1.md).**
+**Expand to 🟡 Medium at the M8 gate. Template: [M05-world-1/plan.md](../M05-world-1/plan.md).**
 
 **Five weeks.** World 5 reuses every prior mechanic in combination, and the Gorgon has four phases.
 

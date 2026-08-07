@@ -2,7 +2,7 @@
 
 **Duration:** 4 weeks (~120 h) · **Dates:** 2027-03-01 → 2027-03-26 · **Detail:** ⚪ Outline
 **Roadmap:** `docs/17-Roadmap.md` M7 · **Risk:** 🟡 MEDIUM
-**Expand to 🟡 Medium at the M5 gate. Template: [M05-world-1.md](M05-world-1.md).**
+**Expand to 🟡 Medium at the M5 gate. Template: [M05-world-1/plan.md](../M05-world-1/plan.md).**
 
 ---
 
@@ -94,4 +94,4 @@ Standard world gate (see M05 §Exit gate) plus:
 - [ ] Projects unlocks and is readable
 - [ ] **Cut Line A decision made and recorded as an ADR**
 
-Then: tag `v0.7.0`, **expand `plans/M09-world-4.md` to 🟡 Medium** (or skip if Cut Line A invoked).
+Then: tag `v0.7.0`, **expand `plans/M09-world-4/plan.md` to 🟡 Medium** (or skip if Cut Line A invoked).

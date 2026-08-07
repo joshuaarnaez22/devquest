@@ -398,7 +398,7 @@ Overrun only. If unused, add tests. **Do not add features.**
 - [ ] **Constants LOCKED, ADR-023 written**
 - [ ] Pillar 1 audit: all five falsification tests pass
 
-Then: tag `v0.1.0`, write `docs/audits/milestone-M1.md`, **expand `plans/M03-vertical-slice.md` to 🔵 Full**.
+Then: tag `v0.1.0`, write `docs/audits/milestone-M1.md`, **expand `plans/M03-vertical-slice/plan.md` to 🔵 Full**.
 
 ---
 

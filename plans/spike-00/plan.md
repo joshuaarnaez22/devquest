@@ -208,7 +208,7 @@ rejected, and the roster changes. Better to know in week zero.
 
 - [x] A grey box runs at 320×180, integer-scaled, 60 fps
 - [x] All seven movement features from S0-T3 work
-- [x] Measured full-hold jump height is 32 ± 0.5 px — **fixed via midpoint integration; ~32.2 px (see [spike-00-results.md](spike-00-results.md))**
+- [x] Measured full-hold jump height is 32 ± 0.5 px — **fixed via midpoint integration; ~32.2 px (see [results.md](results.md))**
 - [x] Every gap and ledge in S0-T4 behaves as the table predicts
 - [x] **`GAP_M` (40 px) clears comfortably with a run-jump**
 - [x] The S0-T6 questions are answered in writing

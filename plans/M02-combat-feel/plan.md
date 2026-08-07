@@ -296,7 +296,7 @@ Also enable the **e2e and perf CI gates** deferred from M0-T9: p99 frame time, h
 - [ ] Zero heap growth over 60 s of combat
 - [ ] Pillar 2 audit: all six falsification tests pass
 
-Then: tag `v0.2.0`, write `docs/audits/milestone-M2.md`, **expand `plans/M04-frameworks.md` to 🔵 Full**.
+Then: tag `v0.2.0`, write `docs/audits/milestone-M2.md`, **expand `plans/M04-frameworks/plan.md` to 🔵 Full**.
 
 ---
 

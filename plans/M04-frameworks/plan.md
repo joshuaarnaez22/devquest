@@ -251,7 +251,7 @@ attack readout, per-pool live/peak/max.
 - [ ] Zero heap growth over 60 s of combat with spawning
 - [ ] AI update under 1.5 ms with 40 active enemies
 
-Then: tag `v0.4.0`, write `docs/audits/milestone-M4.md`, **expand `plans/M06-meta-layer.md` to 🔵 Full**.
+Then: tag `v0.4.0`, write `docs/audits/milestone-M4.md`, **expand `plans/M06-meta-layer/plan.md` to 🔵 Full**.
 
 ---
 

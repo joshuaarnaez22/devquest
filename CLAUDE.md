@@ -12,10 +12,10 @@ Where this file and a doc disagree, the doc wins.
 
 ```
 PHASE:      Pre-M0 — feel probe complete (throwaway ProbeScene in src/)
-NEXT:       plans/M00-foundation.md (3 wk)
-THEN:       plans/M01-feel-prototype.md
+NEXT:       plans/M00-foundation/plan.md (3 wk)
+THEN:       plans/M01-feel-prototype/plan.md
 OPEN P0/P1: 0
-NOTES:      plans/spike-00-results.md — jump peak ~32.2 px (midpoint integ.); GAP_M clears; Gate1 heroes recorded
+NOTES:      plans/spike-00/results.md — jump peak ~32.2 px (midpoint integ.); GAP_M clears; Gate1 heroes recorded
 ```
 
 Update this block at every milestone close.
@@ -24,7 +24,7 @@ Update this block at every milestone close.
 
 ## Before writing any code
 
-1. **Read the current plan** — `plans/M0N-*.md`. It has the task list, files, and exit gate.
+1. **Read the current plan** — `plans/<milestone>/plan.md`. It has the task list, files, and exit gate.
 2. **Read the doc that owns the system** you are touching (table below).
 3. **Do not invent behaviour.** If the spec does not define it, stop and ask. The docs are unusually complete; if something seems unspecified, you have probably not found the right section.
 4. **Do not build ahead of the plan.** A task not in the current milestone does not get built, even if it is quick.
