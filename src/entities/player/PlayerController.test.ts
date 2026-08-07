@@ -113,3 +113,60 @@ describe('PlayerController horizontal', () => {
     expect(src.includes('characterId')).toBe(false);
   });
 });
+
+function jumpPressFrame(): InputFrame {
+  return Object.freeze({
+    ...moveFrame(0),
+    jumpPressed: true,
+    jumpHeld: true,
+    jumpPressedAt: 1,
+  });
+}
+
+describe('PlayerController jump + gravity', () => {
+  it('full-hold Samurai jump peaks at 32.0 ± 0.5 px (midpoint feed)', () => {
+    const { body, ctrl } = makeController(0);
+    const frameMs = 1000 / 60;
+    const dt = frameMs / 1000;
+    let y = 0;
+    let peak = 0;
+
+    ctrl.beginFrame(frameMs);
+    const result = ctrl.tryJump(jumpPressFrame(), {
+      grounded: true,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: 0,
+    });
+    expect(result.kind).toBe('ground');
+
+    // Same order as FeelPlayer: gravity on the jump frame, then Phaser y += v·dt.
+    for (let i = 0; i < 120; i++) {
+      ctrl.beginFrame(frameMs);
+      ctrl.applyGravity();
+      y += body.velocity.y * dt;
+      peak = Math.max(peak, -y);
+      if (ctrl.verticalVelocity >= 0 && i > 5) break;
+    }
+
+    expect(peak).toBeGreaterThanOrEqual(31.5);
+    expect(peak).toBeLessThanOrEqual(32.5);
+  });
+
+  it('ground jump sets jumpVelocity', () => {
+    const { body, ctrl } = makeController(0);
+    ctrl.beginFrame(16.67);
+    ctrl.tryJump(jumpPressFrame(), {
+      grounded: true,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: 0,
+    });
+    expect(body.velocity.y).toBe(SAMURAI_MOVEMENT.jumpVelocity);
+    expect(ctrl.verticalVelocity).toBe(SAMURAI_MOVEMENT.jumpVelocity);
+  });
+});

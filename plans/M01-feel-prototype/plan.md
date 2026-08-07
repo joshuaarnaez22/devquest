@@ -1,6 +1,6 @@
 # M1 — Feel Prototype
 
-**Status:** 🔄 In progress · next **M1-S06** (`M1-T6`) · S01–S05 done · ▶ Checkpoint A
+**Status:** 🔄 In progress · next **M1-S07** (`M1-T7`) · S01–S06 done · ▶ Checkpoint A
 **Duration:** 5 weeks (~150 h) · **Dates:** 2026-08-31 → 2026-10-02 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M1 · **Risk:** 🔴 **HIGH — tuning paralysis**
 **Next:** [M02-combat-feel/plan.md](../M02-combat-feel/plan.md) (after exit gate)
@@ -51,7 +51,7 @@ queue.
 | [x] **M1-S03** | M1-T3 SystemRegistry | 3 | Systems update in `SYSTEM_ORDER` |
 | [x] **M1-S04** | M1-T4 Horizontal move | 10 | Max speed + turn boost measured (may span 2 sittings) |
 | [x] **M1-S05** | M1-T5 Test scene | 5 | ▶ **Checkpoint A** — `level:test` grey box runs L/R |
-| [ ] **M1-S06** | M1-T6 Gravity + jump | 8 | Full-hold peak 32.0 ± 0.5 px |
+| [x] **M1-S06** | M1-T6 Gravity + jump | 8 | Full-hold peak 32.0 ± 0.5 px |
 | [ ] **M1-S07** | M1-T7 Variable jump | 4 | Hold / early release / tap heights |
 | [ ] **M1-S08** | M1-T8 Coyote + buffer | 6 | ≥ 98% ledge success over 1,000 attempts |
 | [ ] **M1-S09** | M1-T9 Player FSM | 8 | Transitions + `LAND` duration === 0 |
@@ -70,7 +70,7 @@ queue.
 | [ ] **M1-S22** | M1-T22 Constants lock | 2 | ADR-023 + `check-constants` green |
 | [ ] **M1-S23** | M1-T23 Buffer | 4 | Overrun only — tests, not features |
 
-**Start here:** open this plan → **M1-S06** → read docs cited by T6 → implement → Verify → commit → stop.
+**Start here:** open this plan → **M1-S07** → read docs cited by T7 → implement → Verify → commit → stop.
 
 ---
 
