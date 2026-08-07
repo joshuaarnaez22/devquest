@@ -120,7 +120,7 @@ src/
 | `npm test`                   | Vitest unit                                                       |
 | `npm run test:e2e`           | Playwright                                                        |
 | `npm run test:pillars`       | Automated pillar targets                                          |
-| `npm run level:test -- w1-1` | Boot straight into a level, debug overlay on, `F1`–`F4` hero swap |
+| `npm run level:test`         | Boot feel-test GameScene (Checkpoint A); later: `-- w1-1` + `F1`–`F4` |
 | `npm run level:validate`     | Six level checks                                                  |
 | `npm run assets:build`       | Harmonise → slice → pack → budget                                 |
 | `npm run assets:verify`      | Density, palette, animations, AA, uniformity                      |
