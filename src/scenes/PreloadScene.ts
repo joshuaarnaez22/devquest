@@ -1,11 +1,10 @@
 import Phaser from 'phaser';
 import { Depth } from '@config/Depth';
-import { isLevelTest } from '@platform/Env';
 
 /**
  * PreloadScene — phase-1 assets, progress bar.
  * docs/13-UI-UX.md §8.1 · M0-T17
- * BitmapText lands with the font atlas in M3; M0 uses a bar + console ready signal only.
+ * Until TitleScene exists (M6), continue into Game (feel-test Checkpoint A).
  */
 export class PreloadScene extends Phaser.Scene {
   private bar: Phaser.GameObjects.Rectangle | undefined;
@@ -38,9 +37,8 @@ export class PreloadScene extends Phaser.Scene {
       this.finished = true;
       if (this.bar) this.bar.width = 160;
       console.warn('ready');
-      if (isLevelTest()) {
-        this.scene.start('Game');
-      }
+      // No Title yet — Boot → Preload → Game (feel-test). Title takes over in M6.
+      this.scene.start('Game');
     };
 
     this.load.on('complete', finish);

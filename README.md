@@ -15,15 +15,9 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:5173 — Boot → Preload loading bar → `ready` in the console.
+Open http://127.0.0.1:5173 — Boot → Preload → **feel-test GameScene** (grey box + gaps). Move with **A/D**.
 
-Feel-test grey box (Checkpoint A):
-
-```bash
-npm run level:test
-```
-
-Moves with **A/D** (or arrows). Debug readout top-left.
+Or: `npm run level:test` (same scene; kept for the Checkpoint A workflow).
 
 ## Commands
 
