@@ -20,6 +20,10 @@ NOTES:      docs/audits/milestone-M0.md · spike notes in plans/spike-00/results
 
 Update this block at every milestone close.
 
+**Milestone close / status sync:** use the project skill
+[`.cursor/skills/milestone-doc-sync/SKILL.md`](.cursor/skills/milestone-doc-sync/SKILL.md) —
+docs, audit, `CLAUDE.md`, **and** `plans/<id>/plan.md` in the same pass.
+
 ---
 
 ## Before writing any code

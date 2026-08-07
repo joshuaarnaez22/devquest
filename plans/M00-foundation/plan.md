@@ -1,7 +1,9 @@
 # M0 — Foundation
 
+**Status:** ✅ Done · closed 2026-08-07 · [audit](../../docs/audits/milestone-M0.md)
 **Duration:** 3 weeks (~90 h) · **Dates:** 2026-08-10 → 2026-08-28 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M0 · **Risk:** Low
+**Next:** [M01-feel-prototype/plan.md](../M01-feel-prototype/plan.md)
 
 ---
 
@@ -19,9 +21,9 @@ that is written without a safety net.
 
 ## Preconditions
 
-- [ ] spike-00 complete, outcome recorded
-- [ ] Node 20+, git, an editor with the ESLint and Prettier extensions
-- [ ] Static hosting target chosen (any — the build is a folder of files)
+- [x] spike-00 complete, outcome recorded — [results](../spike-00/results.md)
+- [x] Node 20+, git, an editor with the ESLint and Prettier extensions
+- [x] Static hosting target chosen — GitHub Pages (workflow on `main`)
 
 ---
 
@@ -347,7 +349,13 @@ From `docs/17-Roadmap.md` M0. Every box, or a recorded cut/date-change ADR.
 - [x] Loading bar reaches 100% and prints "ready" (e2e chromium)
 - [x] Exactly one runtime dependency (`phaser`)
 
-Then: tag `v0.0.1`, write `docs/audits/milestone-M0.md`, **expand `plans/M02-combat-feel/plan.md` to 🔵 Full**.
+**Post-gate (remaining):**
+
+- [x] write `docs/audits/milestone-M0.md`
+- [ ] tag `v0.0.1`
+- [ ] expand `plans/M02-combat-feel/plan.md` to 🔵 Full — deferred until M1 closes (expand next-but-one at each gate)
+
+`tsconfig.json` `include` covers `e2e/` so Playwright specs typecheck under ES2022 + DOM (not the editor ES5 default).
 
 ---
 

@@ -371,18 +371,18 @@ devquest/
 │   ├── ci/check-cutlines.ts
 │   └── ci/check-boundaries.ts
 │
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
+├── e2e/                              # Playwright smoke (production preview)
 │
 ├── docs/                             # this documentation set
 ├── eslint.config.js
 ├── vite.config.ts
-├── tsconfig.json
+├── tsconfig.json                     # include: src, tools, e2e, vite/vitest/playwright configs
 ├── vitest.config.ts
+├── playwright.config.ts
 └── package.json
 ```
+
+Unit tests are colocated next to sources (`*.test.ts` under `src/`).
 
 ### 5.2 Why One `Enemy` Class and One `Boss` Class
 
@@ -1450,7 +1450,16 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
       "@platform/*": ["platform/*"],
     },
   },
-  "include": ["src/**/*", "tools/**/*", "tests/**/*"],
+  // e2e/ must be included so Playwright specs pick up ES2022 + DOM libs
+  // (otherwise the editor falls back to ES5 and async/await errors on Promise).
+  "include": [
+    "src",
+    "tools",
+    "e2e",
+    "vitest.config.ts",
+    "vite.config.ts",
+    "playwright.config.ts"
+  ],
 }
 ```
 

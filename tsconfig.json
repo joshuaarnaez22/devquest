@@ -42,5 +42,12 @@
       "@util/*": ["util/*"]
     }
   },
-  "include": ["src", "tools", "vitest.config.ts", "vite.config.ts", "playwright.config.ts"]
+  "include": [
+    "src",
+    "tools",
+    "e2e",
+    "vitest.config.ts",
+    "vite.config.ts",
+    "playwright.config.ts"
+  ]
 }

@@ -165,15 +165,15 @@ flowchart LR
 
 **Deliverable:** a black screen with a loading bar that reaches 100% and prints "ready" — built by CI, deployed to staging, with every lint rule live.
 
-**Exit gate:**
+**Exit gate:** _(closed 2026-08-07 — `docs/audits/milestone-M0.md`)_
 
-- [ ] `npm run dev` starts in under 2 s
-- [ ] CI green end to end in under 5 minutes
-- [ ] Every non-negotiable lint rule (§16 §4.2) fires when deliberately violated
-- [ ] `check-constants.ts` passes
-- [ ] `madge --circular` reports zero
-- [ ] A commit to `main` auto-deploys to staging
-- [ ] `ObjectPool` and `StateMachine` have unit tests at 100% coverage
+- [x] `npm run dev` starts in under 2 s
+- [x] CI green end to end in under 5 minutes
+- [x] Every non-negotiable lint rule (§16 §4.2) fires when deliberately violated
+- [x] `check-constants.ts` passes
+- [x] `madge --circular` reports zero
+- [x] A commit to `main` auto-deploys to staging (GitHub Pages workflow on `main`)
+- [x] `ObjectPool` and `StateMachine` have unit tests at 100% coverage
 
 **Risk:** low. This is known work.
 
@@ -751,9 +751,9 @@ Maintained at the top of this document, updated at every milestone close:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- CURRENT: M0 Foundation · week 1 of 3 · on track
- SHIPPED: —
- NEXT GATE: 2026-08-28
+ CURRENT: M1 Feel Prototype · not started
+ SHIPPED: Spike 00 · M0 Foundation (2026-08-07)
+ NEXT GATE: M1 · 2026-10-02
  SLACK: +0 weeks (baseline)
  CUT LINES: A pending (Mar 26) · B pending (May 28)
  OPEN P0/P1: 0

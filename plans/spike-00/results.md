@@ -1,8 +1,9 @@
 # Spike 00 — Feel Probe Results
 
 **Date:** 2026-08-07  
-**App:** `/Users/user/Desktop/2d/devquest` (main app — throwaway probe code lives in `src/ProbeScene.ts` until M0 replaces it)  
-**Run:** `npm run dev` → http://127.0.0.1:5173/
+**App:** `/Users/user/Desktop/2d/devquest` (main app)  
+**Note:** Throwaway `ProbeScene` was removed in M0; Boot/Preload is the live scaffold. Movement feel carries into M1.  
+**Run (at the time):** `npm run dev` → http://127.0.0.1:5173/
 
 ---
 

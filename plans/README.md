@@ -92,6 +92,11 @@ Every plan ends with the same four-hour close procedure (`docs/17-Roadmap.md` §
 6. **Exit-gate checklist** — every box ticked, or a recorded cut/date change
 7. **Tag, archive audits, write the review, expand the next-but-one plan**
 
+**Status sync is one pass.** When closing a milestone or updating docs after ship,
+also update that milestone’s `plan.md` (status, preconditions, exit gate, post-gate)
+in the same change set. Agents: follow
+[`.cursor/skills/milestone-doc-sync/SKILL.md`](../.cursor/skills/milestone-doc-sync/SKILL.md).
+
 **A milestone does not close with a failing pillar or an unticked gate box.** The
 options are: fix it, cut scope (record an ADR), or move the date (record an ADR).
 Not "close it anyway."
