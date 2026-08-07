@@ -8,29 +8,10 @@ import { now } from '@platform/Clock';
 import * as GamepadAdapter from '@platform/GamepadAdapter';
 import * as Keyboard from '@platform/Keyboard';
 import type { GameAction, GamepadKind, InputBindings } from '@config/InputMap';
+import type { DigitalAxis, InputDevice, InputFrame } from '@core/InputFrame';
 import type { System } from '@core/SystemRegistry';
 
-export type DigitalAxis = -1 | 0 | 1;
-export type InputDevice = 'keyboard' | 'gamepad';
-
-/** Immutable per-frame input snapshot — docs/13-UI-UX.md §5.2. */
-export interface InputFrame {
-  readonly moveX: DigitalAxis;
-  readonly moveY: DigitalAxis;
-  readonly jumpPressed: boolean;
-  readonly jumpHeld: boolean;
-  readonly jumpReleased: boolean;
-  readonly attackPressed: boolean;
-  readonly attackHeld: boolean;
-  readonly dashPressed: boolean;
-  readonly specialPressed: boolean;
-  readonly specialHeld: boolean;
-  readonly specialReleased: boolean;
-  readonly pausePressed: boolean;
-  readonly jumpPressedAt: number;
-  readonly device: InputDevice;
-  readonly gamepadKind: GamepadKind | null;
-}
+export type { DigitalAxis, InputDevice, InputFrame } from '@core/InputFrame';
 
 interface RawButtons {
   left: boolean;
