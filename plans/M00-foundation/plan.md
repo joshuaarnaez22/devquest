@@ -355,7 +355,7 @@ From `docs/17-Roadmap.md` M0. Every box, or a recorded cut/date-change ADR.
 - [x] tag `v0.0.1`
 - [ ] expand `plans/M02-combat-feel/plan.md` to 🔵 Full — deferred until M1 closes (expand next-but-one at each gate)
 
-`tsconfig.json` `include` covers `e2e/` so Playwright specs typecheck under ES2022 + DOM (not the editor ES5 default).
+`tsconfig.json` `include` covers `e2e/` and `test/` so Playwright specs and Vitest shims typecheck under ES2022 + DOM (not the editor ES5 default).
 
 ---
 
