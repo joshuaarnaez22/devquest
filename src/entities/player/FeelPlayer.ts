@@ -11,6 +11,16 @@ import type Phaser from 'phaser';
 const BODY_W = 14;
 const BODY_H = 28;
 
+/**
+ * Downward speed left on the body while grounded so the next Arcade step still
+ * reports `blocked.down`. Custom gravity uses `allowGravity: false`; with vy=0,
+ * floor contact flickers and jumps miss.
+ *
+ * Arcade `world.update` runs on Scene UPDATE (before Scene.update). Stick is
+ * applied in {@link syncAfterPhysics} so it survives until that next step.
+ */
+const GROUND_STICK = 24;
+
 export class FeelPlayer extends Entity {
   readonly controller: PlayerController;
   grounded = false;
@@ -41,19 +51,29 @@ export class FeelPlayer extends Entity {
     this.setVisible(true);
   }
 
+  /**
+   * Pre-display tick (after Arcade this frame): jump, move, gravity when airborne.
+   * Call {@link syncAfterPhysics} on Scene POST_UPDATE afterward.
+   */
   protected override onUpdate(_time: number, delta: number): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const wasGrounded = this.grounded;
-    this.grounded = body.blocked.down || body.touching.down;
     const frame = this.frames.frame;
     const t = now();
 
-    this.resolveGroundTransitions(wasGrounded, body.y);
     this.controller.beginFrame(delta);
     this.resolveJump(frame, t, body.y);
     this.updateMoveState(frame);
     this.controller.applyHorizontal(frame, this.moveState, this.grounded);
-    this.applyVertical(body.y);
+
+    if (!this.grounded) {
+      this.controller.applyGravity();
+      if (this.jumpOriginY !== null) {
+        const height = this.jumpOriginY - body.y;
+        if (height > this.lastJumpHeight) {
+          this.lastJumpHeight = height;
+        }
+      }
+    }
 
     this.coyoteActive = !this.grounded && t < this.coyoteExpiresAt;
     this.bufferActive =
@@ -66,13 +86,31 @@ export class FeelPlayer extends Entity {
     }
   }
 
-  private resolveGroundTransitions(wasGrounded: boolean, y: number): void {
+  /**
+   * After Scene.update: refresh grounded from this frame's collision, then leave
+   * ground-stick velocity for the next Arcade UPDATE.
+   */
+  syncAfterPhysics(): void {
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    const wasGrounded = this.grounded;
+    const rising = this.controller.verticalVelocity < 0;
+    const onFloor = body.blocked.down || body.touching.down;
+
+    this.grounded = !rising && onFloor;
+
     if (this.grounded && !wasGrounded) {
-      this.onLanded(y);
+      this.onLanded(body.y);
+    } else if (!this.grounded && wasGrounded && !rising) {
+      this.jumpOriginY = body.y;
     }
-    if (!this.grounded && wasGrounded) {
-      this.jumpOriginY = y;
+
+    if (this.grounded) {
+      this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
+      // trueVy stays 0; body keeps stick for next world.update
+      this.controller.armGroundStick(GROUND_STICK);
     }
+
+    this.updateMoveState(this.frames.frame);
   }
 
   private resolveJump(frame: InputFrame, t: number, y: number): void {
@@ -106,21 +144,6 @@ export class FeelPlayer extends Entity {
       return;
     }
     this.moveState = frame.moveX !== 0 ? 'RUN' : 'IDLE';
-  }
-
-  private applyVertical(y: number): void {
-    if (this.grounded) {
-      this.controller.setVerticalVelocity(0);
-      this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
-      return;
-    }
-    this.controller.applyGravity();
-    if (this.jumpOriginY !== null) {
-      const height = this.jumpOriginY - y;
-      if (height > this.lastJumpHeight) {
-        this.lastJumpHeight = height;
-      }
-    }
   }
 
   private onLanded(y: number): void {

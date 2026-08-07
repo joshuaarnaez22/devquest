@@ -48,6 +48,15 @@ export class PlayerController {
     this.body.velocity.y = vy;
   }
 
+  /**
+   * Keep Arcade reporting floor contact without feeding stick into gravity state.
+   * `trueVy` stays 0; body gets a small downward speed for the next world step.
+   */
+  armGroundStick(stick: number): void {
+    this.trueVy = 0;
+    this.body.velocity.y = stick;
+  }
+
   get verticalVelocity(): number {
     return this.trueVy;
   }

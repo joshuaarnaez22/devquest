@@ -25,6 +25,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
+    this.events.on(Phaser.Scenes.Events.POST_UPDATE, this.postUpdate, this);
 
     installDebugBitmapFont(this);
     ensurePlayerBoxTexture(this);
@@ -55,18 +56,27 @@ export class GameScene extends Phaser.Scene {
   override update(time: number, delta: number): void {
     const systems = this.systems;
     const player = this.player;
-    const readout = this.readout;
-    if (systems === undefined || player === undefined || readout === undefined) return;
+    if (systems === undefined || player === undefined) return;
 
     const dt = Math.min(delta, DISPLAY.MAX_DELTA_MS);
     systems.update(time, dt);
     player.update(time, dt);
     systems.postPhysics(time, dt);
+  }
+
+  /** After Arcade: grounded flags are valid; sync HUD. */
+  private postUpdate(): void {
+    const player = this.player;
+    const readout = this.readout;
+    if (player === undefined || readout === undefined) return;
+
+    player.syncAfterPhysics();
 
     const body = player.body as Phaser.Physics.Arcade.Body;
     readout.sync({
       vx: body.velocity.x,
-      vy: body.velocity.y,
+      // Stick velocity is an Arcade contact hack — HUD shows true vertical state.
+      vy: player.grounded ? 0 : player.controller.verticalVelocity,
       state: player.moveState,
       grounded: player.grounded,
       coyoteActive: player.coyoteActive,
@@ -77,6 +87,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   shutdown(): void {
+    this.events.off(Phaser.Scenes.Events.POST_UPDATE, this.postUpdate, this);
     this.readout?.destroy();
     this.readout = undefined;
     this.systems?.destroy();
