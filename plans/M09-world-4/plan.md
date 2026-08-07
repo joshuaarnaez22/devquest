@@ -17,15 +17,15 @@ World 4 complete, plus **the Cut Line B decision**.
 
 ## Deliverables
 
-| # | Deliverable | Spec |
-|---|---|---|
-| 1 | Crystal Cave tileset (~8 h — includes **authoring emissive crystal frames**, which the pack will not have) | `docs/04-Art-Direction.md` §8.3 |
-| 2 | Orc and Golem packs harmonised (~5 h, both paid packs) | `docs/08-Enemy-System.md` §6.5, §6.6 |
-| 3 | `LightBeamMechanic`, low-gravity fields, conveyors | `docs/10-Level-Design.md` §7.4 |
-| 4 | Levels 4-1, 4-2, 4-3 | `docs/10-Level-Design.md` §10 |
-| 5 | Golem Sovereign — 3 phases, **the crystal-core mechanic** | `docs/09-Boss-System.md` §7.4 |
-| 6 | Skills unlock | |
-| 7 | Behaviours: `shield`, `groundSlam`. Attack modules: `beamSweep`, `radialBurst`, `projectileArc` | |
+| #   | Deliverable                                                                                                | Spec                                 |
+| --- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1   | Crystal Cave tileset (~8 h — includes **authoring emissive crystal frames**, which the pack will not have) | `docs/04-Art-Direction.md` §8.3      |
+| 2   | Orc and Golem packs harmonised (~5 h, both paid packs)                                                     | `docs/08-Enemy-System.md` §6.5, §6.6 |
+| 3   | `LightBeamMechanic`, low-gravity fields, conveyors                                                         | `docs/10-Level-Design.md` §7.4       |
+| 4   | Levels 4-1, 4-2, 4-3                                                                                       | `docs/10-Level-Design.md` §10        |
+| 5   | Golem Sovereign — 3 phases, **the crystal-core mechanic**                                                  | `docs/09-Boss-System.md` §7.4        |
+| 6   | Skills unlock                                                                                              |                                      |
+| 7   | Behaviours: `shield`, `groundSlam`. Attack modules: `beamSweep`, `radialBurst`, `projectileArc`            |                                      |
 
 ---
 
@@ -62,24 +62,24 @@ the Sovereign to a `boss-w4` atlas loaded only in the arena — a build-config c
 
 ## Week shape
 
-| Week | Focus |
-|---|---|
-| 1 | Asset harmonisation incl. emissive crystals, `LightBeamMechanic`, low-gravity, conveyors |
-| 2 | Level 4-1, `shield` and `groundSlam` behaviours |
-| 3 | Level 4-2 |
-| 4 | Level 4-3 (puzzle-heavy), Golem Sovereign three phases + core mechanic |
-| 5 | Polish reserve, four-hero puzzle verification, Skills unlock, **Cut Line B decision** |
+| Week | Focus                                                                                    |
+| ---- | ---------------------------------------------------------------------------------------- |
+| 1    | Asset harmonisation incl. emissive crystals, `LightBeamMechanic`, low-gravity, conveyors |
+| 2    | Level 4-1, `shield` and `groundSlam` behaviours                                          |
+| 3    | Level 4-2                                                                                |
+| 4    | Level 4-3 (puzzle-heavy), Golem Sovereign three phases + core mechanic                   |
+| 5    | Polish reserve, four-hero puzzle verification, Skills unlock, **Cut Line B decision**    |
 
 ---
 
 ## 🔴 Cut Line B decision — 2027-05-28
 
-| Signal | Threshold | If breached |
-|---|---|---|
-| Castle tileset resolved | No | Invoke |
-| Weeks remaining vs. M10+M11+M12 work | < 8 weeks | Invoke |
-| Open P1 bugs | > 6 | Invoke |
-| Cut Line A already invoked | — | N/A |
+| Signal                               | Threshold | If breached |
+| ------------------------------------ | --------- | ----------- |
+| Castle tileset resolved              | No        | Invoke      |
+| Weeks remaining vs. M10+M11+M12 work | < 8 weeks | Invoke      |
+| Open P1 bugs                         | > 6       | Invoke      |
+| Cut Line A already invoked           | —         | N/A         |
 
 **If invoked:** drop World 5. The Golem Sovereign becomes the final boss and unlocks Skills **and**
 Contact. Product: 16 levels, 4 worlds, ~3.5 hours. The freed 5 weeks go to polish.

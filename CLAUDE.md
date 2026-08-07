@@ -11,11 +11,11 @@ Where this file and a doc disagree, the doc wins.
 ## Status
 
 ```
-PHASE:      Pre-M0 — feel probe complete (throwaway ProbeScene in src/)
-NEXT:       plans/M00-foundation/plan.md (3 wk)
-THEN:       plans/M01-feel-prototype/plan.md
+PHASE:      M0 complete — Boot/Preload + toolchain
+NEXT:       plans/M01-feel-prototype/plan.md (5 wk)
+THEN:       plans/M02-combat-feel/plan.md
 OPEN P0/P1: 0
-NOTES:      plans/spike-00/results.md — jump peak ~32.2 px (midpoint integ.); GAP_M clears; Gate1 heroes recorded
+NOTES:      docs/audits/milestone-M0.md · spike notes in plans/spike-00/results.md
 ```
 
 Update this block at every milestone close.
@@ -33,28 +33,28 @@ Update this block at every milestone close.
 
 ## Which doc owns what
 
-| Working on… | Read |
-|---|---|
-| Any constant, resolution, budget | `docs/00-README.md` §5 — **canonical, mirrored in `src/config/GameConstants.ts`** |
-| Whether a feature should exist | `docs/02-Game-Pillars.md` |
-| Module layout, boundaries, scenes, systems | `docs/03-Technical-Architecture.md` |
-| Palette, depth, sprite scale, VFX | `docs/04-Art-Direction.md` |
-| Importing or harmonising an asset | `docs/05-Asset-Pipeline.md` |
-| Player movement, heroes, abilities | `docs/06-Characters.md` |
-| Hitboxes, damage, hit stop, poise | `docs/07-Combat.md` |
-| Enemy AI, behaviours, encounters | `docs/08-Enemy-System.md` |
-| Boss phases, arenas, attack modules | `docs/09-Boss-System.md` |
-| Tiled, level metrics, world mechanics | `docs/10-Level-Design.md` |
-| Coins, charms, save data | `docs/11-Progression.md` |
-| Codex, unlocks, `/resume` | `docs/12-Portfolio-System.md` |
-| Menus, HUD, input, accessibility | `docs/13-UI-UX.md` |
-| Animation naming, timing, procedural motion | `docs/14-Animation-Standards.md` |
-| Anything performance | `docs/15-Performance.md` |
-| Style, testing, git, CI | `docs/16-Coding-Standards.md` |
-| Schedule, gates, cut lines | `docs/17-Roadmap.md` |
-| A term you do not recognise | `docs/18-Glossary.md` |
-| "Why is it like this?" | `docs/19-Decisions.md` |
-| A new idea | `docs/20-Future-Ideas.md` — **park it there, do not build it** |
+| Working on…                                 | Read                                                                              |
+| ------------------------------------------- | --------------------------------------------------------------------------------- |
+| Any constant, resolution, budget            | `docs/00-README.md` §5 — **canonical, mirrored in `src/config/GameConstants.ts`** |
+| Whether a feature should exist              | `docs/02-Game-Pillars.md`                                                         |
+| Module layout, boundaries, scenes, systems  | `docs/03-Technical-Architecture.md`                                               |
+| Palette, depth, sprite scale, VFX           | `docs/04-Art-Direction.md`                                                        |
+| Importing or harmonising an asset           | `docs/05-Asset-Pipeline.md`                                                       |
+| Player movement, heroes, abilities          | `docs/06-Characters.md`                                                           |
+| Hitboxes, damage, hit stop, poise           | `docs/07-Combat.md`                                                               |
+| Enemy AI, behaviours, encounters            | `docs/08-Enemy-System.md`                                                         |
+| Boss phases, arenas, attack modules         | `docs/09-Boss-System.md`                                                          |
+| Tiled, level metrics, world mechanics       | `docs/10-Level-Design.md`                                                         |
+| Coins, charms, save data                    | `docs/11-Progression.md`                                                          |
+| Codex, unlocks, `/resume`                   | `docs/12-Portfolio-System.md`                                                     |
+| Menus, HUD, input, accessibility            | `docs/13-UI-UX.md`                                                                |
+| Animation naming, timing, procedural motion | `docs/14-Animation-Standards.md`                                                  |
+| Anything performance                        | `docs/15-Performance.md`                                                          |
+| Style, testing, git, CI                     | `docs/16-Coding-Standards.md`                                                     |
+| Schedule, gates, cut lines                  | `docs/17-Roadmap.md`                                                              |
+| A term you do not recognise                 | `docs/18-Glossary.md`                                                             |
+| "Why is it like this?"                      | `docs/19-Decisions.md`                                                            |
+| A new idea                                  | `docs/20-Future-Ideas.md` — **park it there, do not build it**                    |
 
 ---
 
@@ -62,14 +62,14 @@ Update this block at every milestone close.
 
 Six rules that are never waived. All six are lint- or CI-enforced.
 
-| # | Rule |
-|---|---|
-| 1 | `strict: true` + `noUncheckedIndexedAccess`. A bare `!` needs a justifying comment |
-| 2 | No `any`. `unknown` is fine |
-| 3 | No browser globals (`window`, `document`, `localStorage`, `navigator`, `fetch`, `setTimeout`) outside `src/platform/` |
-| 4 | No `Math.random()` outside `src/core/Rng.ts` |
-| 5 | No layer-boundary violations (`docs/03-Technical-Architecture.md` §6.1) |
-| 6 | No dependency cycles |
+| #   | Rule                                                                                                                  |
+| --- | --------------------------------------------------------------------------------------------------------------------- |
+| 1   | `strict: true` + `noUncheckedIndexedAccess`. A bare `!` needs a justifying comment                                    |
+| 2   | No `any`. `unknown` is fine                                                                                           |
+| 3   | No browser globals (`window`, `document`, `localStorage`, `navigator`, `fetch`, `setTimeout`) outside `src/platform/` |
+| 4   | No `Math.random()` outside `src/core/Rng.ts`                                                                          |
+| 5   | No layer-boundary violations (`docs/03-Technical-Architecture.md` §6.1)                                               |
+| 6   | No dependency cycles                                                                                                  |
 
 Plus three that are equally absolute:
 
@@ -107,20 +107,20 @@ src/
 
 ## Commands
 
-| Command | Does |
-|---|---|
-| `npm run dev` | Vite dev server |
-| `npm run build` | Production build |
-| `npm run typecheck` | tsc, no emit |
-| `npm run lint` | ESLint incl. boundaries |
-| `npm test` | Vitest unit |
-| `npm run test:e2e` | Playwright |
-| `npm run test:pillars` | Automated pillar targets |
+| Command                      | Does                                                              |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `npm run dev`                | Vite dev server                                                   |
+| `npm run build`              | Production build                                                  |
+| `npm run typecheck`          | tsc, no emit                                                      |
+| `npm run lint`               | ESLint incl. boundaries                                           |
+| `npm test`                   | Vitest unit                                                       |
+| `npm run test:e2e`           | Playwright                                                        |
+| `npm run test:pillars`       | Automated pillar targets                                          |
 | `npm run level:test -- w1-1` | Boot straight into a level, debug overlay on, `F1`–`F4` hero swap |
-| `npm run level:validate` | Six level checks |
-| `npm run assets:build` | Harmonise → slice → pack → budget |
-| `npm run assets:verify` | Density, palette, animations, AA, uniformity |
-| `npm run docs:check` | Template, constants parity, links |
+| `npm run level:validate`     | Six level checks                                                  |
+| `npm run assets:build`       | Harmonise → slice → pack → budget                                 |
+| `npm run assets:verify`      | Density, palette, animations, AA, uniformity                      |
+| `npm run docs:check`         | Template, constants parity, links                                 |
 
 In-game: `Ctrl+Shift+D` debug overlay · `F8` frame-step · `F9` hitboxes · `F10` cull margins.
 
@@ -130,7 +130,7 @@ In-game: `Ctrl+Shift+D` debug overlay · `F8` frame-step · `F9` hitboxes · `F1
 
 **Follow the plan.** Each milestone has a plan in `plans/` with numbered tasks. Work them in dependency order. Do not start the next milestone before the current one's exit gate passes.
 
-**Commit per task.** Conventional Commits, scope = module, body explains *why*:
+**Commit per task.** Conventional Commits, scope = module, body explains _why_:
 
 ```
 feat(player): add coyote time as an absolute expiry timestamp
@@ -154,12 +154,12 @@ Refs: docs/06-Characters.md §5.3
 
 From `docs/01-Vision.md` §8.3, repeated here because these are behavioural and will not announce themselves:
 
-| Failure | Countermeasure |
-|---|---|
+| Failure                                                                      | Countermeasure                                                         |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | **Tuning paralysis** — endless polishing of movement, never shipping content | M1 has a hard end date. Constants lock at M1 exit; changes need an ADR |
-| **Framework astronautics** — abstractions before concrete cases | Two implementations before one abstraction. No exceptions |
-| **Portfolio creep** — the Codex grows until it dominates | Deletion Test at M3, M6, M9, M11. If it takes over 2 hours, prune |
-| **Scope absorption** — features added without cutting others | `docs/20-Future-Ideas.md` is the only legal destination |
+| **Framework astronautics** — abstractions before concrete cases              | Two implementations before one abstraction. No exceptions              |
+| **Portfolio creep** — the Codex grows until it dominates                     | Deletion Test at M3, M6, M9, M11. If it takes over 2 hours, prune      |
+| **Scope absorption** — features added without cutting others                 | `docs/20-Future-Ideas.md` is the only legal destination                |
 
 ---
 

@@ -20,31 +20,36 @@ An ADR is **append-only**. A decision that turns out to be wrong is not edited �
 
 ## 2. Goals
 
-| # | Goal | Success Signal |
-|---|------|----------------|
-| G1 | Record every significant decision with its reasoning | A stranger can answer "why X and not Y?" without asking |
-| G2 | Prevent decisions being silently re-litigated | A rejected option is cited, not re-argued |
-| G3 | Make reversal possible and honest | Superseding an ADR is a documented act, not a quiet edit |
-| G4 | Record what was rejected, not only what was chosen | The rejected options are half the value |
-| G5 | Give lint rules and constraints a citable rationale | An error message points at an ADR |
+| #   | Goal                                                 | Success Signal                                           |
+| --- | ---------------------------------------------------- | -------------------------------------------------------- |
+| G1  | Record every significant decision with its reasoning | A stranger can answer "why X and not Y?" without asking  |
+| G2  | Prevent decisions being silently re-litigated        | A rejected option is cited, not re-argued                |
+| G3  | Make reversal possible and honest                    | Superseding an ADR is a documented act, not a quiet edit |
+| G4  | Record what was rejected, not only what was chosen   | The rejected options are half the value                  |
+| G5  | Give lint rules and constraints a citable rationale  | An error message points at an ADR                        |
 
 ---
 
 ## 3. Design Principles
 
 ### P1 — Append Only
+
 Never edit an accepted ADR except to change its status or add a supersession link. The record of what we believed at the time is the point.
 
 ### P2 — Record the Rejected Options
+
 An ADR listing only the chosen option is a press release. The rejected options, with their real trade-offs, are what stop the decision being re-made badly.
 
 ### P3 — Record Consequences, Including Bad Ones
+
 Every decision costs something. An ADR that lists only benefits is not honest and will not be trusted.
 
 ### P4 — Write It When You Decide, Not After
+
 An ADR written three months later is a rationalisation. Written at the moment of decision, it is a record.
 
 ### P5 — Small Decisions Do Not Need an ADR
+
 A variable name does not need one. The test is: **would a competent stranger be surprised by this, and would they want to change it?** If yes, write the ADR.
 
 ---
@@ -62,50 +67,56 @@ A variable name does not need one. The test is: **would a competent stranger be 
 **Affects:** Documents and modules
 
 ### Context
+
 The situation and the forces at play.
 
 ### Options
+
 Each option with its real trade-offs.
 
 ### Decision
+
 What was chosen.
 
 ### Rationale
+
 Why, in terms of the pillars, the vision, or measured evidence.
 
 ### Consequences
+
 What this costs. Positive and negative.
 
 ### Revisit If
+
 The condition under which this should be reconsidered.
 ```
 
 ### 4.2 The Index
 
-| # | Title | Status | Date |
-|---|---|---|---|
-| [001](#adr-001--not-an-rpg) | Not an RPG | ✅ Accepted | 2026-08-07 |
+| #                                                                   | Title                                                    | Status      | Date       |
+| ------------------------------------------------------------------- | -------------------------------------------------------- | ----------- | ---------- |
+| [001](#adr-001--not-an-rpg)                                         | Not an RPG                                               | ✅ Accepted | 2026-08-07 |
 | [002](#adr-002--a-game-not-a-portfolio-website-with-a-resume-hedge) | A game, not a portfolio website (with a `/resume` hedge) | ✅ Accepted | 2026-08-07 |
-| [003](#adr-003--phaser-3-as-the-engine) | Phaser 3 as the engine | ✅ Accepted | 2026-08-07 |
-| [004](#adr-004--vertical-slice-before-framework) | Vertical slice before framework | ✅ Accepted | 2026-08-07 |
-| [005](#adr-005--arcade-physics-over-matterjs) | Arcade Physics over Matter.js | ✅ Accepted | 2026-08-07 |
-| [006](#adr-006--typescript-strict-with-nouncheckedindexedaccess) | TypeScript strict with `noUncheckedIndexedAccess` | ✅ Accepted | 2026-08-07 |
-| [007](#adr-007--one-enemy-class-composition-over-inheritance) | One `Enemy` class, composition over inheritance | ✅ Accepted | 2026-08-07 |
-| [008](#adr-008--320--180-internal-resolution) | 320 × 180 internal resolution | ✅ Accepted | 2026-08-07 |
-| [009](#adr-009--no-backend-localstorage-saves) | No backend, localStorage saves | ✅ Accepted | 2026-08-07 |
-| [010](#adr-010--vite-as-the-bundler) | Vite as the bundler | ✅ Accepted | 2026-08-07 |
-| [011](#adr-011--wall-slide-for-all-four-heroes) | Wall-slide for all four heroes | ✅ Accepted | 2026-08-07 |
-| [012](#adr-012--parry-is-knight-only-at-200-ms) | Parry is Knight-only at 200 ms | ✅ Accepted | 2026-08-07 |
-| [013](#adr-013--five-inputs-and-no-interact-key) | Five inputs and no interact key | ✅ Accepted | 2026-08-07 |
-| [014](#adr-014--hit-stop-is-not-negotiable) | Hit stop is not negotiable | ✅ Accepted | 2026-08-07 |
-| [015](#adr-015--content-is-data-not-code) | Content is data, not code | ✅ Accepted | 2026-08-07 |
-| [016](#adr-016--no-walkable-hub-world) | No walkable hub world | ✅ Accepted | 2026-08-07 |
-| [017](#adr-017--three-charm-slots-not-four) | Three charm slots, not four | ✅ Accepted | 2026-08-07 |
-| [018](#adr-018--darkness-constraints-for-world-3) | Darkness constraints for World 3 | ✅ Accepted | 2026-08-07 |
-| [019](#adr-019--seeded-rng-everywhere) | Seeded RNG everywhere | ✅ Accepted | 2026-08-07 |
-| [020](#adr-020--audio-may-come-from-a-non-craftpix-vendor) | Audio may come from a non-CraftPix vendor | 🟡 Proposed | 2026-08-07 |
-| [021](#adr-021--staggered-enemy-vision-at-10-hz) | Staggered enemy vision at 10 Hz | ✅ Accepted | 2026-08-07 |
-| [022](#adr-022--one-graphics-object-for-boss-ground-indicators) | One Graphics object for boss ground indicators | ✅ Accepted | 2026-08-07 |
+| [003](#adr-003--phaser-3-as-the-engine)                             | Phaser 3 as the engine                                   | ✅ Accepted | 2026-08-07 |
+| [004](#adr-004--vertical-slice-before-framework)                    | Vertical slice before framework                          | ✅ Accepted | 2026-08-07 |
+| [005](#adr-005--arcade-physics-over-matterjs)                       | Arcade Physics over Matter.js                            | ✅ Accepted | 2026-08-07 |
+| [006](#adr-006--typescript-strict-with-nouncheckedindexedaccess)    | TypeScript strict with `noUncheckedIndexedAccess`        | ✅ Accepted | 2026-08-07 |
+| [007](#adr-007--one-enemy-class-composition-over-inheritance)       | One `Enemy` class, composition over inheritance          | ✅ Accepted | 2026-08-07 |
+| [008](#adr-008--320--180-internal-resolution)                       | 320 × 180 internal resolution                            | ✅ Accepted | 2026-08-07 |
+| [009](#adr-009--no-backend-localstorage-saves)                      | No backend, localStorage saves                           | ✅ Accepted | 2026-08-07 |
+| [010](#adr-010--vite-as-the-bundler)                                | Vite as the bundler                                      | ✅ Accepted | 2026-08-07 |
+| [011](#adr-011--wall-slide-for-all-four-heroes)                     | Wall-slide for all four heroes                           | ✅ Accepted | 2026-08-07 |
+| [012](#adr-012--parry-is-knight-only-at-200-ms)                     | Parry is Knight-only at 200 ms                           | ✅ Accepted | 2026-08-07 |
+| [013](#adr-013--five-inputs-and-no-interact-key)                    | Five inputs and no interact key                          | ✅ Accepted | 2026-08-07 |
+| [014](#adr-014--hit-stop-is-not-negotiable)                         | Hit stop is not negotiable                               | ✅ Accepted | 2026-08-07 |
+| [015](#adr-015--content-is-data-not-code)                           | Content is data, not code                                | ✅ Accepted | 2026-08-07 |
+| [016](#adr-016--no-walkable-hub-world)                              | No walkable hub world                                    | ✅ Accepted | 2026-08-07 |
+| [017](#adr-017--three-charm-slots-not-four)                         | Three charm slots, not four                              | ✅ Accepted | 2026-08-07 |
+| [018](#adr-018--darkness-constraints-for-world-3)                   | Darkness constraints for World 3                         | ✅ Accepted | 2026-08-07 |
+| [019](#adr-019--seeded-rng-everywhere)                              | Seeded RNG everywhere                                    | ✅ Accepted | 2026-08-07 |
+| [020](#adr-020--audio-may-come-from-a-non-craftpix-vendor)          | Audio may come from a non-CraftPix vendor                | 🟡 Proposed | 2026-08-07 |
+| [021](#adr-021--staggered-enemy-vision-at-10-hz)                    | Staggered enemy vision at 10 Hz                          | ✅ Accepted | 2026-08-07 |
+| [022](#adr-022--one-graphics-object-for-boss-ground-indicators)     | One Graphics object for boss ground indicators           | ✅ Accepted | 2026-08-07 |
 
 ---
 
@@ -118,13 +129,13 @@ Reading them in order is not recommended. Reading the index in §4.2 and
 jumping to the one you need is. The records that shape the most other
 decisions, and are therefore worth reading unprompted, are:
 
-| ADR | Why It Is Load-Bearing |
-|---|---|
-| [001](#adr-001--not-an-rpg) | Determines what the game is, and closes the most common re-proposal |
-| [003](#adr-003--phaser-3-as-the-engine) | Determines every technical constraint downstream |
-| [004](#adr-004--vertical-slice-before-framework) | Determines the entire milestone sequence |
-| [007](#adr-007--one-enemy-class-composition-over-inheritance) | Determines how all content is authored |
-| [008](#adr-008--320--180-internal-resolution) | Determines every art and UI constraint. Unchangeable |
+| ADR                                                           | Why It Is Load-Bearing                                              |
+| ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [001](#adr-001--not-an-rpg)                                   | Determines what the game is, and closes the most common re-proposal |
+| [003](#adr-003--phaser-3-as-the-engine)                       | Determines every technical constraint downstream                    |
+| [004](#adr-004--vertical-slice-before-framework)              | Determines the entire milestone sequence                            |
+| [007](#adr-007--one-enemy-class-composition-over-inheritance) | Determines how all content is authored                              |
+| [008](#adr-008--320--180-internal-resolution)                 | Determines every art and UI constraint. Unchangeable                |
 
 ---
 
@@ -139,12 +150,12 @@ The single most common suggestion for a developer-portfolio game is to make it a
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **RPG** (turn-based or action-RPG) | Metaphor is obvious; familiar genre; stat systems are easy to author | Needs dozens of hours of content; combat becomes arithmetic; metaphor exhausts in ten seconds; every portfolio game is this |
-| **Action platformer** | Combat is skill-based; 4 hours of excellent content is achievable solo; feel-driven; differentiated | The portfolio connection is less obvious; needs precise controls |
-| **Puzzle game** | Cheap to produce; showcases logic | No feel, no spectacle; weak demonstration of engine skill |
-| **Metroidvania** | Depth, exploration | Scope is 2–3× an action platformer at the same quality |
+| Option                             | Pros                                                                                                | Cons                                                                                                                        |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **RPG** (turn-based or action-RPG) | Metaphor is obvious; familiar genre; stat systems are easy to author                                | Needs dozens of hours of content; combat becomes arithmetic; metaphor exhausts in ten seconds; every portfolio game is this |
+| **Action platformer**              | Combat is skill-based; 4 hours of excellent content is achievable solo; feel-driven; differentiated | The portfolio connection is less obvious; needs precise controls                                                            |
+| **Puzzle game**                    | Cheap to produce; showcases logic                                                                   | No feel, no spectacle; weak demonstration of engine skill                                                                   |
+| **Metroidvania**                   | Depth, exploration                                                                                  | Scope is 2–3× an action platformer at the same quality                                                                      |
 
 ### Decision
 
@@ -183,11 +194,11 @@ The stated goal is to present a developer's portfolio effectively. A game is an 
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **A fast, beautiful website** | Zero friction; universally accessible; 2 weeks of work | Demonstrates that you can build a website. Time-on-page measured in seconds |
-| **A game only** | Demonstrates substantially more skill; time-in-game measured in tens of minutes | Some visitors will not play; accessibility barriers |
-| **A game plus a static résumé** | Both audiences served; the game is the reason to read the résumé | Two things to maintain (but they share one data source) |
+| Option                          | Pros                                                                            | Cons                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **A fast, beautiful website**   | Zero friction; universally accessible; 2 weeks of work                          | Demonstrates that you can build a website. Time-on-page measured in seconds |
+| **A game only**                 | Demonstrates substantially more skill; time-in-game measured in tens of minutes | Some visitors will not play; accessibility barriers                         |
+| **A game plus a static résumé** | Both audiences served; the game is the reason to read the résumé                | Two things to maintain (but they share one data source)                     |
 
 ### Decision
 
@@ -202,7 +213,7 @@ The stated goal is to present a developer's portfolio effectively. A game is an 
 
 ### Consequences
 
-**Positive:** both audiences served; the accessibility story becomes honest rather than apologetic; the résumé link on the *preloader* means someone can leave for the CV before the game even loads.
+**Positive:** both audiences served; the accessibility story becomes honest rather than apologetic; the résumé link on the _preloader_ means someone can leave for the CV before the game even loads.
 
 **Negative:** a small ongoing maintenance surface, mitigated by generating from one source.
 
@@ -223,13 +234,13 @@ The game is a 2D pixel-art platformer for the browser, built by a small team ove
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Phaser 3** | Mature; WebGL-first; excellent Arcade Physics; tilemap support; huge community; TypeScript types; one dependency | Some API inconsistency; large default bundle (mitigated by a custom build) |
-| **PixiJS + custom** | Lighter; more control | We would write physics, tilemaps, scenes, input, and animation ourselves. Months of work |
-| **Excalibur.js** | TypeScript-native; clean API | Much smaller community; less battle-tested |
-| **Godot (web export)** | Full editor; excellent 2D | Large WASM payload (~15 MB) breaks the 8-second load promise; the codebase would be GDScript/C#, weakening the portfolio value of the source |
-| **Custom engine** | Maximum portfolio value | 6+ months before the first level. Fatal to the schedule |
+| Option                 | Pros                                                                                                             | Cons                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phaser 3**           | Mature; WebGL-first; excellent Arcade Physics; tilemap support; huge community; TypeScript types; one dependency | Some API inconsistency; large default bundle (mitigated by a custom build)                                                                   |
+| **PixiJS + custom**    | Lighter; more control                                                                                            | We would write physics, tilemaps, scenes, input, and animation ourselves. Months of work                                                     |
+| **Excalibur.js**       | TypeScript-native; clean API                                                                                     | Much smaller community; less battle-tested                                                                                                   |
+| **Godot (web export)** | Full editor; excellent 2D                                                                                        | Large WASM payload (~15 MB) breaks the 8-second load promise; the codebase would be GDScript/C#, weakening the portfolio value of the source |
+| **Custom engine**      | Maximum portfolio value                                                                                          | 6+ months before the first level. Fatal to the schedule                                                                                      |
 
 ### Decision
 
@@ -268,11 +279,11 @@ The instinct on a data-driven project is to build the framework first — the en
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Framework first** | Content authoring is fast once it exists; feels architecturally clean | Generalises before you know what to generalise; the first content reveals the framework is wrong |
-| **Vertical slice first** | The framework is extracted from a working case; you know what varies | The first enemy is thrown away (partially); feels like rework |
-| **Both in parallel** | — | Neither is done well; the framework churns while content is authored against it |
+| Option                   | Pros                                                                  | Cons                                                                                             |
+| ------------------------ | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Framework first**      | Content authoring is fast once it exists; feels architecturally clean | Generalises before you know what to generalise; the first content reveals the framework is wrong |
+| **Vertical slice first** | The framework is extracted from a working case; you know what varies  | The first enemy is thrown away (partially); feels like rework                                    |
+| **Both in parallel**     | —                                                                     | Neither is done well; the framework churns while content is authored against it                  |
 
 ### Decision
 
@@ -308,11 +319,11 @@ Phaser ships two physics systems. Arcade is AABB-only with no rotation. Matter.j
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Arcade Physics** | 5–10× faster; simple, predictable; tilemap collision built in; deterministic | AABB only; no slopes beyond manual handling; no rotation |
-| **Matter.js** | Arbitrary shapes; slopes; rotation; constraints | Much slower; harder to make feel tight; tilemap integration is manual; non-deterministic across platforms |
-| **Custom collision** | Exactly what we need | Weeks of work to match Arcade's quality |
+| Option               | Pros                                                                         | Cons                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Arcade Physics**   | 5–10× faster; simple, predictable; tilemap collision built in; deterministic | AABB only; no slopes beyond manual handling; no rotation                                                  |
+| **Matter.js**        | Arbitrary shapes; slopes; rotation; constraints                              | Much slower; harder to make feel tight; tilemap integration is manual; non-deterministic across platforms |
+| **Custom collision** | Exactly what we need                                                         | Weeks of work to match Arcade's quality                                                                   |
 
 ### Decision
 
@@ -322,7 +333,7 @@ Phaser ships two physics systems. Arcade is AABB-only with no rotation. Matter.j
 
 1. Nothing in the design needs rotation, arbitrary polygons, or constraints. Every entity is an upright rectangle.
 2. Arcade's speed is the difference between 1.3 ms and 8+ ms of physics per frame at our entity count — a third of the entire frame budget.
-3. Precision platforming needs *predictable* collision. Matter's solver introduces small inconsistencies that are fatal to Pillar 1.
+3. Precision platforming needs _predictable_ collision. Matter's solver introduces small inconsistencies that are fatal to Pillar 1.
 4. Arcade's tilemap collision is built in and battle-tested.
 5. Determinism. Matter.js is not bit-identical across platforms, which would break replay determinism (ADR-019).
 
@@ -351,11 +362,11 @@ TypeScript's strictness is a spectrum. `noUncheckedIndexedAccess` in particular 
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **`strict` only** | Standard; low friction | Array-index bugs pass the compiler |
-| **`strict` + `noUncheckedIndexedAccess`** | Catches the exact bug class our architecture produces | Noticeable friction; requires `!` assertions in provably-safe cases |
-| **Full strictness including `noImplicitAny` on JS** | Maximum safety | We have no JS |
+| Option                                              | Pros                                                  | Cons                                                                |
+| --------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------- |
+| **`strict` only**                                   | Standard; low friction                                | Array-index bugs pass the compiler                                  |
+| **`strict` + `noUncheckedIndexedAccess`**           | Catches the exact bug class our architecture produces | Noticeable friction; requires `!` assertions in provably-safe cases |
+| **Full strictness including `noImplicitAny` on JS** | Maximum safety                                        | We have no JS                                                       |
 
 ### Decision
 
@@ -392,11 +403,11 @@ Seven enemy families × three tiers = 21 configurations, plus five bosses. The c
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Class per enemy** | Familiar; each enemy's code is in one file | 21 classes; variants require subclasses; shared behaviour needs a base class that grows; a diamond problem the moment two enemies share a behaviour a third does not |
-| **One class + composed behaviours** | Variants are free; behaviours are independently testable; designers can add enemies | Behaviour composition is less obvious to read than a single class |
-| **ECS** | Maximum flexibility | 40 entities does not justify the archetype machinery; a large conceptual overhead |
+| Option                              | Pros                                                                                | Cons                                                                                                                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Class per enemy**                 | Familiar; each enemy's code is in one file                                          | 21 classes; variants require subclasses; shared behaviour needs a base class that grows; a diamond problem the moment two enemies share a behaviour a third does not |
+| **One class + composed behaviours** | Variants are free; behaviours are independently testable; designers can add enemies | Behaviour composition is less obvious to read than a single class                                                                                                    |
+| **ECS**                             | Maximum flexibility                                                                 | 40 entities does not justify the archetype machinery; a large conceptual overhead                                                                                    |
 
 ### Decision
 
@@ -434,13 +445,13 @@ The internal render resolution determines the art budget, the level-design vocab
 
 ### Options
 
-| Resolution | Scales to 1080p | Character height | Trade-off |
-|---|---|---|---|
-| **256 × 144** | ×7.5 (non-integer) | 24 px | Too cramped; bad 1080p scaling |
-| **320 × 180** | ×6 exactly | 32 px | Sweet spot |
-| **384 × 216** | ×5 exactly | 38 px | More room, more art per screen, larger atlases |
-| **480 × 270** | ×4 exactly | 48 px | Substantially more art cost; less "pixel art" character |
-| **640 × 360** | ×3 exactly | 64 px | Art cost roughly 4× that of 320×180 |
+| Resolution    | Scales to 1080p    | Character height | Trade-off                                               |
+| ------------- | ------------------ | ---------------- | ------------------------------------------------------- |
+| **256 × 144** | ×7.5 (non-integer) | 24 px            | Too cramped; bad 1080p scaling                          |
+| **320 × 180** | ×6 exactly         | 32 px            | Sweet spot                                              |
+| **384 × 216** | ×5 exactly         | 38 px            | More room, more art per screen, larger atlases          |
+| **480 × 270** | ×4 exactly         | 48 px            | Substantially more art cost; less "pixel art" character |
+| **640 × 360** | ×3 exactly         | 64 px            | Art cost roughly 4× that of 320×180                     |
 
 ### Decision
 
@@ -478,11 +489,11 @@ A backend would enable cloud saves, leaderboards, telemetry, and a contact form.
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **No backend** | Zero infrastructure, cost, or privacy obligation; deployment is a file upload; fully offline | No cloud saves, leaderboards, or telemetry |
-| **Minimal backend** (saves only) | Cross-device saves | Accounts, auth, GDPR, hosting cost, uptime, and a new failure mode for a single-player game |
-| **Full backend** | Everything | All of the above, considerably more |
+| Option                           | Pros                                                                                         | Cons                                                                                        |
+| -------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **No backend**                   | Zero infrastructure, cost, or privacy obligation; deployment is a file upload; fully offline | No cloud saves, leaderboards, or telemetry                                                  |
+| **Minimal backend** (saves only) | Cross-device saves                                                                           | Accounts, auth, GDPR, hosting cost, uptime, and a new failure mode for a single-player game |
+| **Full backend**                 | Everything                                                                                   | All of the above, considerably more                                                         |
 
 ### Decision
 
@@ -523,13 +534,13 @@ The project needs a dev server with fast HMR, a production bundler with tree-sha
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Vite** | Near-instant dev server; native ESM; excellent TS support; `import.meta.env` for dead-code elimination; minimal config | Rollup under the hood, so some Rollup plugin knowledge leaks through |
-| **Webpack** | Mature; maximum ecosystem | Slow dev server; heavy configuration |
-| **esbuild alone** | Fastest | No dev server, no HMR, minimal plugin ecosystem |
-| **Parcel** | Zero config | Less control; smaller community |
-| **No bundler** (native ESM) | Simplest | No tree-shaking, no minification, hundreds of requests |
+| Option                      | Pros                                                                                                                   | Cons                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Vite**                    | Near-instant dev server; native ESM; excellent TS support; `import.meta.env` for dead-code elimination; minimal config | Rollup under the hood, so some Rollup plugin knowledge leaks through |
+| **Webpack**                 | Mature; maximum ecosystem                                                                                              | Slow dev server; heavy configuration                                 |
+| **esbuild alone**           | Fastest                                                                                                                | No dev server, no HMR, minimal plugin ecosystem                      |
+| **Parcel**                  | Zero config                                                                                                            | Less control; smaller community                                      |
+| **No bundler** (native ESM) | Simplest                                                                                                               | No tree-shaking, no minification, hundreds of requests               |
 
 ### Decision
 
@@ -565,12 +576,12 @@ A wall-slide was proposed as a Ninja-exclusive ability, reinforcing its mobility
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Ninja only** | Strong identity; a clear reason to pick the Ninja | Any level using a shaft becomes Ninja-only or Ninja-trivial. Violates `06-Characters.md` P3 (no hero gated out) |
-| **All heroes, identical** | No gating | Removes an identity opportunity |
-| **All heroes, different slide speeds** | No gating; still expresses identity | Slightly more tuning |
-| **No wall-slide** | Simplest | Loses a genuinely good traversal verb |
+| Option                                 | Pros                                              | Cons                                                                                                            |
+| -------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Ninja only**                         | Strong identity; a clear reason to pick the Ninja | Any level using a shaft becomes Ninja-only or Ninja-trivial. Violates `06-Characters.md` P3 (no hero gated out) |
+| **All heroes, identical**              | No gating                                         | Removes an identity opportunity                                                                                 |
+| **All heroes, different slide speeds** | No gating; still expresses identity               | Slightly more tuning                                                                                            |
+| **No wall-slide**                      | Simplest                                          | Loses a genuinely good traversal verb                                                                           |
 
 ### Decision
 
@@ -580,7 +591,7 @@ A wall-slide was proposed as a Ninja-exclusive ability, reinforcing its mobility
 
 1. P3 is non-negotiable: no level may be gated on a hero-specific ability. A Ninja-only wall-slide would force every shaft to have an alternative route, which is expensive and produces worse levels.
 2. Differing slide speeds preserve the identity expression: the Ninja can descend a long shaft in control; the Knight gets a brief catch.
-3. Wall-jump is identical for everyone, so the *skill* is universal and only the *feel* differs.
+3. Wall-jump is identical for everyone, so the _skill_ is universal and only the _feel_ differs.
 
 ### Consequences
 
@@ -607,22 +618,22 @@ A parry — a tight timing window that negates damage and rewards with a counter
 
 ### Pillar assessment
 
-| Pillar | Assessment |
-|---|---|
-| 1 Responsive | ⚠️ A 100 ms window demands perfect input latency. We have it, but it is unforgiving |
-| 2 Combat | ✅ Strongly served. A successful parry is the highest-feedback moment available |
-| 3 Polish | ✅ A parry flash is exceptional feedback |
-| 4 Learnable | ❌ **Violated.** 100 ms is not learnable by a non-gamer. Mandatory parry gates out the primary audience |
-| 5 Novelty | ➖ Neutral |
+| Pillar       | Assessment                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------- |
+| 1 Responsive | ⚠️ A 100 ms window demands perfect input latency. We have it, but it is unforgiving                     |
+| 2 Combat     | ✅ Strongly served. A successful parry is the highest-feedback moment available                         |
+| 3 Polish     | ✅ A parry flash is exceptional feedback                                                                |
+| 4 Learnable  | ❌ **Violated.** 100 ms is not learnable by a non-gamer. Mandatory parry gates out the primary audience |
+| 5 Novelty    | ➖ Neutral                                                                                              |
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Universal, 100 ms** | Deep, high-skill | Fails Pillar 4 |
-| **Universal, 200 ms** | More accessible | Still mandatory-feeling; dilutes hero identity |
-| **Knight-only, 200 ms** | Opt-in at character select; never mandatory; gives the beginner hero a skill ceiling | Only one hero gets the best mechanic |
-| **Cut it** | Simplest | Loses the single best combat moment available |
+| Option                  | Pros                                                                                 | Cons                                           |
+| ----------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| **Universal, 100 ms**   | Deep, high-skill                                                                     | Fails Pillar 4                                 |
+| **Universal, 200 ms**   | More accessible                                                                      | Still mandatory-feeling; dilutes hero identity |
+| **Knight-only, 200 ms** | Opt-in at character select; never mandatory; gives the beginner hero a skill ceiling | Only one hero gets the best mechanic           |
+| **Cut it**              | Simplest                                                                             | Loses the single best combat moment available  |
 
 ### Decision
 
@@ -632,7 +643,7 @@ A parry — a tight timing window that negates damage and rewards with a counter
 
 1. Pillar 4 outranks Pillar 2 in the precedence order (`02-Game-Pillars.md` §11), because the primary audience must be able to finish.
 2. Making it hero-exclusive means it is **opt-in at character select** and never mandatory. A player who cannot parry picks a different hero and loses nothing.
-3. It gives the *beginner* hero the highest skill ceiling, which is an elegant inversion: a novice holds Guard and survives; an expert taps Guard and turns every enemy attack into a free critical. Low floor, high ceiling, in one ability.
+3. It gives the _beginner_ hero the highest skill ceiling, which is an elegant inversion: a novice holds Guard and survives; an expert taps Guard and turns every enemy attack into a free critical. Low floor, high ceiling, in one ability.
 4. 200 ms rather than 100 ms because the window should reward reading a telegraph, not frame-perfect execution.
 
 ### Consequences
@@ -658,11 +669,11 @@ The primary audience may not play games. Every additional control is a barrier.
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Move, jump, attack, dash, special, interact (6)** | Conventional; interact is explicit | A non-gamer must learn which key opens a door |
-| **Move, jump, attack, dash, special (5), interact on jump** | One fewer thing to learn; mashing the confident button always works | Slightly unconventional |
-| **Four inputs** (no special) | Simplest | Removes hero identity entirely |
+| Option                                                      | Pros                                                                | Cons                                          |
+| ----------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------- |
+| **Move, jump, attack, dash, special, interact (6)**         | Conventional; interact is explicit                                  | A non-gamer must learn which key opens a door |
+| **Move, jump, attack, dash, special (5), interact on jump** | One fewer thing to learn; mashing the confident button always works | Slightly unconventional                       |
+| **Four inputs** (no special)                                | Simplest                                                            | Removes hero identity entirely                |
 
 ### Decision
 
@@ -700,12 +711,12 @@ A recurring proposal, arising whenever hit stop is perceived as lag on slower ma
 
 ### Options
 
-| Option | Assessment |
-|---|---|
-| **Remove hit stop** | Destroys Pillar 2's load-bearing layer. Combat becomes "the number went down" |
-| **Reduce durations** | Weakens the effect without addressing the cause |
-| **Make it a setting** | Splits the game into a version that feels good and a version that does not |
-| **Fix the implementation** | The actual answer |
+| Option                     | Assessment                                                                    |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| **Remove hit stop**        | Destroys Pillar 2's load-bearing layer. Combat becomes "the number went down" |
+| **Reduce durations**       | Weakens the effect without addressing the cause                               |
+| **Make it a setting**      | Splits the game into a version that feels good and a version that does not    |
+| **Fix the implementation** | The actual answer                                                             |
 
 ### Decision
 
@@ -746,12 +757,12 @@ Enemies, bosses, levels, characters, charms, UI menus, and portfolio content all
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **TypeScript objects** | Type-safe by construction; no schema needed; refactorable | Every content change is a code change; designers need an engineer; content churn pollutes source history |
-| **JSON + schemas** | Designers are autonomous; content and code churn are separated; validated at boot | Types must be maintained alongside schemas; runtime validation needed |
-| **A custom DSL** | Maximally expressive | A parser to write and maintain, for no clear gain |
-| **A database or CMS** | Editing UI | Requires a backend (ADR-009) |
+| Option                 | Pros                                                                              | Cons                                                                                                     |
+| ---------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **TypeScript objects** | Type-safe by construction; no schema needed; refactorable                         | Every content change is a code change; designers need an engineer; content churn pollutes source history |
+| **JSON + schemas**     | Designers are autonomous; content and code churn are separated; validated at boot | Types must be maintained alongside schemas; runtime validation needed                                    |
+| **A custom DSL**       | Maximally expressive                                                              | A parser to write and maintain, for no clear gain                                                        |
+| **A database or CMS**  | Editing UI                                                                        | Requires a backend (ADR-009)                                                                             |
 
 ### Decision
 
@@ -789,11 +800,11 @@ A walkable hub — a small explorable space with an NPC vendor, a charm bench, a
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Walkable hub** | Atmospheric; makes the vendor a character; a place to return to | 2–3 weeks of level design, art, and NPC work; adds walking time to every transition; a space the player passes through in 8 seconds |
-| **Menu-based world select** | Instant; zero content cost; more information density | Less atmospheric |
-| **Hybrid** (a static illustrated screen with hotspots) | Some atmosphere, low cost | Neither one thing nor the other |
+| Option                                                 | Pros                                                            | Cons                                                                                                                                |
+| ------------------------------------------------------ | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Walkable hub**                                       | Atmospheric; makes the vendor a character; a place to return to | 2–3 weeks of level design, art, and NPC work; adds walking time to every transition; a space the player passes through in 8 seconds |
+| **Menu-based world select**                            | Instant; zero content cost; more information density            | Less atmospheric                                                                                                                    |
+| **Hybrid** (a static illustrated screen with hotspots) | Some atmosphere, low cost                                       | Neither one thing nor the other                                                                                                     |
 
 ### Decision
 
@@ -829,12 +840,12 @@ Ten charms exist. The number of simultaneous slots determines whether the system
 
 ### Options
 
-| Slots | Effect |
-|---|---|
-| **2** | Very tight; most charms never used; the two best dominate |
-| **3** | Meaningful choice; world-specific charms compete with always-good ones |
-| **4** | Prototyped: players converged on one dominant loadout and stopped engaging |
-| **5+** | Accumulation, not choice |
+| Slots  | Effect                                                                     |
+| ------ | -------------------------------------------------------------------------- |
+| **2**  | Very tight; most charms never used; the two best dominate                  |
+| **3**  | Meaningful choice; world-specific charms compete with always-good ones     |
+| **4**  | Prototyped: players converged on one dominant loadout and stopped engaging |
+| **5+** | Accumulation, not choice                                                   |
 
 ### Decision
 
@@ -871,13 +882,13 @@ World 3's mechanic is light and darkness — a lantern radius, extinguishable br
 
 ### Pillar assessment
 
-| Pillar | Assessment |
-|---|---|
+| Pillar       | Assessment                                                                           |
+| ------------ | ------------------------------------------------------------------------------------ |
 | 1 Responsive | ➖ Neutral, provided the light radius does not obscure the player's own landing zone |
-| 2 Combat | ⚠️ Risk — enemy tells must remain readable |
-| 3 Polish | ✅ Strongly served. Lighting is high-value visual polish |
-| 4 Learnable | ⚠️ Risk — a player who cannot see cannot learn |
-| 5 Novelty | ✅ Exactly the mandate |
+| 2 Combat     | ⚠️ Risk — enemy tells must remain readable                                           |
+| 3 Polish     | ✅ Strongly served. Lighting is high-value visual polish                             |
+| 4 Learnable  | ⚠️ Risk — a player who cannot see cannot learn                                       |
+| 5 Novelty    | ✅ Exactly the mandate                                                               |
 
 ### Decision
 
@@ -893,7 +904,7 @@ Extended to bosses: **the Oni Lord is always visible** at 60% self-illumination 
 
 1. Constraint (a) preserves Pillar 4. Learning requires seeing the thing that killed you.
 2. Constraint (b) preserves Pillar 2. An unreadable telegraph is not difficulty; it is noise.
-3. With both constraints, darkness becomes an *information management* challenge — do I spend time relighting braziers? — rather than a visibility punishment. That is a genuinely new question and satisfies Pillar 5.
+3. With both constraints, darkness becomes an _information management_ challenge — do I spend time relighting braziers? — rather than a visibility punishment. That is a genuinely new question and satisfies Pillar 5.
 4. Phase 3's "boss as a beacon in total dark" turns the constraint into the most dramatic moment in the fight.
 
 ### Consequences
@@ -921,11 +932,11 @@ The game needs randomness for enemy attack selection, particle spread, drop roll
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **`Math.random()`** | Zero effort | Non-reproducible; makes bug reports unactionable; forecloses replays |
-| **A seeded PRNG, used everywhere** | Deterministic; reproducible bugs; enables replays, ghosts, and reliable perf testing | Must be threaded to every consumer; needs a lint rule |
-| **Seeded for gameplay, `Math.random` for cosmetics** | Slightly less plumbing | The boundary is unclear and will erode |
+| Option                                               | Pros                                                                                 | Cons                                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| **`Math.random()`**                                  | Zero effort                                                                          | Non-reproducible; makes bug reports unactionable; forecloses replays |
+| **A seeded PRNG, used everywhere**                   | Deterministic; reproducible bugs; enables replays, ghosts, and reliable perf testing | Must be threaded to every consumer; needs a lint rule                |
+| **Seeded for gameplay, `Math.random` for cosmetics** | Slightly less plumbing                                                               | The boundary is unclear and will erode                               |
 
 ### Decision
 
@@ -966,16 +977,16 @@ Read literally, "CraftPix only" would block audio procurement entirely.
 
 ### Options
 
-| Option | Pros | Cons |
-|---|---|---|
-| **Ship with no audio** | No decision needed | A silent action platformer is materially worse. Audio is the strongest telegraph tool available in dark worlds |
-| **CraftPix only, even for audio** | Literal compliance | May be impossible; would produce a poor or incomplete soundscape |
-| **License audio from a specialist vendor** | Good audio; no visual cohesion impact | An explicit exception to the stated constraint |
-| **Commission original audio** | Best fit | Cost and schedule beyond the project's scope |
+| Option                                     | Pros                                  | Cons                                                                                                           |
+| ------------------------------------------ | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Ship with no audio**                     | No decision needed                    | A silent action platformer is materially worse. Audio is the strongest telegraph tool available in dark worlds |
+| **CraftPix only, even for audio**          | Literal compliance                    | May be impossible; would produce a poor or incomplete soundscape                                               |
+| **License audio from a specialist vendor** | Good audio; no visual cohesion impact | An explicit exception to the stated constraint                                                                 |
+| **Commission original audio**              | Best fit                              | Cost and schedule beyond the project's scope                                                                   |
 
 ### Proposed decision
 
-**Audio may be sourced from a non-CraftPix vendor.** The CraftPix-only constraint is understood to govern *visual* cohesion, which audio does not affect.
+**Audio may be sourced from a non-CraftPix vendor.** The CraftPix-only constraint is understood to govern _visual_ cohesion, which audio does not affect.
 
 ### Rationale
 
@@ -1010,12 +1021,12 @@ A 40-enemy stress test measured the `ai` system at 2.80 ms — 187% of its 1.5 m
 
 ### Options
 
-| Option | Saving | Cost |
-|---|---|---|
-| **Remove line-of-sight** | 2.5 ms | Enemies see through walls. Violates `08-Enemy-System.md` P6 ("enemies do not cheat"). **Rejected** |
-| **Cheaper raycast algorithm** | ~0.4 ms | Marginal; does not solve the problem |
-| **Cache results per tile pair** | ~1.9 ms | Cache invalidation on any movement; substantial complexity |
-| **Stagger to 10 Hz, keyed on entity id** | ~2.2 ms | 100 ms of sight latency |
+| Option                                   | Saving  | Cost                                                                                               |
+| ---------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
+| **Remove line-of-sight**                 | 2.5 ms  | Enemies see through walls. Violates `08-Enemy-System.md` P6 ("enemies do not cheat"). **Rejected** |
+| **Cheaper raycast algorithm**            | ~0.4 ms | Marginal; does not solve the problem                                                               |
+| **Cache results per tile pair**          | ~1.9 ms | Cache invalidation on any movement; substantial complexity                                         |
+| **Stagger to 10 Hz, keyed on entity id** | ~2.2 ms | 100 ms of sight latency                                                                            |
 
 ### Decision
 
@@ -1050,12 +1061,12 @@ Boss attacks draw ground indicators during their windup — cones, circles, rect
 
 ### Options
 
-| Option | Draw Calls | Notes |
-|---|---|---|
-| **Sprite per indicator** | +9 | Simple; over budget |
-| **Pre-rendered indicator atlas** | +1 | Cones and beams have variable angles and lengths; would need many pre-rendered variants |
-| **One shared `Graphics` object** | +1 | Redrawn per frame; arbitrary shapes and angles free |
-| **A custom shader** | +1 | Overkill; introduces the project's first shader |
+| Option                           | Draw Calls | Notes                                                                                   |
+| -------------------------------- | ---------- | --------------------------------------------------------------------------------------- |
+| **Sprite per indicator**         | +9         | Simple; over budget                                                                     |
+| **Pre-rendered indicator atlas** | +1         | Cones and beams have variable angles and lengths; would need many pre-rendered variants |
+| **One shared `Graphics` object** | +1         | Redrawn per frame; arbitrary shapes and angles free                                     |
+| **A custom shader**              | +1         | Overkill; introduces the project's first shader                                         |
 
 ### Decision
 
@@ -1086,20 +1097,20 @@ An indicator design requires a texture, or the heap-growth test ever flags `Grap
 
 ### 5.1 When to Write an ADR
 
-| Situation | ADR? |
-|---|---|
-| Choosing a library or framework | **Yes** |
-| Choosing between two architectural patterns | **Yes** |
-| A design decision that a stranger would question | **Yes** |
-| Rejecting a proposed feature for a pillar reason | **Yes** |
-| A performance optimisation with a real trade-off | **Yes** |
-| Changing a locked constant | **Yes** |
-| Invoking or declining a cut line | **Yes, always** |
-| Adding an exception to a stated constraint | **Yes** |
-| Naming a variable | No |
-| Fixing a bug | No |
-| Adding a level | No |
-| Refactoring with no behaviour change | No |
+| Situation                                        | ADR?            |
+| ------------------------------------------------ | --------------- |
+| Choosing a library or framework                  | **Yes**         |
+| Choosing between two architectural patterns      | **Yes**         |
+| A design decision that a stranger would question | **Yes**         |
+| Rejecting a proposed feature for a pillar reason | **Yes**         |
+| A performance optimisation with a real trade-off | **Yes**         |
+| Changing a locked constant                       | **Yes**         |
+| Invoking or declining a cut line                 | **Yes, always** |
+| Adding an exception to a stated constraint       | **Yes**         |
+| Naming a variable                                | No              |
+| Fixing a bug                                     | No              |
+| Adding a level                                   | No              |
+| Refactoring with no behaviour change             | No              |
 
 ### 5.2 Superseding
 
@@ -1112,6 +1123,7 @@ An ADR is never edited. To reverse a decision:
 
 ```markdown
 ## ADR-005 — Arcade Physics over Matter.js
+
 **Status:** ⛔ Superseded by ADR-034 · **Date:** 2026-08-07
 ```
 
@@ -1133,15 +1145,15 @@ ADRs are cited from:
 
 Decisions identified as necessary but not yet made:
 
-| Topic | Decide By | Owner | Notes |
-|---|---|---|---|
-| Audio vendor (ADR-020) | M9 | Producer | Currently Proposed |
-| Castle tileset source | M9 | Art Director | Licensed pack vs. graveyard recolour |
-| Cut Line A: invoke or decline | M7 (Mar 26) | Producer | ADR required either way |
-| Cut Line B: invoke or decline | M9 (May 28) | Producer | ADR required either way |
-| `enemies-w4` atlas split | M9 | Tech Director | Only if the atlas overflows |
-| Steam wrapper (Tauri vs. Electron) | Post-launch | Tech Director | Tauri preferred; see `03` §14.1 |
-| Per-world atlas eviction | If texture memory > 110 MB | Tech Director | Implemented, disabled |
+| Topic                              | Decide By                  | Owner         | Notes                                |
+| ---------------------------------- | -------------------------- | ------------- | ------------------------------------ |
+| Audio vendor (ADR-020)             | M9                         | Producer      | Currently Proposed                   |
+| Castle tileset source              | M9                         | Art Director  | Licensed pack vs. graveyard recolour |
+| Cut Line A: invoke or decline      | M7 (Mar 26)                | Producer      | ADR required either way              |
+| Cut Line B: invoke or decline      | M9 (May 28)                | Producer      | ADR required either way              |
+| `enemies-w4` atlas split           | M9                         | Tech Director | Only if the atlas overflows          |
+| Steam wrapper (Tauri vs. Electron) | Post-launch                | Tech Director | Tauri preferred; see `03` §14.1      |
+| Per-world atlas eviction           | If texture memory > 110 MB | Tech Director | Implemented, disabled                |
 
 ---
 
@@ -1174,12 +1186,12 @@ bound by a lint rule cannot be violated without an explicit, visible override.
 
 **Which ADRs are bound at which strength:**
 
-| Binding | ADRs |
-|---|---|
-| Lint rule | 005 (no Matter import), 006 (tsconfig), 008 (no literal depths), 013 (`add.text` ban), 015 (schema validation), 019 (`Math.random` ban), plus the portfolio-isolation rule from `12-Portfolio-System.md` §5.3 |
-| CI check | 002 (`/resume` build + WCAG), 003 (bundle size), 009 (`check-portability`), 012 (pillar checks), 018 (`check-dark-hazards`), 021/022 (perf gates) |
-| Source comment | 004, 005, 007, 011, 014, 016, 017 |
-| Documentation only | 001, 010, 020, 023+ |
+| Binding            | ADRs                                                                                                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lint rule          | 005 (no Matter import), 006 (tsconfig), 008 (no literal depths), 013 (`add.text` ban), 015 (schema validation), 019 (`Math.random` ban), plus the portfolio-isolation rule from `12-Portfolio-System.md` §5.3 |
+| CI check           | 002 (`/resume` build + WCAG), 003 (bundle size), 009 (`check-portability`), 012 (pillar checks), 018 (`check-dark-hazards`), 021/022 (perf gates)                                                             |
+| Source comment     | 004, 005, 007, 011, 014, 016, 017                                                                                                                                                                             |
+| Documentation only | 001, 010, 020, 023+                                                                                                                                                                                           |
 
 **The four documentation-only ADRs are the ones most at risk of being
 re-litigated.** ADR-001 in particular is the reason §8 of `20-Future-Ideas.md`
@@ -1199,7 +1211,7 @@ decision that cannot be encoded in a lint rule.
 > dominant loadout and stopped engaging with the system by World 2. The
 > three-slot constraint is what makes swapping in Lantern for World 3 a real
 > decision. The 'feels stingy' observation is real though — worth checking
-> whether the *cosmetic* sink (F09) is a better answer to having spare coins."
+> whether the _cosmetic_ sink (F09) is a better answer to having spare coins."
 
 **One citation, one line, and the underlying observation still gets taken
 seriously.** That is the difference between a decision log and a wall.
@@ -1215,6 +1227,7 @@ after the degradation ladder:
 **Status:** ✅ Accepted · **Date:** 2027-04-18 · **Supersedes:** part of ADR-018
 
 ### Context
+
 ADR-018 approved darkness for World 3 with two constraints. Both hold. What
 has changed is measurement: on the low tier (2017 Intel HD 620), the light
 mask costs 1.8 ms rather than the 0.42 ms measured on minimum spec, pushing
@@ -1242,11 +1255,11 @@ which weakens Pillar 2 across the whole game to address one report.
 
 **With ADR-014**, the response is a triage against three known causes:
 
-| Cause | Check | Result |
-|---|---|---|
-| Freezing the whole scene | Do particles continue during a freeze? | ✅ They do |
-| Freezing input | Is input buffered through the freeze? | ❌ **No** — the buffer was cleared on freeze entry, not on exit |
-| An actual frame-rate problem | Is p99 within budget on that machine? | ✅ 14.2 ms |
+| Cause                        | Check                                  | Result                                                          |
+| ---------------------------- | -------------------------------------- | --------------------------------------------------------------- |
+| Freezing the whole scene     | Do particles continue during a freeze? | ✅ They do                                                      |
+| Freezing input               | Is input buffered through the freeze?  | ❌ **No** — the buffer was cleared on freeze entry, not on exit |
+| An actual frame-rate problem | Is p99 within budget on that machine?  | ✅ 14.2 ms                                                      |
 
 **Root cause: cause 2, a real bug.** Six lines changed in `InputSystem`. Hit
 stop durations unchanged. The report was accurate and the proposed fix was
@@ -1263,7 +1276,7 @@ The records are prose, but their metadata is machine-readable so the index in
 // tools/docs/adr.ts
 
 export type AdrStatus =
-  | { readonly kind: 'proposed'; readonly decideBy: string }        // milestone or ISO date
+  | { readonly kind: 'proposed'; readonly decideBy: string } // milestone or ISO date
   | { readonly kind: 'accepted' }
   | { readonly kind: 'superseded'; readonly by: string; readonly partial: boolean }
   | { readonly kind: 'deprecated'; readonly reason: string };
@@ -1278,16 +1291,16 @@ export interface AdrOption {
 }
 
 export interface Adr {
-  readonly id: string;                       // 'ADR-017'
+  readonly id: string; // 'ADR-017'
   readonly title: string;
   readonly status: AdrStatus;
-  readonly date: string;                     // ISO 8601
+  readonly date: string; // ISO 8601
   readonly deciders: readonly string[];
-  readonly affects: readonly string[];       // doc filenames and module paths
-  readonly options: readonly AdrOption[];    // MUST contain >= 2, exactly 1 chosen
+  readonly affects: readonly string[]; // doc filenames and module paths
+  readonly options: readonly AdrOption[]; // MUST contain >= 2, exactly 1 chosen
   readonly consequences: {
     readonly positive: readonly string[];
-    readonly negative: readonly string[];    // MUST be non-empty
+    readonly negative: readonly string[]; // MUST be non-empty
   };
   readonly revisitIf: string;
   readonly binding: AdrBinding;
@@ -1296,11 +1309,11 @@ export interface Adr {
 
 **Three invariants `check-adrs.ts` enforces:**
 
-| Invariant | Rationale |
-|---|---|
-| `options.length >= 2` with exactly one `chosen` | §3 P2 — an ADR listing only the chosen option is a press release |
-| `consequences.negative.length >= 1` | §3 P3 — every decision costs something. An ADR with no downside is not honest and will not be trusted |
-| Every `superseded` status names an existing ADR, and that ADR's Context mentions what changed | §5.2 — a supersession without a stated change is an unexplained reversal |
+| Invariant                                                                                     | Rationale                                                                                             |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `options.length >= 2` with exactly one `chosen`                                               | §3 P2 — an ADR listing only the chosen option is a press release                                      |
+| `consequences.negative.length >= 1`                                                           | §3 P3 — every decision costs something. An ADR with no downside is not honest and will not be trusted |
+| Every `superseded` status names an existing ADR, and that ADR's Context mentions what changed | §5.2 — a supersession without a stated change is an unexplained reversal                              |
 
 A fourth check runs against the codebase rather than the document: **every ADR
 declared `binding: 'lint'` must have its id appear in at least one ESLint rule
@@ -1311,15 +1324,15 @@ that is not actually enforced.
 
 ## 10. Future Expansion — This Log
 
-| Item | Trigger | Notes |
-|---|---|---|
-| **Generated index** | Past ~40 ADRs | Parse records into `Adr[]` and emit §4.2 and the §7 binding table. Removes hand-maintenance drift |
-| **`check-adrs.ts`** | Now, ~1 day | The three invariants in §9. High value: it catches the press-release failure mode automatically |
-| **ADR-to-code link check** | With `check-adrs.ts` | Verify every `binding: 'lint'` ADR appears in a rule message |
-| **Annual supersession review** | Yearly | Re-read accepted ADRs against current measurements. ADR-018 and ADR-021 both rest on numbers that could change with new hardware or content |
-| **Steam-port ADR block** | Steam port | Wrapper choice, achievement mapping, Cloud-save conflict resolution. Likely 4–6 records |
-| **Audio ADR block** | After ADR-020 resolves | Vendor, format, loudness target, licensing archival process |
-| **A "decisions we got wrong" retrospective** | Post-launch | Not a new format — the supersession chain already records it. But a short summary would be the single most useful thing to hand a future project |
+| Item                                         | Trigger                | Notes                                                                                                                                            |
+| -------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Generated index**                          | Past ~40 ADRs          | Parse records into `Adr[]` and emit §4.2 and the §7 binding table. Removes hand-maintenance drift                                                |
+| **`check-adrs.ts`**                          | Now, ~1 day            | The three invariants in §9. High value: it catches the press-release failure mode automatically                                                  |
+| **ADR-to-code link check**                   | With `check-adrs.ts`   | Verify every `binding: 'lint'` ADR appears in a rule message                                                                                     |
+| **Annual supersession review**               | Yearly                 | Re-read accepted ADRs against current measurements. ADR-018 and ADR-021 both rest on numbers that could change with new hardware or content      |
+| **Steam-port ADR block**                     | Steam port             | Wrapper choice, achievement mapping, Cloud-save conflict resolution. Likely 4–6 records                                                          |
+| **Audio ADR block**                          | After ADR-020 resolves | Vendor, format, loudness target, licensing archival process                                                                                      |
+| **A "decisions we got wrong" retrospective** | Post-launch            | Not a new format — the supersession chain already records it. But a short summary would be the single most useful thing to hand a future project |
 
 **Deliberately not planned:** a lightweight ADR format for small decisions.
 §3 P5 already says small decisions do not need one, and adding a second, lighter
@@ -1344,37 +1357,37 @@ format would blur that line until every variable name got a record.
 
 ## 12. Out of Scope
 
-| Excluded | Reason |
-|---|---|
-| **Implementation details** | An ADR records the decision, not the code. The owning document has the specification |
-| **Bug fixes** | Not decisions |
-| **Content decisions** | "World 3 is a graveyard" is a design choice recorded in `10-Level-Design.md`, not an ADR — unless a stranger would question it |
-| **Reversible, low-cost choices** | P5. A choice that costs an hour to change does not need a record |
-| **Meeting minutes** | An ADR is the outcome, not the discussion |
-| **Personnel or process decisions** | Unless they change the architecture |
-| **Post-launch decisions** | Recorded when made, not planned here |
+| Excluded                           | Reason                                                                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Implementation details**         | An ADR records the decision, not the code. The owning document has the specification                                           |
+| **Bug fixes**                      | Not decisions                                                                                                                  |
+| **Content decisions**              | "World 3 is a graveyard" is a design choice recorded in `10-Level-Design.md`, not an ADR — unless a stranger would question it |
+| **Reversible, low-cost choices**   | P5. A choice that costs an hour to change does not need a record                                                               |
+| **Meeting minutes**                | An ADR is the outcome, not the discussion                                                                                      |
+| **Personnel or process decisions** | Unless they change the architecture                                                                                            |
+| **Post-launch decisions**          | Recorded when made, not planned here                                                                                           |
 
 ---
 
 ## 13. Cross References
 
-| Topic | Document |
-|-------|----------|
-| Change control requiring an ADR for MAJOR doc versions | `00-README.md` §9.5 |
-| Vision decisions: ADR-001, ADR-002 | `01-Vision.md` §7 |
-| Pillar precedence used in ADR-012 | `02-Game-Pillars.md` §11 |
+| Topic                                                         | Document                       |
+| ------------------------------------------------------------- | ------------------------------ |
+| Change control requiring an ADR for MAJOR doc versions        | `00-README.md` §9.5            |
+| Vision decisions: ADR-001, ADR-002                            | `01-Vision.md` §7              |
+| Pillar precedence used in ADR-012                             | `02-Game-Pillars.md` §11       |
 | Architecture decisions: ADR-003, 005, 006, 007, 010, 015, 019 | `03-Technical-Architecture.md` |
-| Resolution decision: ADR-008 | `04-Art-Direction.md` §5 |
-| Asset constraint exception: ADR-020 | `05-Asset-Pipeline.md` §9.6 |
-| Character decisions: ADR-011, ADR-012 | `06-Characters.md` |
-| Combat decision: ADR-014 | `07-Combat.md` §6.2 |
-| Enemy framework: ADR-007; vision staggering: ADR-021 | `08-Enemy-System.md` |
-| Indicator rendering: ADR-022 | `09-Boss-System.md` §10.2 |
-| Darkness constraints: ADR-018 | `10-Level-Design.md` §7.3 |
-| Progression decisions: ADR-016, ADR-017 | `11-Progression.md` |
-| Portfolio decisions: ADR-002, ADR-009 | `12-Portfolio-System.md` |
-| Input decision: ADR-013 | `13-UI-UX.md` §5.1 |
-| Performance decisions: ADR-021, ADR-022 | `15-Performance.md` §14 |
-| Lint rules citing ADRs | `16-Coding-Standards.md` §7 |
-| Cut-line decisions requiring ADRs | `17-Roadmap.md` §8 |
-| Rejected ideas that did not warrant an ADR | `20-Future-Ideas.md` |
+| Resolution decision: ADR-008                                  | `04-Art-Direction.md` §5       |
+| Asset constraint exception: ADR-020                           | `05-Asset-Pipeline.md` §9.6    |
+| Character decisions: ADR-011, ADR-012                         | `06-Characters.md`             |
+| Combat decision: ADR-014                                      | `07-Combat.md` §6.2            |
+| Enemy framework: ADR-007; vision staggering: ADR-021          | `08-Enemy-System.md`           |
+| Indicator rendering: ADR-022                                  | `09-Boss-System.md` §10.2      |
+| Darkness constraints: ADR-018                                 | `10-Level-Design.md` §7.3      |
+| Progression decisions: ADR-016, ADR-017                       | `11-Progression.md`            |
+| Portfolio decisions: ADR-002, ADR-009                         | `12-Portfolio-System.md`       |
+| Input decision: ADR-013                                       | `13-UI-UX.md` §5.1             |
+| Performance decisions: ADR-021, ADR-022                       | `15-Performance.md` §14        |
+| Lint rules citing ADRs                                        | `16-Coding-Standards.md` §7    |
+| Cut-line decisions requiring ADRs                             | `17-Roadmap.md` §8             |
+| Rejected ideas that did not warrant an ADR                    | `20-Future-Ideas.md`           |

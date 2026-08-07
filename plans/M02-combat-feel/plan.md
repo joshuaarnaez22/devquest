@@ -41,20 +41,20 @@ Put a header comment on `Skeleton.ts` saying exactly this, or it looks like poor
 
 `src/components/`. Small, pure, heavily tested.
 
-| Component | Spec | Key detail |
-|---|---|---|
-| `Health.ts` | `docs/07-Combat.md` §12 | Trivial |
-| `Poise.ts` | §8 | **Break resets the pool to max, not to zero.** All-or-nothing regen after `regenDelayMs` |
-| `IFrames.ts` | §9.1 | **Longest wins, never additive.** `grant()` uses `Math.max` |
-| `Knockback.ts` | §6.4 | Decaying impulse *added* to velocity, not overriding it |
-| `Facing.ts` | — | −1 / +1, drives flip and hitbox offset |
+| Component      | Spec                    | Key detail                                                                               |
+| -------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
+| `Health.ts`    | `docs/07-Combat.md` §12 | Trivial                                                                                  |
+| `Poise.ts`     | §8                      | **Break resets the pool to max, not to zero.** All-or-nothing regen after `regenDelayMs` |
+| `IFrames.ts`   | §9.1                    | **Longest wins, never additive.** `grant()` uses `Math.max`                              |
+| `Knockback.ts` | §6.4                    | Decaying impulse _added_ to velocity, not overriding it                                  |
+| `Facing.ts`    | —                       | −1 / +1, drives flip and hitbox offset                                                   |
 
 **Verify:** unit tests. Poise break/regen semantics and i-frame max-not-sum are the two that
 must be exact.
 
 ---
 
-### M2-T2 — `Hitbox` and `Hurtbox` · 8 h · *depends: T1*
+### M2-T2 — `Hitbox` and `Hurtbox` · 8 h · _depends: T1_
 
 `docs/07-Combat.md` §5.
 
@@ -69,7 +69,7 @@ Also implement the generosity asymmetry (§5.2): player hitbox +3 px leading edg
 
 ---
 
-### M2-T3 — Collision groups and the hit queue · 6 h · *depends: T2*
+### M2-T3 — Collision groups and the hit queue · 6 h · _depends: T2_
 
 `src/config/CollisionGroups.ts` and the overlap registration in `GameScene`.
 
@@ -83,7 +83,7 @@ Resolving inside a callback corrupts the physics group and produces random crash
 
 ---
 
-### M2-T4 — Attack scheduling and player combo · 8 h · *depends: T2*
+### M2-T4 — Attack scheduling and player combo · 8 h · _depends: T2_
 
 Attack states in the player FSM. Hitboxes **time-scheduled in milliseconds** from `AttackStep`,
 never driven by animation frames (§11.2). An artist must be able to add a frame without silently
@@ -101,7 +101,7 @@ violates Pillar 1.
 
 ## Week 2 — The nine layers (~30 h)
 
-### M2-T5 — `CombatSystem` and `HitResolution` · 10 h · *depends: T3, T4*
+### M2-T5 — `CombatSystem` and `HitResolution` · 10 h · _depends: T3, T4_
 
 `src/systems/CombatSystem.ts` per `docs/07-Combat.md` §6.1, §11.1.
 
@@ -117,16 +117,16 @@ Every damage number in the game must be reproducible by hand from that formula.
 
 ---
 
-### M2-T6 — `HitStopSystem` · 8 h · *depends: T5* · **the load-bearing layer**
+### M2-T6 — `HitStopSystem` · 8 h · _depends: T5_ · **the load-bearing layer**
 
 `docs/07-Combat.md` §6.2. Four rules, all of which are exit-gate items:
 
-| Rule | Failure if broken |
-|---|---|
-| **Freeze participants only** — VFX, particles, camera, parallax continue | Reads as a dropped frame, not impact |
-| **Longest wins, never additive** | Two simultaneous hits produce an unbearable freeze |
-| **Input buffered, never dropped** | Player feels control taken away |
-| **Save and restore velocity; `allowGravity = false` while frozen** | Knockback vanishes; entity drops suddenly after the freeze |
+| Rule                                                                     | Failure if broken                                          |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| **Freeze participants only** — VFX, particles, camera, parallax continue | Reads as a dropped frame, not impact                       |
+| **Longest wins, never additive**                                         | Two simultaneous hits produce an unbearable freeze         |
+| **Input buffered, never dropped**                                        | Player feels control taken away                            |
+| **Save and restore velocity; `allowGravity = false` while frozen**       | Knockback vanishes; entity drops suddenly after the freeze |
 
 That last one is subtle: without disabling gravity, a frozen entity accumulates downward velocity
 and lurches when released. It reads as "the hit stop feels wrong" with no obvious cause.
@@ -136,15 +136,15 @@ and lurches when released. It reads as "the hit stop feels wrong" with no obviou
 
 ---
 
-### M2-T7 — Layers 2–5 and 8 · 8 h · *depends: T5*
+### M2-T7 — Layers 2–5 and 8 · 8 h · _depends: T5_
 
-| Layer | Implementation |
-|---|---|
-| 2 Hit flash | `setTintFill` (replace), **not** `setTint` (multiply). 80 ms hold, 40 ms fade |
-| 3 Knockback | `KnockbackSystem`. Direction from relative position. **Poise-intact victims receive only 35%** — this is what makes heavy enemies feel heavy |
-| 4 Slash VFX | Pooled, positioned at the contact point **offset 40% toward the victim**. Positioning on the attacker reads as a whiff |
-| 5 Camera shake | Trauma model: 0–1 accumulator, **quadratic** response, decay 1.6/s, clamped, `Math.round` the offset, 4 px max |
-| 8 Particles | Material-aware (`bone`, `flesh`, `spirit`, `stone`, `scale`). Grey placeholders in M2 |
+| Layer          | Implementation                                                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2 Hit flash    | `setTintFill` (replace), **not** `setTint` (multiply). 80 ms hold, 40 ms fade                                                                |
+| 3 Knockback    | `KnockbackSystem`. Direction from relative position. **Poise-intact victims receive only 35%** — this is what makes heavy enemies feel heavy |
+| 4 Slash VFX    | Pooled, positioned at the contact point **offset 40% toward the victim**. Positioning on the attacker reads as a whiff                       |
+| 5 Camera shake | Trauma model: 0–1 accumulator, **quadratic** response, decay 1.6/s, clamped, `Math.round` the offset, 4 px max                               |
+| 8 Particles    | Material-aware (`bone`, `flesh`, `spirit`, `stone`, `scale`). Grey placeholders in M2                                                        |
 
 **The quadratic trauma curve is why small hits feel present without shaking.** Linear makes every
 hit either invisible or nauseating.
@@ -154,16 +154,16 @@ simultaneous hits clamp rather than sum.
 
 ---
 
-### M2-T8 — Layers 6, 7, 9 · 6 h · *depends: T6*
+### M2-T8 — Layers 6, 7, 9 · 6 h · _depends: T6_
 
-**Layers 6 (stagger) and 7 (damage number) fire *after* hit stop ends**, or the stagger animation
+**Layers 6 (stagger) and 7 (damage number) fire _after_ hit stop ends**, or the stagger animation
 is invisible inside the freeze.
 
-| Layer | Detail |
-|---|---|
-| 6 Stagger | Poise broken → full stagger + a 12-particle white ring. Poise intact → 100 ms flinch, AI continues. **The visible distinction is the core readability mechanic** |
-| 7 Damage numbers | Pooled, rise 12 px over 500 ms, colour-coded by `DamageNumberStyle`, 8 px proximity stacking |
-| 9 Death | Explosion, +30 ms hit stop, +0.10 trauma, 3× particles, coin scatter with a **300 ms collection delay** so the sparkle is not eaten by the explosion |
+| Layer            | Detail                                                                                                                                                           |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6 Stagger        | Poise broken → full stagger + a 12-particle white ring. Poise intact → 100 ms flinch, AI continues. **The visible distinction is the core readability mechanic** |
+| 7 Damage numbers | Pooled, rise 12 px over 500 ms, colour-coded by `DamageNumberStyle`, 8 px proximity stacking                                                                     |
+| 9 Death          | Explosion, +30 ms hit stop, +0.10 trauma, 3× particles, coin scatter with a **300 ms collection delay** so the sparkle is not eaten by the explosion             |
 
 **Verify:** poise break and flinch are visually distinguishable at 1× without reading numbers.
 
@@ -171,7 +171,7 @@ is invisible inside the freeze.
 
 ## Week 3 — One enemy, one fight (~30 h)
 
-### M2-T9 — Hardcoded Skeleton · 10 h · *depends: T5*
+### M2-T9 — Hardcoded Skeleton · 10 h · _depends: T5_
 
 `src/entities/enemy/Skeleton.ts`. **One class, numbers inline, marked for extraction in M4.**
 
@@ -189,7 +189,7 @@ Samurai combo hits.
 
 ---
 
-### M2-T10 — Player damage, i-frames, death · 8 h · *depends: T5, T9*
+### M2-T10 — Player damage, i-frames, death · 8 h · _depends: T5, T9_
 
 Player takes damage, enters `HURT` (300 ms), gains 800 ms i-frames with 100 ms alpha flicker,
 knockback applies. Death sequence and a respawn at the level start (checkpoints are M3).
@@ -200,17 +200,17 @@ Red vignette on damage, 200 ms, additive at 25%.
 
 ---
 
-### M2-T11 — The four abilities · 10 h · *depends: T4*
+### M2-T11 — The four abilities · 10 h · _depends: T4_
 
 `src/entities/player/abilities/` — the `Ability` interface (`docs/06-Characters.md` §9.1) plus all
 four implementations.
 
-| Hero | Ability | The hard part |
-|---|---|---|
-| Knight | Guard | `onIncomingDamage` hook. **200 ms parry window** (ADR-012), guard break after 3 blocked hits in 2 s |
-| Samurai | Iai Slash | Charge state, pass-through movement, **kill refunds cooldown** |
-| Ninja | Shadow Step | Teleport with destination validation (8 samples then cancel), decoy that retargets enemies |
-| Wizard | Arcane Nova | Mana pool, radial overlap query, Barrier with a damage cap |
+| Hero    | Ability     | The hard part                                                                                       |
+| ------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| Knight  | Guard       | `onIncomingDamage` hook. **200 ms parry window** (ADR-012), guard break after 3 blocked hits in 2 s |
+| Samurai | Iai Slash   | Charge state, pass-through movement, **kill refunds cooldown**                                      |
+| Ninja   | Shadow Step | Teleport with destination validation (8 samples then cancel), decoy that retargets enemies          |
+| Wizard  | Arcane Nova | Mana pool, radial overlap query, Barrier with a damage cap                                          |
 
 **Four implementations of one interface, written together.** This satisfies the two-implementations
 rule with margin and validates the interface immediately.
@@ -219,7 +219,7 @@ rule with margin and validates the interface immediately.
 
 ---
 
-### M2-T12 — Crouch · 2 h · *depends: T9*
+### M2-T12 — Crouch · 2 h · _depends: T9_
 
 Deferred from M1 because it only matters once projectiles exist. Hurtbox height ×0.6,
 horizontal movement locked. Stationary by design — no crawl.
@@ -232,13 +232,13 @@ horizontal movement locked. Stationary by design — no crawl.
 
 Same structure as M1 week 5. Measure, adjust, re-measure.
 
-| Day | Focus |
-|---|---|
-| 1 | Hit stop durations. Sweep 40/60/80 ms on light hits and find where impact turns to lag |
-| 2 | Knockback, trauma, flash timing. Verify the poise-break read |
-| 3 | Playtest 1. **Muted recording test** — can they tell hits landed? |
-| 4 | Playtests 2 and 3. Skeleton encounter pacing |
-| 5 | Final adjust, Pillar 2 audit |
+| Day | Focus                                                                                  |
+| --- | -------------------------------------------------------------------------------------- |
+| 1   | Hit stop durations. Sweep 40/60/80 ms on light hits and find where impact turns to lag |
+| 2   | Knockback, trauma, flash timing. Verify the poise-break read                           |
+| 3   | Playtest 1. **Muted recording test** — can they tell hits landed?                      |
+| 4   | Playtests 2 and 3. Skeleton encounter pacing                                           |
+| 5   | Final adjust, Pillar 2 audit                                                           |
 
 **The muted-recording test is Pillar 2's falsification test #2.** Show a playtester a silent
 recording; if they cannot always tell whether a hit connected, a layer is failing.
@@ -256,13 +256,13 @@ per-enemy poise bars, hit-stop borders, queued-hit count, resolution time.
 
 ### M2-T15 — Pillar 2 tests + perf gates · 6 h
 
-| Check | Target |
-|---|---|
-| `p2.nineLayers` | Every `HitResolution` fires nine effects |
-| `p2.hitStopNotAdditive` | Two 110 ms requests → 110 ms |
-| `p2.inputBuffered` | Input during freeze applies on the first unfrozen frame |
-| `p2.traumaClamped` | Trauma never exceeds 1.0 |
-| `p2.noEnemyIFrames` | Enemies hittable every overlapping frame |
+| Check                   | Target                                                  |
+| ----------------------- | ------------------------------------------------------- |
+| `p2.nineLayers`         | Every `HitResolution` fires nine effects                |
+| `p2.hitStopNotAdditive` | Two 110 ms requests → 110 ms                            |
+| `p2.inputBuffered`      | Input during freeze applies on the first unfrozen frame |
+| `p2.traumaClamped`      | Trauma never exceeds 1.0                                |
+| `p2.noEnemyIFrames`     | Enemies hittable every overlapping frame                |
 
 Also enable the **e2e and perf CI gates** deferred from M0-T9: p99 frame time, heap growth over
 60 s of combat, draw calls.
@@ -302,26 +302,26 @@ Then: tag `v0.2.0`, write `docs/audits/milestone-M2.md`, **expand `plans/M04-fra
 
 ## Risks
 
-| Risk | P | Mitigation |
-|---|---|---|
-| **Hit-feel tuning paralysis** | 🔴 High | Week 4 is timeboxed. Same discipline as M1 |
-| Hit stop perceived as lag | Med | ADR-014's three causes: whole-scene freeze, input freeze, actual frame drop. Triage against those before touching durations |
-| **Over-abstracting the enemy early** | 🔴 High | The Skeleton is hardcoded. If you find yourself writing `EnemyDefinition`, stop — that is M4 |
-| Ability interface wrong | Med | Four implementations written together surface interface problems immediately |
-| Combat scope creep (more enemies) | Med | One enemy. Variety is M4–M5 |
+| Risk                                 | P       | Mitigation                                                                                                                  |
+| ------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Hit-feel tuning paralysis**        | 🔴 High | Week 4 is timeboxed. Same discipline as M1                                                                                  |
+| Hit stop perceived as lag            | Med     | ADR-014's three causes: whole-scene freeze, input freeze, actual frame drop. Triage against those before touching durations |
+| **Over-abstracting the enemy early** | 🔴 High | The Skeleton is hardcoded. If you find yourself writing `EnemyDefinition`, stop — that is M4                                |
+| Ability interface wrong              | Med     | Four implementations written together surface interface problems immediately                                                |
+| Combat scope creep (more enemies)    | Med     | One enemy. Variety is M4–M5                                                                                                 |
 
 ---
 
 ## Explicitly not in M2
 
-| Not doing | Milestone |
-|---|---|
-| `EnemyDefinition`, JSON enemies, behaviour modules | M4 |
-| More than one enemy type | M4–M5 |
-| Bosses | M4 (framework), M5 (first boss) |
-| Real sprites and animations | M3 |
-| Tilemaps and real levels | M3 |
-| Checkpoints | M3 |
-| Charms, progression, save | M6 |
-| Assist Options | M11 |
-| Audio | M11 or post-launch |
+| Not doing                                          | Milestone                       |
+| -------------------------------------------------- | ------------------------------- |
+| `EnemyDefinition`, JSON enemies, behaviour modules | M4                              |
+| More than one enemy type                           | M4–M5                           |
+| Bosses                                             | M4 (framework), M5 (first boss) |
+| Real sprites and animations                        | M3                              |
+| Tilemaps and real levels                           | M3                              |
+| Checkpoints                                        | M3                              |
+| Charms, progression, save                          | M6                              |
+| Assist Options                                     | M11                             |
+| Audio                                              | M11 or post-launch              |

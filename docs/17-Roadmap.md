@@ -21,35 +21,41 @@ The plan is built around one uncomfortable truth from `01-Vision.md` §8.3: the 
 
 ## 2. Goals
 
-| # | Goal | Success Signal |
-|---|------|----------------|
-| G1 | Sequence work so risk is retired early | The riskiest unknowns are resolved by month 4 |
-| G2 | Give every milestone a hard, testable exit gate | A milestone either closes or it does not; there is no "mostly done" |
-| G3 | Make scope cuts a planned decision, not a panic | Cut lines have dates and owners |
-| G4 | Reserve time for polish, structurally | 20% of every milestone, protected |
-| G5 | Make progress visible | Anyone can tell where the project is in 30 seconds |
-| G6 | Plan for a solo/small-team sustainable pace | No milestone assumes crunch |
+| #   | Goal                                            | Success Signal                                                      |
+| --- | ----------------------------------------------- | ------------------------------------------------------------------- |
+| G1  | Sequence work so risk is retired early          | The riskiest unknowns are resolved by month 4                       |
+| G2  | Give every milestone a hard, testable exit gate | A milestone either closes or it does not; there is no "mostly done" |
+| G3  | Make scope cuts a planned decision, not a panic | Cut lines have dates and owners                                     |
+| G4  | Reserve time for polish, structurally           | 20% of every milestone, protected                                   |
+| G5  | Make progress visible                           | Anyone can tell where the project is in 30 seconds                  |
+| G6  | Plan for a solo/small-team sustainable pace     | No milestone assumes crunch                                         |
 
 ---
 
 ## 3. Design Principles
 
 ### P1 — Retire Risk Early
+
 The build order (`01-Vision.md` §8.1) front-loads the things most likely to be wrong: movement feel, combat feel, and the art-harmonisation cost. If any of those is worse than expected, we want to know in month 3, not month 9.
 
 ### P2 — Vertical Slice Before Framework
+
 Ship one complete level with one enemy and one boss before writing the enemy framework or the boss framework. Building a generic system before you have a working concrete case generalises the wrong things (`19-Decisions.md` ADR-004).
 
 ### P3 — Every Milestone Ships Something Playable
+
 No milestone produces only code. Every one ends with a build a person can play, and it is played by someone who did not build it.
 
 ### P4 — The Gate Is the Plan
+
 A milestone's exit gate is a list of falsifiable conditions. If they are not met, the milestone does not close — the scope is cut or the date moves, and the choice is recorded.
 
 ### P5 — Protect the Polish Reserve
+
 20% of each milestone is reserved for polish on what already exists. It is the first thing pressure tries to eat, and it is the last thing to be given up.
 
 ### P6 — Sustainable Pace
+
 The plan assumes roughly 30 productive hours a week. It does not assume evenings and weekends, and a plan that requires them is a plan that has already failed.
 
 ---
@@ -58,21 +64,21 @@ The plan assumes roughly 30 productive hours a week. It does not assume evenings
 
 ### 4.1 The Twelve Milestones
 
-| # | Milestone | Weeks | Dates | Theme |
-|---|---|---|---|---|
-| **M0** | Foundation | 3 | Aug 10 – Aug 28 | Repo, pipeline, tooling |
-| **M1** | Feel Prototype | 5 | Aug 31 – Oct 2 | Movement. Grey boxes. **Constants lock** |
-| **M2** | Combat Feel | 4 | Oct 5 – Oct 30 | Hit stop, one enemy, one attack |
-| **M3** | Vertical Slice | 5 | Nov 2 – Dec 4 | 1-1 complete and beautiful. Art harmonisation |
-| **M4** | Frameworks | 4 | Dec 7 – Jan 1 | Enemy, boss, level, data. Tooling |
-| **M5** | World 1 | 4 | Jan 4 – Jan 29 | 4 levels + Skeleton Warlord |
-| **M6** | Meta Layer | 4 | Feb 1 – Feb 26 | UI, save, progression, Codex, `/resume` |
-| **M7** | World 2 | 4 | Mar 1 – Mar 26 | 4 levels + Alpha Werewolf. **Cut Line A decision** |
-| **M8** | World 3 | 4 | Mar 29 – Apr 23 | 4 levels + Oni Lord. Darkness |
-| **M9** | World 4 | 5 | Apr 26 – May 28 | 4 levels + Golem Sovereign. **Cut Line B decision** |
-| **M10** | World 5 | 5 | May 31 – Jul 2 | 4 levels + Gorgon. Castle assets |
-| **M11** | Polish & Accessibility | 3 | Jul 5 – Jul 23 | Assist, a11y, perf, bugs |
-| **M12** | Launch | 2 | Jul 26 – Aug 6 | Final QA, deploy, launch |
+| #       | Milestone              | Weeks | Dates           | Theme                                               |
+| ------- | ---------------------- | ----- | --------------- | --------------------------------------------------- |
+| **M0**  | Foundation             | 3     | Aug 10 – Aug 28 | Repo, pipeline, tooling                             |
+| **M1**  | Feel Prototype         | 5     | Aug 31 – Oct 2  | Movement. Grey boxes. **Constants lock**            |
+| **M2**  | Combat Feel            | 4     | Oct 5 – Oct 30  | Hit stop, one enemy, one attack                     |
+| **M3**  | Vertical Slice         | 5     | Nov 2 – Dec 4   | 1-1 complete and beautiful. Art harmonisation       |
+| **M4**  | Frameworks             | 4     | Dec 7 – Jan 1   | Enemy, boss, level, data. Tooling                   |
+| **M5**  | World 1                | 4     | Jan 4 – Jan 29  | 4 levels + Skeleton Warlord                         |
+| **M6**  | Meta Layer             | 4     | Feb 1 – Feb 26  | UI, save, progression, Codex, `/resume`             |
+| **M7**  | World 2                | 4     | Mar 1 – Mar 26  | 4 levels + Alpha Werewolf. **Cut Line A decision**  |
+| **M8**  | World 3                | 4     | Mar 29 – Apr 23 | 4 levels + Oni Lord. Darkness                       |
+| **M9**  | World 4                | 5     | Apr 26 – May 28 | 4 levels + Golem Sovereign. **Cut Line B decision** |
+| **M10** | World 5                | 5     | May 31 – Jul 2  | 4 levels + Gorgon. Castle assets                    |
+| **M11** | Polish & Accessibility | 3     | Jul 5 – Jul 23  | Assist, a11y, perf, bugs                            |
+| **M12** | Launch                 | 2     | Jul 26 – Aug 6  | Final QA, deploy, launch                            |
 
 **Total: 52 weeks.**
 
@@ -108,14 +114,14 @@ gantt
 
 ### 4.3 Effort Distribution
 
-| Category | Weeks | Share |
-|---|---|---|
-| Engineering — systems and frameworks | 16 | 31% |
-| Content — levels, enemies, bosses | 18 | 35% |
-| Art — integration and harmonisation | 6 | 12% |
-| UI, meta, and portfolio | 5 | 10% |
-| Polish, accessibility, and QA | 5 | 10% |
-| Tooling and pipeline | 2 | 4% |
+| Category                             | Weeks | Share |
+| ------------------------------------ | ----- | ----- |
+| Engineering — systems and frameworks | 16    | 31%   |
+| Content — levels, enemies, bosses    | 18    | 35%   |
+| Art — integration and harmonisation  | 6     | 12%   |
+| UI, meta, and portfolio              | 5     | 10%   |
+| Polish, accessibility, and QA        | 5     | 10%   |
+| Tooling and pipeline                 | 2     | 4%    |
 
 **Content is the largest single category**, which is correct for a game whose frameworks are deliberately small.
 
@@ -151,11 +157,11 @@ flowchart LR
 
 **Theme:** everything needed to start building, and nothing else.
 
-| Week | Work |
-|---|---|
-| 1 | Repo, Vite + TypeScript + Phaser, `tsconfig`, ESLint flat config with all §7 rules, Prettier, Husky, `commitlint` |
-| 2 | CI pipeline (lint, typecheck, boundaries, unit, build, size). Vitest and Playwright harnesses. Deploy pipeline to staging |
-| 3 | `GameConstants.ts`, `Depth.ts`, `Palette.ts`, `EventBus`, `StateMachine`, `ObjectPool`, `Registry`, `Result`, `Rng`, `Assert`. Boot/Preload scenes. Atlas build script |
+| Week | Work                                                                                                                                                                   |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Repo, Vite + TypeScript + Phaser, `tsconfig`, ESLint flat config with all §7 rules, Prettier, Husky, `commitlint`                                                      |
+| 2    | CI pipeline (lint, typecheck, boundaries, unit, build, size). Vitest and Playwright harnesses. Deploy pipeline to staging                                              |
+| 3    | `GameConstants.ts`, `Depth.ts`, `Palette.ts`, `EventBus`, `StateMachine`, `ObjectPool`, `Registry`, `Result`, `Rng`, `Assert`. Boot/Preload scenes. Atlas build script |
 
 **Deliverable:** a black screen with a loading bar that reaches 100% and prints "ready" — built by CI, deployed to staging, with every lint rule live.
 
@@ -177,13 +183,13 @@ flowchart LR
 
 **Theme:** movement. No art. Grey rectangles. The most important milestone in the project.
 
-| Week | Work |
-|---|---|
-| 1 | `PlayerController`: run, accel/decel, gravity, jump. `InputSystem` with keyboard |
-| 2 | Coyote time, jump buffer, variable jump height, asymmetric gravity, apex hang |
-| 3 | Dash, wall slide, wall jump. Gamepad. The player FSM in full |
-| 4 | The four character configurations (values only, one grey box each). Tuning |
-| 5 | **Tuning only.** Playtests. Latency measurement. Constants lock |
+| Week | Work                                                                             |
+| ---- | -------------------------------------------------------------------------------- |
+| 1    | `PlayerController`: run, accel/decel, gravity, jump. `InputSystem` with keyboard |
+| 2    | Coyote time, jump buffer, variable jump height, asymmetric gravity, apex hang    |
+| 3    | Dash, wall slide, wall jump. Gamepad. The player FSM in full                     |
+| 4    | The four character configurations (values only, one grey box each). Tuning       |
+| 5    | **Tuning only.** Playtests. Latency measurement. Constants lock                  |
 
 **Deliverable:** a grey rectangle in a grey test level, playable with keyboard and gamepad, that feels as good as Celeste to move.
 
@@ -208,12 +214,12 @@ flowchart LR
 
 **Theme:** one enemy, one attack, nine layers of feedback.
 
-| Week | Work |
-|---|---|
-| 1 | `Hitbox`, `Hurtbox`, `Health`, `Poise`, `IFrames`. Hit queue and post-physics resolution |
-| 2 | The nine-layer stack: hit stop, flash, knockback, VFX, shake, stagger, damage numbers, particles, death |
-| 3 | One concrete Skeleton (hardcoded, not data-driven — P2). One player combo. `VfxSystem`, `ParticleSystem`, `CameraSystem` |
-| 4 | **Tuning only.** Playtests. Hit-feel iteration |
+| Week | Work                                                                                                                     |
+| ---- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1    | `Hitbox`, `Hurtbox`, `Health`, `Poise`, `IFrames`. Hit queue and post-physics resolution                                 |
+| 2    | The nine-layer stack: hit stop, flash, knockback, VFX, shake, stagger, damage numbers, particles, death                  |
+| 3    | One concrete Skeleton (hardcoded, not data-driven — P2). One player combo. `VfxSystem`, `ParticleSystem`, `CameraSystem` |
+| 4    | **Tuning only.** Playtests. Hit-feel iteration                                                                           |
 
 **Deliverable:** a grey rectangle hitting a grey rectangle, and it feels like Dead Cells.
 
@@ -240,13 +246,13 @@ flowchart LR
 
 **Theme:** one complete, beautiful level. This is where art enters and where the art-cost assumption is tested.
 
-| Week | Work |
-|---|---|
-| 1 | **Art harmonisation begins.** Palette remap pipeline, de-AA, outline scripts. Knight + Skeleton + Green Zone tileset through all six gates |
-| 2 | Harmonisation continues: Nature backgrounds, VFX packs (including the slash de-cartooning). Atlas build |
-| 3 | Tiled workflow, `LevelLoader`, `ObjectFactory`, `TileCollision`, `ParallaxBackground`. Level 1-1 greyboxed |
-| 4 | 1-1 art pass, moving platforms, checkpoints, camera zones. HUD v1 |
-| 5 | **Polish reserve.** Squash/stretch, dust, landing feedback, all of the §5.3.2 feedback contract |
+| Week | Work                                                                                                                                       |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1    | **Art harmonisation begins.** Palette remap pipeline, de-AA, outline scripts. Knight + Skeleton + Green Zone tileset through all six gates |
+| 2    | Harmonisation continues: Nature backgrounds, VFX packs (including the slash de-cartooning). Atlas build                                    |
+| 3    | Tiled workflow, `LevelLoader`, `ObjectFactory`, `TileCollision`, `ParallaxBackground`. Level 1-1 greyboxed                                 |
+| 4    | 1-1 art pass, moving platforms, checkpoints, camera zones. HUD v1                                                                          |
+| 5    | **Polish reserve.** Squash/stretch, dust, landing feedback, all of the §5.3.2 feedback contract                                            |
 
 **Deliverable:** level 1-1, playable start to finish, fully art-passed, with the complete feedback contract.
 
@@ -271,12 +277,12 @@ flowchart LR
 
 **Theme:** generalise what M2 and M3 proved. Build the tools that make M5–M10 fast.
 
-| Week | Work |
-|---|---|
-| 1 | `ContentDatabase`, JSON schemas, validation. Refactor the hardcoded Skeleton into `EnemyDefinition` + behaviours |
-| 2 | Behaviour registry: `patrol`, `chase`, `melee`, `ranged`, `leap`. `SpawnSystem`, `CullingSystem`. Tier generation |
-| 3 | `Boss` class, `BossPhaseMachine`, the first four attack modules. Arena lifecycle |
-| 4 | **Tooling week.** `level:test` hot-load, debug overlay, `level:validate`, `check-hero-parity`, encounter-budget checker |
+| Week | Work                                                                                                                    |
+| ---- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1    | `ContentDatabase`, JSON schemas, validation. Refactor the hardcoded Skeleton into `EnemyDefinition` + behaviours        |
+| 2    | Behaviour registry: `patrol`, `chase`, `melee`, `ranged`, `leap`. `SpawnSystem`, `CullingSystem`. Tier generation       |
+| 3    | `Boss` class, `BossPhaseMachine`, the first four attack modules. Arena lifecycle                                        |
+| 4    | **Tooling week.** `level:test` hot-load, debug overlay, `level:validate`, `check-hero-parity`, encounter-budget checker |
 
 **Deliverable:** a Skeleton defined entirely in JSON, three variants generated, and a level designer who can iterate without an engineer.
 
@@ -300,12 +306,12 @@ flowchart LR
 
 **Theme:** the first full world. Establishes the content-production rate that the rest of the plan depends on.
 
-| Week | Work |
-|---|---|
-| 1 | Levels 1-2 and 1-3 greyboxed. Skeleton Archer and Skeleton Brute variants. Collectible and prop assets |
-| 2 | 1-2 and 1-3 art-passed. One-way platforms and bounce caps |
-| 3 | Skeleton Warlord: two phases, arena 1-4, intro and death sequences, boss health bar |
-| 4 | **Polish reserve.** Encounter tuning, secret placement, pacing |
+| Week | Work                                                                                                   |
+| ---- | ------------------------------------------------------------------------------------------------------ |
+| 1    | Levels 1-2 and 1-3 greyboxed. Skeleton Archer and Skeleton Brute variants. Collectible and prop assets |
+| 2    | 1-2 and 1-3 art-passed. One-way platforms and bounce caps                                              |
+| 3    | Skeleton Warlord: two phases, arena 1-4, intro and death sequences, boss health bar                    |
+| 4    | **Polish reserve.** Encounter tuning, secret placement, pacing                                         |
 
 **Deliverable:** World 1 complete — four levels, one boss, playable end to end.
 
@@ -322,7 +328,7 @@ flowchart LR
 - [ ] 60 fps sustained through the boss fight on minimum hardware
 - [ ] **Content-production rate measured.** Weeks per world recorded and the plan re-forecast
 
-**Risk: MEDIUM.** M5's real output is the *measurement*. If a world takes 6 weeks rather than 4, worlds 2–5 need 24 weeks rather than 16, and the plan is 8 weeks over — which is exactly what Cut Line A exists for. This is the earliest reliable signal.
+**Risk: MEDIUM.** M5's real output is the _measurement_. If a world takes 6 weeks rather than 4, worlds 2–5 need 24 weeks rather than 16, and the plan is 8 weeks over — which is exactly what Cut Line A exists for. This is the earliest reliable signal.
 
 ---
 
@@ -330,12 +336,12 @@ flowchart LR
 
 **Theme:** everything around the game. Menus, saves, progression, and the Codex.
 
-| Week | Work |
-|---|---|
-| 1 | **GUI kit and icon authoring** (`05-Asset-Pipeline.md` §9.2, §9.3 — ~34 hours). Bitmap fonts |
-| 2 | `UiBuilder`, `FocusManager`, the widget library. Title, Character Select, Settings |
-| 3 | `SaveSystem` with migrations, `ProgressionSystem`, charms, World Select with the Vendor panel |
-| 4 | `PortfolioSystem`, `CodexScene`, `UnlockScene`, `/resume` build script. Portfolio content authored |
+| Week | Work                                                                                               |
+| ---- | -------------------------------------------------------------------------------------------------- |
+| 1    | **GUI kit and icon authoring** (`05-Asset-Pipeline.md` §9.2, §9.3 — ~34 hours). Bitmap fonts       |
+| 2    | `UiBuilder`, `FocusManager`, the widget library. Title, Character Select, Settings                 |
+| 3    | `SaveSystem` with migrations, `ProgressionSystem`, charms, World Select with the Vendor panel      |
+| 4    | `PortfolioSystem`, `CodexScene`, `UnlockScene`, `/resume` build script. Portfolio content authored |
 
 **Deliverable:** a complete game shell. Start, choose a hero, play World 1, earn About Me, read it, quit, resume.
 
@@ -363,12 +369,12 @@ flowchart LR
 
 **Theme:** wind, the Werewolf, and the first scope checkpoint.
 
-| Week | Work |
-|---|---|
-| 1 | Autumn Forest + Fairy Tale harmonisation. Werewolf pack. `WindZoneMechanic`, crumbling branches, updrafts |
-| 2 | Levels 2-1 and 2-2. Wall-slide introduction |
-| 3 | Level 2-3. Alpha Werewolf: three phases, wall-pounce, arena wind |
-| 4 | **Polish reserve.** Tuning, secrets, the Projects unlock |
+| Week | Work                                                                                                      |
+| ---- | --------------------------------------------------------------------------------------------------------- |
+| 1    | Autumn Forest + Fairy Tale harmonisation. Werewolf pack. `WindZoneMechanic`, crumbling branches, updrafts |
+| 2    | Levels 2-1 and 2-2. Wall-slide introduction                                                               |
+| 3    | Level 2-3. Alpha Werewolf: three phases, wall-pounce, arena wind                                          |
+| 4    | **Polish reserve.** Tuning, secrets, the Projects unlock                                                  |
 
 **Deliverable:** World 2 complete. Two worlds, two bosses, two portfolio sections.
 
@@ -386,16 +392,16 @@ flowchart LR
 
 Assessed at the M7 review:
 
-| Signal | Threshold | Action if Breached |
-|---|---|---|
-| Weeks per world (measured over M5, M7) | > 5 | Invoke Cut Line A |
-| Art harmonisation variance | > +40% vs. estimate | Invoke Cut Line A |
-| Open P1 bugs | > 8 | Invoke Cut Line A |
-| Castle tileset still unresolved | Yes at Mar 26 | Escalate; likely Cut Line B |
+| Signal                                 | Threshold           | Action if Breached          |
+| -------------------------------------- | ------------------- | --------------------------- |
+| Weeks per world (measured over M5, M7) | > 5                 | Invoke Cut Line A           |
+| Art harmonisation variance             | > +40% vs. estimate | Invoke Cut Line A           |
+| Open P1 bugs                           | > 8                 | Invoke Cut Line A           |
+| Castle tileset still unresolved        | Yes at Mar 26       | Escalate; likely Cut Line B |
 
 **Cut Line A:** drop Worlds 4 and 5. The Oni Lord (M8) becomes the final boss and unlocks Experience, Skills, and Contact together. The product is 12 levels, three worlds, ~3 hours, and it is complete. The freed 10 weeks go to polish, accessibility, and a Time Trial mode.
 
-**The decision is recorded as an ADR either way** — including a decision *not* to cut, with the reasoning.
+**The decision is recorded as an ADR either way** — including a decision _not_ to cut, with the reasoning.
 
 ---
 
@@ -403,12 +409,12 @@ Assessed at the M7 review:
 
 **Theme:** darkness, information management, and the first shippable product.
 
-| Week | Work |
-|---|---|
-| 1 | Graveyard harmonisation. Yokai + Witch packs. `LanternMechanic`, light mask, fog banks, soul-braziers |
-| 2 | Levels 3-1 and 3-2. `teleport`, `summon`, `flee`, `hover` behaviours |
-| 3 | Level 3-3. Oni Lord: three phases, shadow copies, brazier extinguishing |
-| 4 | **Polish reserve.** The Experience unlock. Cut Line A verification if invoked |
+| Week | Work                                                                                                  |
+| ---- | ----------------------------------------------------------------------------------------------------- |
+| 1    | Graveyard harmonisation. Yokai + Witch packs. `LanternMechanic`, light mask, fog banks, soul-braziers |
+| 2    | Levels 3-1 and 3-2. `teleport`, `summon`, `flee`, `hover` behaviours                                  |
+| 3    | Level 3-3. Oni Lord: three phases, shadow copies, brazier extinguishing                               |
+| 4    | **Polish reserve.** The Experience unlock. Cut Line A verification if invoked                         |
 
 **Deliverable:** World 3 complete. **If Cut Line A was invoked, this is the shipping product.**
 
@@ -431,13 +437,13 @@ Assessed at the M7 review:
 
 **Theme:** puzzles, the heaviest content in the game. Five weeks, not four, because beam puzzles are slow to author.
 
-| Week | Work |
-|---|---|
-| 1 | Crystal Cave harmonisation (incl. authoring emissive crystal frames). Orc + Golem packs |
-| 2 | `LightBeamMechanic`, low-gravity fields, conveyors. `charge`, `shield`, `groundSlam` behaviours |
-| 3 | Levels 4-1 and 4-2 |
-| 4 | Level 4-3 (the beam-puzzle-heavy level). Golem Sovereign: three phases, the core mechanic |
-| 5 | **Polish reserve.** Puzzle solvability testing, the Skills unlock |
+| Week | Work                                                                                            |
+| ---- | ----------------------------------------------------------------------------------------------- |
+| 1    | Crystal Cave harmonisation (incl. authoring emissive crystal frames). Orc + Golem packs         |
+| 2    | `LightBeamMechanic`, low-gravity fields, conveyors. `charge`, `shield`, `groundSlam` behaviours |
+| 3    | Levels 4-1 and 4-2                                                                              |
+| 4    | Level 4-3 (the beam-puzzle-heavy level). Golem Sovereign: three phases, the core mechanic       |
+| 5    | **Polish reserve.** Puzzle solvability testing, the Skills unlock                               |
 
 **Deliverable:** World 4 complete.
 
@@ -454,12 +460,12 @@ Assessed at the M7 review:
 
 **🔴 CUT LINE B DECISION — May 28**
 
-| Signal | Threshold | Action |
-|---|---|---|
-| Castle tileset resolved | No | Invoke Cut Line B |
+| Signal                             | Threshold                 | Action            |
+| ---------------------------------- | ------------------------- | ----------------- |
+| Castle tileset resolved            | No                        | Invoke Cut Line B |
 | Weeks remaining vs. work remaining | < 8 weeks for M10+M11+M12 | Invoke Cut Line B |
-| Open P1 bugs | > 6 | Invoke Cut Line B |
-| Cut Line A already invoked | — | N/A |
+| Open P1 bugs                       | > 6                       | Invoke Cut Line B |
+| Cut Line A already invoked         | —                         | N/A               |
 
 **Cut Line B:** drop World 5. The Golem Sovereign becomes the final boss and unlocks Skills and Contact together. The product is 16 levels, four worlds, ~3.5 hours. The freed 5 weeks go to polish.
 
@@ -469,13 +475,13 @@ Assessed at the M7 review:
 
 **Theme:** synthesis and the final boss. Five weeks because World 5 reuses every mechanic and the Gorgon has four phases.
 
-| Week | Work |
-|---|---|
-| 1 | **Castle tileset resolution** (licensed or the graveyard-recolour fallback, `05-Asset-Pipeline.md` §9.1). Gorgon pack + phase-2 recolour |
-| 2 | `TimedGateMechanic`, wall turrets, petrify zones, crushers. Level 5-1 |
-| 3 | Levels 5-2 and 5-3 (the synthesis gauntlets) |
-| 4 | Gorgon: four phases, escalating gaze, collapsing arena |
-| 5 | **Polish reserve.** The Contact unlock, the ending, the Victory scene, credits |
+| Week | Work                                                                                                                                     |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | **Castle tileset resolution** (licensed or the graveyard-recolour fallback, `05-Asset-Pipeline.md` §9.1). Gorgon pack + phase-2 recolour |
+| 2    | `TimedGateMechanic`, wall turrets, petrify zones, crushers. Level 5-1                                                                    |
+| 3    | Levels 5-2 and 5-3 (the synthesis gauntlets)                                                                                             |
+| 4    | Gorgon: four phases, escalating gaze, collapsing arena                                                                                   |
+| 5    | **Polish reserve.** The Contact unlock, the ending, the Victory scene, credits                                                           |
 
 **Deliverable:** content complete. 20 levels, 5 bosses, 5 portfolio sections, an ending.
 
@@ -499,11 +505,11 @@ Assessed at the M7 review:
 
 **Theme:** make it finishable by anyone, and make it fast everywhere.
 
-| Week | Work |
-|---|---|
-| 1 | Assist Options in full. The boss skip valve. Auto-retry. Accessibility settings |
-| 2 | Performance: minimum-hardware verification per world, the degradation ladder, the watchdog |
-| 3 | Bug burn-down. P0/P1 to zero. Final playtests |
+| Week | Work                                                                                       |
+| ---- | ------------------------------------------------------------------------------------------ |
+| 1    | Assist Options in full. The boss skip valve. Auto-retry. Accessibility settings            |
+| 2    | Performance: minimum-hardware verification per world, the degradation ladder, the watchdog |
+| 3    | Bug burn-down. P0/P1 to zero. Final playtests                                              |
 
 **Deliverable:** a game a non-gamer can finish.
 
@@ -531,10 +537,10 @@ Assessed at the M7 review:
 
 **Theme:** ship it.
 
-| Week | Work |
-|---|---|
-| 1 | Final QA: full playthrough × 4 heroes × 3 browsers. Save-migration verification. Licence audit. Legal review of the asset manifest |
-| 2 | Production deploy, `/resume` deploy, launch, monitoring, hotfix readiness |
+| Week | Work                                                                                                                               |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Final QA: full playthrough × 4 heroes × 3 browsers. Save-migration verification. Licence audit. Legal review of the asset manifest |
+| 2    | Production deploy, `/resume` deploy, launch, monitoring, hotfix readiness                                                          |
 
 **Deliverable:** DevQuest, live.
 
@@ -595,32 +601,39 @@ Written at each close into `docs/audits/milestone-M<N>.md`:
 **Tag:** v0.5.0
 
 ## Exit gate
+
 All 10 conditions met. Evidence: [links]
 
 ## Pillar audit
-P1 ✅  P2 ✅  P3 ✅  P4 ✅  P5 ✅
+
+P1 ✅ P2 ✅ P3 ✅ P4 ✅ P5 ✅
 Features serving no pillar: (none)
 Features rejected by pillar citation: shop system, loot drops
 
 ## Measurements
+
 - Weeks per world: 4.0 (planned 4.0)
 - Art harmonisation: 22h actual vs 24h estimated (−8%)
 - p99 frame time, min hardware: 14.2 ms
 - Naive playtest: first jump 7s, first kill 71s, W1 completion 5/5
 
 ## Re-forecast
+
 Worlds 2–5 at 4 weeks each → 16 weeks. Plan holds. No cut required.
 
 ## What went wrong
+
 The Skeleton Warlord's phase-2 add spawning was re-implemented three
 times before landing on the `resummonWhenBelow` model. Should have
 prototyped on paper first. ~1.5 days lost.
 
 ## What went right
+
 `level:test` hot-load saved an estimated 6 hours over the milestone.
 Building tooling in M4 week 4 paid for itself in M5 week 1.
 
 ## Carried forward
+
 - #218 Werewolf leap arc feels floaty at low gravity (P3)
 - #224 Coin batching threshold may be too aggressive (P3)
 ```
@@ -639,12 +652,12 @@ projectedTotal     = projectedWorldWork + nonWorldMilestonesRemaining
 slack              = weeksToLaunchDate − projectedTotal
 ```
 
-| Slack | Action |
-|---|---|
-| > 2 weeks | Healthy. Continue |
-| 0 to 2 weeks | Warning. Protect the polish reserve; add nothing |
+| Slack         | Action                                                    |
+| ------------- | --------------------------------------------------------- |
+| > 2 weeks     | Healthy. Continue                                         |
+| 0 to 2 weeks  | Warning. Protect the polish reserve; add nothing          |
 | −2 to 0 weeks | Cut a level from the next world, or drop an optional path |
-| < −2 weeks | Invoke the next available cut line |
+| < −2 weeks    | Invoke the next available cut line                        |
 
 ---
 
@@ -652,32 +665,32 @@ slack              = weeksToLaunchDate − projectedTotal
 
 Tracked continuously; reviewed at every milestone close.
 
-| # | Risk | P | Impact | Owner | Mitigation | Trigger |
-|---|---|---|---|---|---|---|
-| R1 | **Tuning paralysis** in M1/M2 | High | Fatal | Director | Fixed end dates; constants lock at M1 exit | Week 5 of M1 without a lock |
-| R2 | **Art harmonisation exceeds estimate** | Med | Severe | Art Dir | Measured at M3; cut line if > +40% | M3 review |
-| R3 | **Content rate slower than 4 wks/world** | Med | Severe | Producer | Measured at M5; cut lines at M7/M9 | M5 review |
-| R4 | **Castle tileset never resolved** | Med | Moderate | Art Dir | Graveyard-recolour fallback, 16 h, costed | M9 review |
-| R5 | **Framework over-engineering** in M4 | Med | Severe | Tech Dir | Two-implementations rule, enforced in review | Any interface with one impl |
-| R6 | **Portfolio creep** | Med | Severe | Director | Deletion Test at M3, M6, M9, M11 | Test exceeds 2 hours |
-| R7 | **Light mask too slow** (W3) | Low-Med | Moderate | Tech Dir | Degradation ladder tier 4 already specified | M8 perf pass |
-| R8 | **GUI kit needs full custom authoring** | Med | Moderate | Art Dir | 20 h budgeted in M6 week 1 | M6 week 1 overrun |
-| R9 | **Browser regression** breaks WebGL | Low | Moderate | Tech Dir | Cross-browser CI on every merge | CI failure |
-| R10 | **Asset licence problem** | Low | Fatal | Art Dir | Licence text archived at download, not linked | Legal review at M12 |
-| R11 | **Audio never procured** | Med | Moderate | Producer | `NullAudioBackend` ships; game is complete without audio | M9 |
-| R12 | **Solo-developer availability** | Med | Severe | Producer | Sustainable pace assumption; cut lines absorb 10 weeks | Any two-week gap |
-| R13 | **Save-schema change destroys data** | Low | Fatal | Tech Dir | Migration fixtures per version, CI-enforced | Any schema change without a fixture |
-| R14 | **`enemies-w4` atlas overflows** | Med | Minor | Tech Dir | Split the Sovereign to `boss-w4` — a build-config change | M9 |
+| #   | Risk                                     | P       | Impact   | Owner    | Mitigation                                               | Trigger                             |
+| --- | ---------------------------------------- | ------- | -------- | -------- | -------------------------------------------------------- | ----------------------------------- |
+| R1  | **Tuning paralysis** in M1/M2            | High    | Fatal    | Director | Fixed end dates; constants lock at M1 exit               | Week 5 of M1 without a lock         |
+| R2  | **Art harmonisation exceeds estimate**   | Med     | Severe   | Art Dir  | Measured at M3; cut line if > +40%                       | M3 review                           |
+| R3  | **Content rate slower than 4 wks/world** | Med     | Severe   | Producer | Measured at M5; cut lines at M7/M9                       | M5 review                           |
+| R4  | **Castle tileset never resolved**        | Med     | Moderate | Art Dir  | Graveyard-recolour fallback, 16 h, costed                | M9 review                           |
+| R5  | **Framework over-engineering** in M4     | Med     | Severe   | Tech Dir | Two-implementations rule, enforced in review             | Any interface with one impl         |
+| R6  | **Portfolio creep**                      | Med     | Severe   | Director | Deletion Test at M3, M6, M9, M11                         | Test exceeds 2 hours                |
+| R7  | **Light mask too slow** (W3)             | Low-Med | Moderate | Tech Dir | Degradation ladder tier 4 already specified              | M8 perf pass                        |
+| R8  | **GUI kit needs full custom authoring**  | Med     | Moderate | Art Dir  | 20 h budgeted in M6 week 1                               | M6 week 1 overrun                   |
+| R9  | **Browser regression** breaks WebGL      | Low     | Moderate | Tech Dir | Cross-browser CI on every merge                          | CI failure                          |
+| R10 | **Asset licence problem**                | Low     | Fatal    | Art Dir  | Licence text archived at download, not linked            | Legal review at M12                 |
+| R11 | **Audio never procured**                 | Med     | Moderate | Producer | `NullAudioBackend` ships; game is complete without audio | M9                                  |
+| R12 | **Solo-developer availability**          | Med     | Severe   | Producer | Sustainable pace assumption; cut lines absorb 10 weeks   | Any two-week gap                    |
+| R13 | **Save-schema change destroys data**     | Low     | Fatal    | Tech Dir | Migration fixtures per version, CI-enforced              | Any schema change without a fixture |
+| R14 | **`enemies-w4` atlas overflows**         | Med     | Minor    | Tech Dir | Split the Sovereign to `boss-w4` — a build-config change | M9                                  |
 
 ### 7.1 The Three Risks That Actually Matter
 
 **R1, R3, and R6.** Everything else has a known, costed mitigation. These three are behavioural, and behavioural risks are the ones that kill projects.
 
-| Risk | The Behaviour | The Structural Counter |
-|---|---|---|
-| R1 Tuning paralysis | "Just one more tuning pass" | The M1 end date is a date, not a condition. Constants lock and further changes need an ADR |
-| R3 Content rate | "World 3 will be faster now that we know what we're doing" | Measured rate, not hoped rate, drives the forecast |
-| R6 Portfolio creep | "It would be so cool if the Codex also…" | The Deletion Test is timed. Over 2 hours means roots have grown |
+| Risk                | The Behaviour                                              | The Structural Counter                                                                     |
+| ------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| R1 Tuning paralysis | "Just one more tuning pass"                                | The M1 end date is a date, not a condition. Constants lock and further changes need an ADR |
+| R3 Content rate     | "World 3 will be faster now that we know what we're doing" | Measured rate, not hoped rate, drives the forecast                                         |
+| R6 Portfolio creep  | "It would be so cool if the Codex also…"                   | The Deletion Test is timed. Over 2 hours means roots have grown                            |
 
 ---
 
@@ -687,27 +700,27 @@ Tracked continuously; reviewed at every milestone close.
 
 Cuts are made in this order. Each is cheaper than the one below it.
 
-| # | Cut | Saves | Cost |
-|---|---|---|---|
-| 1 | Optional paths in the remaining worlds | ~0.5 wk/world | Less exploration content |
-| 2 | Secrets in the remaining worlds | ~0.3 wk/world | Less completionist depth |
-| 3 | One level from a world (3 stages → 2) | ~1 wk/world | Shorter worlds |
-| 4 | Enemy elite tiers | ~0.5 wk total | Less variety |
-| 5 | **Cut Line B** — drop World 5 | 5 wks | One world, one boss |
-| 6 | **Cut Line A** — drop Worlds 4 and 5 | 10 wks | Two worlds, two bosses |
-| 7 | Drop a playable hero | ~1 wk | Significant identity loss. **Last resort** |
+| #   | Cut                                    | Saves         | Cost                                       |
+| --- | -------------------------------------- | ------------- | ------------------------------------------ |
+| 1   | Optional paths in the remaining worlds | ~0.5 wk/world | Less exploration content                   |
+| 2   | Secrets in the remaining worlds        | ~0.3 wk/world | Less completionist depth                   |
+| 3   | One level from a world (3 stages → 2)  | ~1 wk/world   | Shorter worlds                             |
+| 4   | Enemy elite tiers                      | ~0.5 wk total | Less variety                               |
+| 5   | **Cut Line B** — drop World 5          | 5 wks         | One world, one boss                        |
+| 6   | **Cut Line A** — drop Worlds 4 and 5   | 10 wks        | Two worlds, two bosses                     |
+| 7   | Drop a playable hero                   | ~1 wk         | Significant identity loss. **Last resort** |
 
 **Never cut:** portfolio reachability, Assist Options, accessibility, the `/resume` page, hit feel, or the M1/M2 constants. These are the product.
 
 ### 8.2 What Cut Lines Do Not Change
 
-| Preserved | Mechanism |
-|---|---|
+| Preserved                             | Mechanism                               |
+| ------------------------------------- | --------------------------------------- |
 | All five portfolio sections reachable | `fallbackUnlocks` + `check-cutlines.ts` |
-| All four heroes | Cuts remove worlds, never heroes |
-| The full meta layer | M6 is before both cut lines |
-| Accessibility | M11 is after both |
-| Feel quality | M1/M2 are before everything |
+| All four heroes                       | Cuts remove worlds, never heroes        |
+| The full meta layer                   | M6 is before both cut lines             |
+| Accessibility                         | M11 is after both                       |
+| Feel quality                          | M1/M2 are before everything             |
 
 **This is why the cut lines are placed where they are.** Everything that defines the product's quality ships before the first cut decision.
 
@@ -715,16 +728,16 @@ Cuts are made in this order. Each is cheaper than the one below it.
 
 ## 9. Implementation Notes — Cadence
 
-| Ritual | When | Duration | Output |
-|---|---|---|---|
-| Daily check-in | Each morning | 5 min | Today's one priority, written down |
-| Weekly review | Friday | 30 min | Progress vs. milestone plan; slack recalculated |
-| Milestone gate | Milestone end | 4 h | §6.1 |
-| Milestone review | Same day | 1 h | `docs/audits/milestone-M<N>.md` |
-| Monthly re-forecast | Milestone close | 30 min | §6.3 |
-| Risk review | Milestone close | 30 min | §7 updated |
-| Playtest | Every milestone | 1 h | Fresh eyes, always |
-| Doc sync | Every milestone | 1 h | Docs match reality |
+| Ritual              | When            | Duration | Output                                          |
+| ------------------- | --------------- | -------- | ----------------------------------------------- |
+| Daily check-in      | Each morning    | 5 min    | Today's one priority, written down              |
+| Weekly review       | Friday          | 30 min   | Progress vs. milestone plan; slack recalculated |
+| Milestone gate      | Milestone end   | 4 h      | §6.1                                            |
+| Milestone review    | Same day        | 1 h      | `docs/audits/milestone-M<N>.md`                 |
+| Monthly re-forecast | Milestone close | 30 min   | §6.3                                            |
+| Risk review         | Milestone close | 30 min   | §7 updated                                      |
+| Playtest            | Every milestone | 1 h      | Fresh eyes, always                              |
+| Doc sync            | Every milestone | 1 h      | Docs match reality                              |
 
 **The daily one-priority note is the highest-value ritual for a solo developer.** Writing down the single most important thing before opening the editor prevents the most common solo failure: three weeks of interesting work on something that did not matter.
 
@@ -749,15 +762,15 @@ Maintained at the top of this document, updated at every milestone close:
 
 ### 10.2 Issue Labels
 
-| Label | Meaning |
-|---|---|
-| `milestone:M5` | Scheduled milestone |
-| `pillar:1`–`pillar:5` | Which pillar it serves or threatens |
-| `p0`–`p4` | Severity (`16-Coding-Standards.md` §11.7) |
-| `cut-candidate` | Droppable under pressure |
-| `blocked` | With a named blocker |
-| `polish` | Counts against the 20% reserve |
-| `docs-drift` | A doc no longer matches the code |
+| Label                 | Meaning                                   |
+| --------------------- | ----------------------------------------- |
+| `milestone:M5`        | Scheduled milestone                       |
+| `pillar:1`–`pillar:5` | Which pillar it serves or threatens       |
+| `p0`–`p4`             | Severity (`16-Coding-Standards.md` §11.7) |
+| `cut-candidate`       | Droppable under pressure                  |
+| `blocked`             | With a named blocker                      |
+| `polish`              | Counts against the 20% reserve            |
+| `docs-drift`          | A doc no longer matches the code          |
 
 **Pillar labels enable burn-down per pillar**, which reveals which pillar is under-invested. A project with 40 open `pillar:2` issues and 2 open `pillar:4` issues is telling you something.
 
@@ -767,14 +780,14 @@ Maintained at the top of this document, updated at every milestone close:
 
 Not part of the twelve months. Recorded so it is not planned for prematurely.
 
-| Phase | When | Content |
-|---|---|---|
-| **Hotfix window** | Launch + 2 weeks | P0/P1 only. No features |
-| **Feedback pass** | Launch + 1 month | Tuning from real player behaviour |
-| **Boss Rush** | Launch + 2 months | Reuses all existing content. ~2 weeks |
-| **Time Trial** | Launch + 3 months | ~1 month |
-| **Steam port** | Launch + 3–6 months | ~4 weeks (`03-Technical-Architecture.md` §14.3) |
-| **Everything else** | — | `20-Future-Ideas.md` |
+| Phase               | When                | Content                                         |
+| ------------------- | ------------------- | ----------------------------------------------- |
+| **Hotfix window**   | Launch + 2 weeks    | P0/P1 only. No features                         |
+| **Feedback pass**   | Launch + 1 month    | Tuning from real player behaviour               |
+| **Boss Rush**       | Launch + 2 months   | Reuses all existing content. ~2 weeks           |
+| **Time Trial**      | Launch + 3 months   | ~1 month                                        |
+| **Steam port**      | Launch + 3–6 months | ~4 weeks (`03-Technical-Architecture.md` §14.3) |
+| **Everything else** | —                   | `20-Future-Ideas.md`                            |
 
 **Nothing from this table enters the twelve-month plan under any circumstance.** A post-launch feature pulled forward is a cut line invoked in disguise.
 
@@ -799,44 +812,44 @@ Not part of the twelve months. Recorded so it is not planned for prematurely.
 
 ## 13. Out of Scope
 
-| Excluded | Reason |
-|---|---|
-| **Detailed task breakdowns** | Live in the issue tracker. This document plans at the week level |
-| **Individual assignment** | Team-size dependent |
-| **Budget and cost** | Not a documentation concern |
-| **Marketing timeline** | Producer-owned outside `docs/` |
-| **Post-launch content plans** | §11 and `20-Future-Ideas.md` |
-| **The Steam port schedule** | Post-launch |
-| **Audio production schedule** | Blocked on `ADR-020` (vendor selection) |
-| **Localisation** | Post-launch |
-| **Crunch as a contingency** | P6. Cut lines exist so crunch does not have to |
+| Excluded                      | Reason                                                           |
+| ----------------------------- | ---------------------------------------------------------------- |
+| **Detailed task breakdowns**  | Live in the issue tracker. This document plans at the week level |
+| **Individual assignment**     | Team-size dependent                                              |
+| **Budget and cost**           | Not a documentation concern                                      |
+| **Marketing timeline**        | Producer-owned outside `docs/`                                   |
+| **Post-launch content plans** | §11 and `20-Future-Ideas.md`                                     |
+| **The Steam port schedule**   | Post-launch                                                      |
+| **Audio production schedule** | Blocked on `ADR-020` (vendor selection)                          |
+| **Localisation**              | Post-launch                                                      |
+| **Crunch as a contingency**   | P6. Cut lines exist so crunch does not have to                   |
 
 ---
 
 ## 14. Cross References
 
-| Topic | Document |
-|-------|----------|
-| Content scope this plan delivers | `00-README.md` §5.6 |
-| The build order that determines milestone sequence | `01-Vision.md` §8.1 |
-| Cut-line structure and portfolio reachability | `01-Vision.md` §7.4, §11 |
-| The risk register this section expands | `01-Vision.md` §8.3 |
-| Definition of Done (the M12 gate) | `01-Vision.md` §7.5 |
-| The Pillar Audit run at every gate | `02-Game-Pillars.md` §6.2 |
-| Feel constants locked at M1 | `00-README.md` §5.3, `02-Game-Pillars.md` §5.1 |
-| Nine-layer combat stack delivered in M2 | `02-Game-Pillars.md` §5.2, `07-Combat.md` §6 |
-| Feedback contract delivered in M3 | `02-Game-Pillars.md` §5.3.2 |
-| Frameworks built in M4 | `03-Technical-Architecture.md` §10 |
-| Art harmonisation estimates measured in M3 | `04-Art-Direction.md` §8.3 |
-| Missing asset categories and their blocking milestones | `05-Asset-Pipeline.md` §9.7 |
-| Castle tileset fallback plan (M10) | `05-Asset-Pipeline.md` §9.1 |
-| GUI kit authoring (M6) | `05-Asset-Pipeline.md` §9.2 |
-| Per-world level specifications | `10-Level-Design.md` §10 |
-| Per-boss specifications | `09-Boss-System.md` §7 |
-| Save migrations verified at M6 and M12 | `11-Progression.md` §8.6 |
-| The Deletion Test procedure | `12-Portfolio-System.md` §5.1 |
-| Assist Options delivered in M11 | `13-UI-UX.md` §11 |
-| Minimum-hardware verification procedure | `15-Performance.md` §9.4 |
-| Bug severity definitions | `16-Coding-Standards.md` §11.7 |
-| Cut decisions recorded as ADRs | `19-Decisions.md` |
-| Post-launch backlog | `20-Future-Ideas.md` |
+| Topic                                                  | Document                                       |
+| ------------------------------------------------------ | ---------------------------------------------- |
+| Content scope this plan delivers                       | `00-README.md` §5.6                            |
+| The build order that determines milestone sequence     | `01-Vision.md` §8.1                            |
+| Cut-line structure and portfolio reachability          | `01-Vision.md` §7.4, §11                       |
+| The risk register this section expands                 | `01-Vision.md` §8.3                            |
+| Definition of Done (the M12 gate)                      | `01-Vision.md` §7.5                            |
+| The Pillar Audit run at every gate                     | `02-Game-Pillars.md` §6.2                      |
+| Feel constants locked at M1                            | `00-README.md` §5.3, `02-Game-Pillars.md` §5.1 |
+| Nine-layer combat stack delivered in M2                | `02-Game-Pillars.md` §5.2, `07-Combat.md` §6   |
+| Feedback contract delivered in M3                      | `02-Game-Pillars.md` §5.3.2                    |
+| Frameworks built in M4                                 | `03-Technical-Architecture.md` §10             |
+| Art harmonisation estimates measured in M3             | `04-Art-Direction.md` §8.3                     |
+| Missing asset categories and their blocking milestones | `05-Asset-Pipeline.md` §9.7                    |
+| Castle tileset fallback plan (M10)                     | `05-Asset-Pipeline.md` §9.1                    |
+| GUI kit authoring (M6)                                 | `05-Asset-Pipeline.md` §9.2                    |
+| Per-world level specifications                         | `10-Level-Design.md` §10                       |
+| Per-boss specifications                                | `09-Boss-System.md` §7                         |
+| Save migrations verified at M6 and M12                 | `11-Progression.md` §8.6                       |
+| The Deletion Test procedure                            | `12-Portfolio-System.md` §5.1                  |
+| Assist Options delivered in M11                        | `13-UI-UX.md` §11                              |
+| Minimum-hardware verification procedure                | `15-Performance.md` §9.4                       |
+| Bug severity definitions                               | `16-Coding-Standards.md` §11.7                 |
+| Cut decisions recorded as ADRs                         | `19-Decisions.md`                              |
+| Post-launch backlog                                    | `20-Future-Ideas.md`                           |

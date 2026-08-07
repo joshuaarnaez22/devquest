@@ -20,15 +20,15 @@ If a proposed change requires editing this document, that change is a **strategi
 
 ## 2. Goals
 
-| # | Goal | Success Signal |
-|---|------|----------------|
-| G1 | State the product definition in one unambiguous paragraph | Anyone can repeat the elevator pitch after one read |
-| G2 | Define the target audience and their expectations | Feature debates resolve by asking "does the audience want this?" |
-| G3 | Establish the competitive frame and what we borrow from whom | Comparisons are specific and mechanical, not vibes-based |
-| G4 | Define the "portfolio second" constraint operationally | There exists a concrete test for whether a portfolio feature has overstepped |
-| G5 | Define measurable success criteria for launch | We can say objectively whether the project succeeded |
-| G6 | Define non-goals with the same precision as goals | Scope creep is caught at proposal, not at implementation |
-| G7 | Define the risk register and mitigations | Known failure modes have owners and countermeasures |
+| #   | Goal                                                         | Success Signal                                                               |
+| --- | ------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| G1  | State the product definition in one unambiguous paragraph    | Anyone can repeat the elevator pitch after one read                          |
+| G2  | Define the target audience and their expectations            | Feature debates resolve by asking "does the audience want this?"             |
+| G3  | Establish the competitive frame and what we borrow from whom | Comparisons are specific and mechanical, not vibes-based                     |
+| G4  | Define the "portfolio second" constraint operationally       | There exists a concrete test for whether a portfolio feature has overstepped |
+| G5  | Define measurable success criteria for launch                | We can say objectively whether the project succeeded                         |
+| G6  | Define non-goals with the same precision as goals            | Scope creep is caught at proposal, not at implementation                     |
+| G7  | Define the risk register and mitigations                     | Known failure modes have owners and countermeasures                          |
 
 ---
 
@@ -46,7 +46,7 @@ A grey box that feels perfect ships. A beautiful scene that feels wrong does not
 
 Given a choice between a third character ability and 40 ms of hitstop tuning across all existing abilities, tune the hitstop. Breadth is cheap to add later; a foundation that feels wrong contaminates everything built on top of it.
 
-**Operational consequence:** the feature backlog is ordered by *depth on existing systems* before *new systems*, and every milestone reserves 20% of its time for polish on what already exists.
+**Operational consequence:** the feature backlog is ordered by _depth on existing systems_ before _new systems_, and every milestone reserves 20% of its time for polish on what already exists.
 
 ### P3 — Polish Before Content
 
@@ -70,12 +70,12 @@ Five worlds that are excellent beat eight worlds that are adequate. The content 
 
 DevQuest sits at the intersection of three established shapes:
 
-| Reference | What We Take | What We Explicitly Do Not Take |
-|-----------|--------------|--------------------------------|
-| **Celeste** | Movement fidelity: coyote time, jump buffering, variable jump height, air control, the discipline of tuning one verb until it is perfect | Assist mode complexity, narrative weight, single-screen room structure, wall-climbing as a core verb |
-| **Dead Cells** | Hit feel: hitstop, screen shake, damage numbers, enemy stagger, the "crunch" of a connected blow. Weapon-identity-driven playstyle differences | Roguelike structure, permadeath, procedural generation, build randomisation, item economy |
-| **Hollow Knight** | Combat legibility: clear enemy tells, generous but honest hitboxes, boss encounters as authored set-pieces with distinct phases | Metroidvania interconnection, map exploration, sprawling scope, atmospheric restraint (we are louder) |
-| **Mega Man X** | Level-per-world structure, a new mechanic per world, character-select-driven replay | Weapon-stealing, boss weakness rock-paper-scissors, 8-boss non-linear select |
+| Reference         | What We Take                                                                                                                                   | What We Explicitly Do Not Take                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Celeste**       | Movement fidelity: coyote time, jump buffering, variable jump height, air control, the discipline of tuning one verb until it is perfect       | Assist mode complexity, narrative weight, single-screen room structure, wall-climbing as a core verb  |
+| **Dead Cells**    | Hit feel: hitstop, screen shake, damage numbers, enemy stagger, the "crunch" of a connected blow. Weapon-identity-driven playstyle differences | Roguelike structure, permadeath, procedural generation, build randomisation, item economy             |
+| **Hollow Knight** | Combat legibility: clear enemy tells, generous but honest hitboxes, boss encounters as authored set-pieces with distinct phases                | Metroidvania interconnection, map exploration, sprawling scope, atmospheric restraint (we are louder) |
+| **Mega Man X**    | Level-per-world structure, a new mechanic per world, character-select-driven replay                                                            | Weapon-stealing, boss weakness rock-paper-scissors, 8-boss non-linear select                          |
 
 **Where we differ from all four:** the portfolio unlock layer, and a four-character roster where the character is chosen once per run rather than swapped mid-level.
 
@@ -101,15 +101,15 @@ Concretely, this means:
 
 ### 5.1 Platform Definition
 
-| Attribute | Decision | Rationale |
-|-----------|----------|-----------|
-| **Primary platform** | Desktop web browser | Zero-install is the point — a recruiter clicks a link and is playing in 8 seconds |
-| **Browsers supported** | Chrome/Edge 120+, Firefox 120+, Safari 17+ | Covers >95% of desktop traffic; all have solid WebGL2 and Gamepad API |
-| **Minimum hardware** | 2019 MacBook Air (Intel UHD 617), 8 GB RAM | Deliberately low. If it runs at 60 fps here it runs everywhere |
-| **Input** | Keyboard (primary), Gamepad (full parity) | Both are first-class; neither is a port of the other |
-| **Orientation** | Landscape only | 320×180 is a 16:9 internal buffer |
-| **Network** | None required after load | Fully offline-capable once cached. No backend, no accounts |
-| **Secondary platform** | Steam (Electron/Tauri wrapper) | Post-launch. See `03-Technical-Architecture.md` §14 |
+| Attribute              | Decision                                   | Rationale                                                                         |
+| ---------------------- | ------------------------------------------ | --------------------------------------------------------------------------------- |
+| **Primary platform**   | Desktop web browser                        | Zero-install is the point — a recruiter clicks a link and is playing in 8 seconds |
+| **Browsers supported** | Chrome/Edge 120+, Firefox 120+, Safari 17+ | Covers >95% of desktop traffic; all have solid WebGL2 and Gamepad API             |
+| **Minimum hardware**   | 2019 MacBook Air (Intel UHD 617), 8 GB RAM | Deliberately low. If it runs at 60 fps here it runs everywhere                    |
+| **Input**              | Keyboard (primary), Gamepad (full parity)  | Both are first-class; neither is a port of the other                              |
+| **Orientation**        | Landscape only                             | 320×180 is a 16:9 internal buffer                                                 |
+| **Network**            | None required after load                   | Fully offline-capable once cached. No backend, no accounts                        |
+| **Secondary platform** | Steam (Electron/Tauri wrapper)             | Post-launch. See `03-Technical-Architecture.md` §14                               |
 
 ### 5.2 The Load-Time Promise
 
@@ -123,11 +123,11 @@ This is not a nice-to-have. A recruiter with 90 seconds of patience who spends 2
 
 ### 5.3 Session Shape
 
-| Session Type | Duration | Design Requirement |
-|--------------|----------|-------------------|
-| **The Recruiter Session** | 3–8 minutes | Must reach the first boss and unlock About Me within 12 minutes of play. World 1 is tuned as the shop window |
-| **The Casual Session** | 20–40 minutes | One world per sitting. Checkpoints and world boundaries align to this |
-| **The Completionist Session** | 2 hours+ | Secret hunting, charm collection, character re-runs |
+| Session Type                  | Duration      | Design Requirement                                                                                           |
+| ----------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
+| **The Recruiter Session**     | 3–8 minutes   | Must reach the first boss and unlock About Me within 12 minutes of play. World 1 is tuned as the shop window |
+| **The Casual Session**        | 20–40 minutes | One world per sitting. Checkpoints and world boundaries align to this                                        |
+| **The Completionist Session** | 2 hours+      | Secret hunting, charm collection, character re-runs                                                          |
 
 **Consequence:** the save system must checkpoint aggressively and resume instantly. A player who closes the tab mid-level and returns tomorrow resumes at the last checkpoint with zero friction and no "continue?" prompt ambiguity. See `11-Progression.md` §8.
 
@@ -140,12 +140,14 @@ This is not a nice-to-have. A recruiter with 90 seconds of patience who spends 2
 **Who they are:** Evaluating the developer for a role. Has 90 seconds of curiosity and 15 minutes of interest if the first 90 seconds land. May not be a gamer.
 
 **What they need:**
+
 - To be playing, not reading, within 10 seconds.
 - Controls that make sense without a tutorial screen.
 - A visible reason to keep going (progress bar, unlock preview).
 - A path to the portfolio content that does not require skill they lack.
 
 **Design consequences:**
+
 - World 1-1 teaches movement through level geometry, not text.
 - **Assist Options** exist and are surfaced in the pause menu without shame framing: infinite health, damage reduction, slow-motion, skip-boss-after-3-deaths. See `13-UI-UX.md` §11.
 - The Codex is reachable from the main menu at any time, showing locked entries as silhouettes — the reward is legible before it is earned.
@@ -156,11 +158,13 @@ This is not a nice-to-have. A recruiter with 90 seconds of patience who spends 2
 **Who they are:** A peer who found the link on social media or a developer forum. Games-literate, code-literate, likely to look at the repository.
 
 **What they need:**
+
 - Mechanical depth that respects them.
 - Evidence of engineering quality — clean code, real architecture, no shortcuts.
 - Something to talk about: a clever mechanic, a well-tuned boss.
 
 **Design consequences:**
+
 - The repository is public and the code is written to be read (`16-Coding-Standards.md`).
 - Character playstyles are genuinely different, not stat re-skins.
 - Boss fights reward pattern mastery.
@@ -171,11 +175,13 @@ This is not a nice-to-have. A recruiter with 90 seconds of patience who spends 2
 **Who they are:** Found the game as a game. Does not care about the portfolio. Plays Celeste, Dead Cells, Katana Zero.
 
 **What they need:**
+
 - Tight controls, no compromises.
 - Real challenge available.
 - Reasons to replay: four characters, secrets, time trials.
 
 **Design consequences:**
+
 - The Deletion Test (§4.4) exists primarily to serve this audience.
 - Difficulty is honest by default; Assist Options are opt-in and never suggested unsolicited except after repeated boss failures.
 - Post-launch content targets this group (`20-Future-Ideas.md`).
@@ -195,23 +201,23 @@ We are explicitly **not** building for:
 
 ### 7.1 Feature Set — Shipping Scope
 
-| Category | Feature | Priority |
-|----------|---------|----------|
-| **Movement** | Run, jump (variable height), coyote time, jump buffer, air control, dash, one-way platforms, landing recovery | P0 |
-| **Combat** | 3-hit ground combo, air attack, hitstop, hitflash, knockback, damage numbers, i-frames, enemy stagger | P0 |
-| **Characters** | 4 heroes, each with unique stats, unique special, unique feel | P0 |
-| **Enemies** | 7 base types, 3 tiers each (basic / veteran / elite) = 21 configurations | P0 |
-| **Bosses** | 5 multi-phase encounters with intro, arena, death sequence | P0 |
-| **Levels** | 20 handcrafted levels across 5 worlds | P0 |
-| **Mechanics** | 5 world-specific mechanic sets (one per world, never repeated) | P0 |
-| **Progression** | Health shards, charms (3 slots), coins, world unlocks | P0 |
-| **Portfolio** | Codex with 5 sections, unlock ceremony, re-readable | P0 |
-| **UI** | Main menu, character select, world select, HUD, pause, settings, victory, game over, Codex | P0 |
-| **Save** | LocalStorage, versioned schema, 3 slots, auto-save at checkpoints | P0 |
-| **Input** | Keyboard + gamepad, full remapping, hot-swap detection | P0 |
-| **Accessibility** | Assist options, reduced motion, screen shake toggle, colourblind-safe UI, hold-vs-toggle | P0 |
-| **Audio** | Music, SFX, mixer with per-channel volume | P1 — *assets not yet selected* |
-| **Extras** | Time trial mode, boss rush, gallery | P2 |
+| Category          | Feature                                                                                                       | Priority                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| **Movement**      | Run, jump (variable height), coyote time, jump buffer, air control, dash, one-way platforms, landing recovery | P0                             |
+| **Combat**        | 3-hit ground combo, air attack, hitstop, hitflash, knockback, damage numbers, i-frames, enemy stagger         | P0                             |
+| **Characters**    | 4 heroes, each with unique stats, unique special, unique feel                                                 | P0                             |
+| **Enemies**       | 7 base types, 3 tiers each (basic / veteran / elite) = 21 configurations                                      | P0                             |
+| **Bosses**        | 5 multi-phase encounters with intro, arena, death sequence                                                    | P0                             |
+| **Levels**        | 20 handcrafted levels across 5 worlds                                                                         | P0                             |
+| **Mechanics**     | 5 world-specific mechanic sets (one per world, never repeated)                                                | P0                             |
+| **Progression**   | Health shards, charms (3 slots), coins, world unlocks                                                         | P0                             |
+| **Portfolio**     | Codex with 5 sections, unlock ceremony, re-readable                                                           | P0                             |
+| **UI**            | Main menu, character select, world select, HUD, pause, settings, victory, game over, Codex                    | P0                             |
+| **Save**          | LocalStorage, versioned schema, 3 slots, auto-save at checkpoints                                             | P0                             |
+| **Input**         | Keyboard + gamepad, full remapping, hot-swap detection                                                        | P0                             |
+| **Accessibility** | Assist options, reduced motion, screen shake toggle, colourblind-safe UI, hold-vs-toggle                      | P0                             |
+| **Audio**         | Music, SFX, mixer with per-channel volume                                                                     | P1 — _assets not yet selected_ |
+| **Extras**        | Time trial mode, boss rush, gallery                                                                           | P2                             |
 
 ### 7.2 Why Not an RPG — The Detailed Answer
 
@@ -223,7 +229,7 @@ This is documented at length because it is the single most frequently proposed p
 
 1. **The metaphor is cute for ten seconds and tedious for two hours.** A pun does not sustain a play session. The player who "gets it" at minute one has nothing left at minute thirty.
 2. **RPG systems demand content volume we cannot produce.** A satisfying RPG needs dozens of hours of encounters, items, and dialogue. A satisfying action platformer needs four hours of excellent levels. With a twelve-month solo-scale budget, only one of these is achievable at a shippable quality bar.
-3. **RPG combat is arithmetic; action combat is skill.** Our pillars (`02-Game-Pillars.md`) are built on *feel*. Turn-based or stat-driven combat has no hitstop, no knockback, no screen shake — it removes the entire second pillar.
+3. **RPG combat is arithmetic; action combat is skill.** Our pillars (`02-Game-Pillars.md`) are built on _feel_. Turn-based or stat-driven combat has no hitstop, no knockback, no screen shake — it removes the entire second pillar.
 4. **It fails the Deletion Test.** An RPG whose stats are career metaphors collapses without the metaphor. An action platformer does not.
 5. **It is the expected answer.** Every developer-portfolio-game is an RPG. Building an action platformer is itself a differentiator.
 
@@ -233,11 +239,11 @@ This is documented at length because it is the single most frequently proposed p
 
 **The proposal usually is:** the game is a gimmick; just build a beautiful, fast website.
 
-**Why the game is the right call *for this specific goal*:**
+**Why the game is the right call _for this specific goal_:**
 
 1. A website demonstrates that you can build a website. A 60 fps game engine build with a data-driven enemy framework, object pooling, a state-machine-driven boss system, and a documented architecture demonstrates considerably more.
 2. Time-on-page for a portfolio site is measured in seconds. Time-in-game for a competent platformer is measured in tens of minutes.
-3. **The hedge:** a plain, fast, accessible HTML résumé is *also* shipped at the same domain under `/resume`, linked from the title screen and the Codex. The game does not replace the résumé; it is the reason someone reads it. This is non-negotiable and is in scope — see `12-Portfolio-System.md` §12.
+3. **The hedge:** a plain, fast, accessible HTML résumé is _also_ shipped at the same domain under `/resume`, linked from the title screen and the Codex. The game does not replace the résumé; it is the reason someone reads it. This is non-negotiable and is in scope — see `12-Portfolio-System.md` §12.
 
 **Recorded as:** `ADR-002` in `19-Decisions.md`.
 
@@ -269,7 +275,7 @@ flowchart TD
 
 **Cut Line B** (invoked at M9 if World 5 is not playable): World 5 is dropped. Golem Sovereign becomes the final boss and unlocks both Skills and Contact.
 
-**The rule:** portfolio sections are *never* cut. Only the worlds that gate them are. The unlock mapping is data-driven precisely so a cut is a JSON edit, not a refactor. See `12-Portfolio-System.md` §9.
+**The rule:** portfolio sections are _never_ cut. Only the worlds that gate them are. The unlock mapping is data-driven precisely so a cut is a JSON edit, not a refactor. See `12-Portfolio-System.md` §9.
 
 ### 7.5 Definition of Done — The Product
 
@@ -304,7 +310,7 @@ flowchart LR
     F --> G[7. Polish + accessibility]
 ```
 
-**The critical insight:** step 4 (frameworks) comes *after* step 3 (vertical slice), not before. Building a generic enemy framework before you have shipped one enemy that feels good produces a framework that generalises the wrong things. The vertical slice is what teaches you what the framework needs to abstract.
+**The critical insight:** step 4 (frameworks) comes _after_ step 3 (vertical slice), not before. Building a generic enemy framework before you have shipped one enemy that feels good produces a framework that generalises the wrong things. The vertical slice is what teaches you what the framework needs to abstract.
 
 This is the inverse of the instinct to "build the architecture first," and it is deliberate. See `19-Decisions.md` `ADR-004`.
 
@@ -324,16 +330,16 @@ If any of these assumptions breaks — particularly "art is licensed" — the sc
 
 Recorded plainly, because naming the failure mode is the cheapest mitigation available:
 
-| Failure Mode | Probability | Impact | Mitigation |
-|---|---|---|---|
-| **Tuning paralysis** — endlessly polishing movement, never shipping content | High | Fatal | M1 has a hard end date. Constants lock at M1 exit and change only via ADR |
-| **Framework astronautics** — building abstractions before the concrete case | High | Severe | §8.1 build order. No abstraction without two concrete implementations |
-| **Art inconsistency** — mixing packs, breaking pixel density | Medium | Severe | `05-Asset-Pipeline.md` gate; no asset enters without passing the checklist |
-| **Portfolio creep** — the portfolio layer grows until it dominates | Medium | Severe | The Deletion Test, applied at every milestone review |
-| **Scope absorption** — new features added without cutting others | High | Fatal | `20-Future-Ideas.md` is the only legal destination for a new idea mid-milestone |
-| **Content fatigue** — worlds 3–5 become progressively less polished | Medium | Moderate | Cut lines. Ship three excellent worlds over five mediocre ones |
-| **Browser regression** — a Safari or Chrome update breaks WebGL behaviour | Low | Moderate | Cross-browser smoke test in CI on every merge |
-| **Asset licence problem** — a pack's terms change or were misread | Low | Fatal | Licence text is archived in-repo at integration time, not linked |
+| Failure Mode                                                                | Probability | Impact   | Mitigation                                                                      |
+| --------------------------------------------------------------------------- | ----------- | -------- | ------------------------------------------------------------------------------- |
+| **Tuning paralysis** — endlessly polishing movement, never shipping content | High        | Fatal    | M1 has a hard end date. Constants lock at M1 exit and change only via ADR       |
+| **Framework astronautics** — building abstractions before the concrete case | High        | Severe   | §8.1 build order. No abstraction without two concrete implementations           |
+| **Art inconsistency** — mixing packs, breaking pixel density                | Medium      | Severe   | `05-Asset-Pipeline.md` gate; no asset enters without passing the checklist      |
+| **Portfolio creep** — the portfolio layer grows until it dominates          | Medium      | Severe   | The Deletion Test, applied at every milestone review                            |
+| **Scope absorption** — new features added without cutting others            | High        | Fatal    | `20-Future-Ideas.md` is the only legal destination for a new idea mid-milestone |
+| **Content fatigue** — worlds 3–5 become progressively less polished         | Medium      | Moderate | Cut lines. Ship three excellent worlds over five mediocre ones                  |
+| **Browser regression** — a Safari or Chrome update breaks WebGL behaviour   | Low         | Moderate | Cross-browser smoke test in CI on every merge                                   |
+| **Asset licence problem** — a pack's terms change or were misread           | Low         | Fatal    | Licence text is archived in-repo at integration time, not linked                |
 
 ---
 
@@ -373,21 +379,23 @@ The point of this mapping is auditability: every claim in the vision has a syste
 **Request:** "Add a shop where you spend coins on permanent upgrades."
 
 **Evaluation:**
-- *Does it serve a pillar?* Weakly. It does not improve controls, combat feel, visual polish, learnability, or mechanical novelty.
-- *Does it pass the RPG test?* No — permanent stat upgrades are exactly the arithmetic-combat drift rejected in §7.2.
-- *Does it cost content?* Yes: a shop scene, an economy balance pass, upgrade art, and save-schema changes. Roughly one world's worth of time.
-- *Verdict:* **Rejected.** Coins already have a sink (charms, health shards) that requires no new scene. Moved to `20-Future-Ideas.md`.
+
+- _Does it serve a pillar?_ Weakly. It does not improve controls, combat feel, visual polish, learnability, or mechanical novelty.
+- _Does it pass the RPG test?_ No — permanent stat upgrades are exactly the arithmetic-combat drift rejected in §7.2.
+- _Does it cost content?_ Yes: a shop scene, an economy balance pass, upgrade art, and save-schema changes. Roughly one world's worth of time.
+- _Verdict:_ **Rejected.** Coins already have a sink (charms, health shards) that requires no new scene. Moved to `20-Future-Ideas.md`.
 
 ### 10.2 Applying the Vision to a Different Feature Request
 
 **Request:** "Add a wall-slide so the Ninja can descend shafts slowly."
 
 **Evaluation:**
-- *Does it serve a pillar?* Yes — Pillar 1 (Responsive Controls) and Pillar 5 (character distinctiveness through mechanics).
-- *Does it cost content?* Low. One state in the existing player FSM, one animation from an already-licensed pack, ~40 lines.
-- *Does it break the Deletion Test?* No — unrelated to portfolio.
-- *Does it create level-design obligations?* Yes: shafts must exist for it to matter, and levels must not become Ninja-only.
-- *Verdict:* **Accepted with condition** — wall-slide is available to all four characters at differing slide speeds (Ninja fastest recovery, Knight slowest), so no level is character-gated. Recorded as `ADR-011`.
+
+- _Does it serve a pillar?_ Yes — Pillar 1 (Responsive Controls) and Pillar 5 (character distinctiveness through mechanics).
+- _Does it cost content?_ Low. One state in the existing player FSM, one animation from an already-licensed pack, ~40 lines.
+- _Does it break the Deletion Test?_ No — unrelated to portfolio.
+- _Does it create level-design obligations?_ Yes: shafts must exist for it to matter, and levels must not become Ninja-only.
+- _Verdict:_ **Accepted with condition** — wall-slide is available to all four characters at differing slide speeds (Ninja fastest recovery, Knight slowest), so no level is character-gated. Recorded as `ADR-011`.
 
 ### 10.3 Applying the Deletion Test in Review
 
@@ -428,11 +436,41 @@ export interface WorldManifestEntry {
 }
 
 export const WORLD_MANIFEST: readonly WorldManifestEntry[] = [
-  { id: 'w1', displayName: 'Verdant Ascent', cutLine: 'core', unlocks: ['about'],      fallbackUnlocks: [] },
-  { id: 'w2', displayName: 'Autumn Reach',   cutLine: 'core', unlocks: ['projects'],   fallbackUnlocks: [] },
-  { id: 'w3', displayName: 'Hollow Barrow',  cutLine: 'core', unlocks: ['experience'], fallbackUnlocks: ['skills', 'contact'] },
-  { id: 'w4', displayName: 'Crystal Deep',   cutLine: 'a',    unlocks: ['skills'],     fallbackUnlocks: ['contact'] },
-  { id: 'w5', displayName: "Gorgon's Spire", cutLine: 'b',    unlocks: ['contact'],    fallbackUnlocks: [] },
+  {
+    id: 'w1',
+    displayName: 'Verdant Ascent',
+    cutLine: 'core',
+    unlocks: ['about'],
+    fallbackUnlocks: [],
+  },
+  {
+    id: 'w2',
+    displayName: 'Autumn Reach',
+    cutLine: 'core',
+    unlocks: ['projects'],
+    fallbackUnlocks: [],
+  },
+  {
+    id: 'w3',
+    displayName: 'Hollow Barrow',
+    cutLine: 'core',
+    unlocks: ['experience'],
+    fallbackUnlocks: ['skills', 'contact'],
+  },
+  {
+    id: 'w4',
+    displayName: 'Crystal Deep',
+    cutLine: 'a',
+    unlocks: ['skills'],
+    fallbackUnlocks: ['contact'],
+  },
+  {
+    id: 'w5',
+    displayName: "Gorgon's Spire",
+    cutLine: 'b',
+    unlocks: ['contact'],
+    fallbackUnlocks: [],
+  },
 ] as const;
 
 /** Build-time flag. Set by CI from the milestone config, not hand-edited. */
@@ -464,17 +502,17 @@ This runs in `tools/ci/check-cutlines.ts` on every build. A cut that orphans a p
 
 Ordered by how well each serves the vision, not by how interesting it is to build.
 
-| Idea | Serves Vision? | When |
-|------|---------------|------|
-| **Steam release** | Strongly — validates the "real game" claim | Post-launch, 3 months |
-| **Time Trial mode** | Yes — depth for the tertiary audience, near-zero content cost | Post-launch, 1 month |
-| **Boss Rush** | Yes — reuses existing content entirely | Post-launch, 2 weeks |
+| Idea                  | Serves Vision?                                                         | When                  |
+| --------------------- | ---------------------------------------------------------------------- | --------------------- |
+| **Steam release**     | Strongly — validates the "real game" claim                             | Post-launch, 3 months |
+| **Time Trial mode**   | Yes — depth for the tertiary audience, near-zero content cost          | Post-launch, 1 month  |
+| **Boss Rush**         | Yes — reuses existing content entirely                                 | Post-launch, 2 weeks  |
 | **A fifth character** | Moderately — replay value, but a full animation set and ability design | Post-launch, 2 months |
-| **World 6** | Moderately — content, but the unlock chain is already complete | Post-launch, 3 months |
-| **Localisation** | Weakly for the primary audience, strongly for reach | Post-launch, evaluate |
-| **Touch / mobile** | Weakly — precision platforming and touch conflict | Investigate only |
-| **Level editor** | Weakly for players, strongly as a portfolio artifact | Evaluate post-launch |
-| **Multiplayer** | Not at all | Never |
+| **World 6**           | Moderately — content, but the unlock chain is already complete         | Post-launch, 3 months |
+| **Localisation**      | Weakly for the primary audience, strongly for reach                    | Post-launch, evaluate |
+| **Touch / mobile**    | Weakly — precision platforming and touch conflict                      | Investigate only      |
+| **Level editor**      | Weakly for players, strongly as a portfolio artifact                   | Evaluate post-launch  |
+| **Multiplayer**       | Not at all                                                             | Never                 |
 
 All of these live in `20-Future-Ideas.md` with fuller treatment. Nothing here enters the twelve-month plan.
 
@@ -499,38 +537,38 @@ This document is doing its job when:
 
 Explicitly excluded from the twelve-month product. Proposals for these are closed by reference to this section.
 
-| Excluded | Reason |
-|----------|--------|
-| **Any backend service** | No accounts, no leaderboards, no telemetry server. Save is local. Adds infrastructure, privacy obligations, and cost for no vision benefit |
-| **Procedural generation** | Contradicts "handcrafted levels." A generator good enough to match hand-authored quality is a bigger project than the game |
-| **Narrative campaign** | No dialogue system, no cutscenes beyond boss intros, no branching. Not what the audience is here for |
-| **RPG systems** | §7.2. No XP, no levels, no stat allocation, no equipment stats, no inventory |
-| **Multiplayer** | Netcode for a 60 fps action platformer is a year of work on its own |
-| **Mobile / touch** | §6.4 |
-| **Monetisation** | The game is free. No ads, no IAP, no paid tiers |
-| **User-generated content** | No level editor, no sharing, no moderation burden |
-| **Achievements / cloud saves** | Steam-only concern, deferred to the port |
-| **Custom engine** | Phaser 3 is chosen and locked. See `19-Decisions.md` `ADR-003` |
-| **3D or 2.5D elements** | Pure 2D pixel art. No parallax fakery beyond layered scrolling backgrounds |
-| **Voice acting** | Cost and scope with no vision benefit |
+| Excluded                       | Reason                                                                                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Any backend service**        | No accounts, no leaderboards, no telemetry server. Save is local. Adds infrastructure, privacy obligations, and cost for no vision benefit |
+| **Procedural generation**      | Contradicts "handcrafted levels." A generator good enough to match hand-authored quality is a bigger project than the game                 |
+| **Narrative campaign**         | No dialogue system, no cutscenes beyond boss intros, no branching. Not what the audience is here for                                       |
+| **RPG systems**                | §7.2. No XP, no levels, no stat allocation, no equipment stats, no inventory                                                               |
+| **Multiplayer**                | Netcode for a 60 fps action platformer is a year of work on its own                                                                        |
+| **Mobile / touch**             | §6.4                                                                                                                                       |
+| **Monetisation**               | The game is free. No ads, no IAP, no paid tiers                                                                                            |
+| **User-generated content**     | No level editor, no sharing, no moderation burden                                                                                          |
+| **Achievements / cloud saves** | Steam-only concern, deferred to the port                                                                                                   |
+| **Custom engine**              | Phaser 3 is chosen and locked. See `19-Decisions.md` `ADR-003`                                                                             |
+| **3D or 2.5D elements**        | Pure 2D pixel art. No parallax fakery beyond layered scrolling backgrounds                                                                 |
+| **Voice acting**               | Cost and scope with no vision benefit                                                                                                      |
 
 ---
 
 ## 15. Cross References
 
-| Topic | Document |
-|-------|----------|
-| Canonical constants referenced throughout this document | `00-README.md` §5 |
-| The five pillars derived from §3 | `02-Game-Pillars.md` |
-| How the 8-second load promise is achieved | `03-Technical-Architecture.md` §9, `15-Performance.md` §7 |
-| Steam port considerations | `03-Technical-Architecture.md` §14 |
-| Asset licensing gate referenced in §8.3 | `05-Asset-Pipeline.md` §4 |
-| The four heroes and their distinctiveness | `06-Characters.md` |
-| The five bosses referenced in §7.4 | `09-Boss-System.md` |
-| World and level structure | `10-Level-Design.md` |
-| The unlock chain and cut-line data | `11-Progression.md` §6, `12-Portfolio-System.md` §9 |
-| The Deletion Test's system boundary | `12-Portfolio-System.md` §5 |
-| Assist Options for the primary audience | `13-UI-UX.md` §11 |
-| Milestones, cut-line dates, and gates | `17-Roadmap.md` |
-| ADR-001 through ADR-004 cited here | `19-Decisions.md` |
-| Everything rejected in §12 and §14 | `20-Future-Ideas.md` |
+| Topic                                                   | Document                                                  |
+| ------------------------------------------------------- | --------------------------------------------------------- |
+| Canonical constants referenced throughout this document | `00-README.md` §5                                         |
+| The five pillars derived from §3                        | `02-Game-Pillars.md`                                      |
+| How the 8-second load promise is achieved               | `03-Technical-Architecture.md` §9, `15-Performance.md` §7 |
+| Steam port considerations                               | `03-Technical-Architecture.md` §14                        |
+| Asset licensing gate referenced in §8.3                 | `05-Asset-Pipeline.md` §4                                 |
+| The four heroes and their distinctiveness               | `06-Characters.md`                                        |
+| The five bosses referenced in §7.4                      | `09-Boss-System.md`                                       |
+| World and level structure                               | `10-Level-Design.md`                                      |
+| The unlock chain and cut-line data                      | `11-Progression.md` §6, `12-Portfolio-System.md` §9       |
+| The Deletion Test's system boundary                     | `12-Portfolio-System.md` §5                               |
+| Assist Options for the primary audience                 | `13-UI-UX.md` §11                                         |
+| Milestones, cut-line dates, and gates                   | `17-Roadmap.md`                                           |
+| ADR-001 through ADR-004 cited here                      | `19-Decisions.md`                                         |
+| Everything rejected in §12 and §14                      | `20-Future-Ideas.md`                                      |

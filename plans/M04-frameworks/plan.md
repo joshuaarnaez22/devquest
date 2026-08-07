@@ -48,7 +48,7 @@ levels in.
 
 ---
 
-### M4-T2 — `ContentDatabase` · 8 h · *depends: T1*
+### M4-T2 — `ContentDatabase` · 8 h · _depends: T1_
 
 `src/data/ContentDatabase.ts`. Loads, validates, indexes, freezes. Typed accessors returning
 branded ids (`docs/03-Technical-Architecture.md` §15).
@@ -63,7 +63,7 @@ guarantees an id names real content.
 
 ---
 
-### M4-T3 — Extract `EnemyDefinition` · 8 h · *depends: T2*
+### M4-T3 — Extract `EnemyDefinition` · 8 h · _depends: T2_
 
 Convert the hardcoded M2 Skeleton to data. Write `enemies/skeleton_basic.json` with the exact
 numbers from `Skeleton.ts`, then delete `Skeleton.ts`.
@@ -73,7 +73,7 @@ resulting position traces. If they differ, the extraction lost something.
 
 ---
 
-### M4-T4 — The one `Enemy` class · 4 h · *depends: T3*
+### M4-T4 — The one `Enemy` class · 4 h · _depends: T3_
 
 `src/entities/enemy/Enemy.ts`, configured entirely from `EnemyDefinition`
 (`docs/08-Enemy-System.md` §10.1).
@@ -85,7 +85,7 @@ branching. `grep -r "extends Enemy" src/` must return nothing, forever.
 
 ## Week 2 — Behaviours and spawning (~30 h)
 
-### M4-T5 — Behaviour interface and registry · 6 h · *depends: T4*
+### M4-T5 — Behaviour interface and registry · 6 h · _depends: T4_
 
 `docs/08-Enemy-System.md` §5.3, §9.2 of the coding standards.
 
@@ -98,7 +98,7 @@ transition, so the `allowed` guard stays meaningful.
 
 ---
 
-### M4-T6 — Five behaviours · 12 h · *depends: T5*
+### M4-T6 — Five behaviours · 12 h · _depends: T5_
 
 `patrol`, `chase`, `melee`, `ranged`, `leap`. The first three are extracted from the M2 Skeleton;
 `ranged` and `leap` are new but needed for the Skeleton Archer and (in M7) the Werewolf.
@@ -108,7 +108,7 @@ behaviour is testable against a fake context.
 
 ---
 
-### M4-T7 — Shared enemy FSM · 6 h · *depends: T5*
+### M4-T7 — Shared enemy FSM · 6 h · _depends: T5_
 
 `src/entities/enemy/EnemyStates.ts` — all 11 states from `docs/08-Enemy-System.md` §5.1.
 
@@ -117,14 +117,14 @@ window where the enemy cannot act.
 
 ---
 
-### M4-T8 — Sensing · 6 h · *depends: T7*
+### M4-T8 — Sensing · 6 h · _depends: T7_
 
 `VisionCone` and `LedgeSensor` (`docs/08-Enemy-System.md` §5.5, §5.6).
 
 **Line of sight is mandatory for ranged enemies.** An archer that shoots through a wall is a bug,
 and P6 ("enemies do not cheat") is a stated principle.
 
-Hearing is omnidirectional, short (48–60 px), and *does* pass through walls — it models "it heard
+Hearing is omnidirectional, short (48–60 px), and _does_ pass through walls — it models "it heard
 you land" and prevents cheesing enemies behind thin walls.
 
 Implement the **10 Hz staggered raycast now** (ADR-021), keyed `(frameCount + id) % 6`. Doing it
@@ -134,7 +134,7 @@ later means measuring a regression first.
 
 ## Week 3 — Spawning, pooling, bosses (~30 h)
 
-### M4-T9 — `SpawnSystem` and `CullingSystem` · 8 h · *depends: T4*
+### M4-T9 — `SpawnSystem` and `CullingSystem` · 8 h · _depends: T4_
 
 Activation margin 400 px, deactivation 560 px — the 160 px hysteresis prevents boundary thrash.
 
@@ -145,7 +145,7 @@ worse, reappears at full health at its spawn point.
 
 ---
 
-### M4-T10 — Enemy pooling and tier generation · 6 h · *depends: T9*
+### M4-T10 — Enemy pooling and tier generation · 6 h · _depends: T9_
 
 Pools keyed by `EnemyDefId`, not family — `skeleton_basic` and `skeleton_elite` have different
 textures and body sizes.
@@ -158,7 +158,7 @@ fails the build — the edit belongs in the basic definition or the tier delta.
 
 ---
 
-### M4-T11 — Boss framework · 12 h · *depends: T7*
+### M4-T11 — Boss framework · 12 h · _depends: T7_
 
 `src/entities/boss/Boss.ts` + `BossPhaseMachine.ts` — nested FSM, phases outer, attacks inner
 (`docs/09-Boss-System.md` §5.1).
@@ -177,7 +177,7 @@ eight arrive with the bosses that need them.
 
 ---
 
-### M4-T12 — Arena lifecycle · 4 h · *depends: T11*
+### M4-T12 — Arena lifecycle · 4 h · _depends: T11_
 
 Trigger volume, gate closing, camera bounds lock, health bar, **the intro that does not take
 control from the player**, the four-beat death sequence.
@@ -203,14 +203,14 @@ saved in the first milestone alone.
 
 Six checks (`docs/10-Level-Design.md` §8.7):
 
-| Check | Fails if |
-|---|---|
-| `check-layers` | A required layer missing or misnamed |
-| `check-hero-parity` | A main-path gap > 37.3 px or ledge > 26.1 px (worst-case hero minus margin) |
-| `check-teaching` | A world's mechanic lacks any of the five beats, or they are out of order |
-| `check-pacing` | Empty stretch > 160 px, or checkpoints > 900 px apart |
-| `check-encounter-budget` | Weight exceeds the level's budget by > 15% |
-| `check-template` | Missing main path, optional path, secret, mini challenge, or 3 checkpoints |
+| Check                    | Fails if                                                                    |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `check-layers`           | A required layer missing or misnamed                                        |
+| `check-hero-parity`      | A main-path gap > 37.3 px or ledge > 26.1 px (worst-case hero minus margin) |
+| `check-teaching`         | A world's mechanic lacks any of the five beats, or they are out of order    |
+| `check-pacing`           | Empty stretch > 160 px, or checkpoints > 900 px apart                       |
+| `check-encounter-budget` | Weight exceeds the level's budget by > 15%                                  |
+| `check-template`         | Missing main path, optional path, secret, mini challenge, or 3 checkpoints  |
 
 `check-hero-parity` is the important one — it is what makes `docs/06-Characters.md` P3 (no hero
 gated out) enforceable rather than aspirational.
@@ -257,23 +257,23 @@ Then: tag `v0.4.0`, write `docs/audits/milestone-M4.md`, **expand `plans/M06-met
 
 ## Risks
 
-| Risk | P | Mitigation |
-|---|---|---|
-| **Over-generalisation** | 🟠 Med-High | Two-implementations rule, enforced in review. Every interface must name its second implementation |
-| Extraction changes behaviour subtly | Med | Replay-diff against the M2 recording. Not eyeballing |
-| Building all 14 behaviours now | Med | Five only. The rest arrive with the enemies that need them |
-| Building all 12 attack modules now | Med | Four only |
-| Tooling week cut under pressure | **Med** | **Do not cut it.** T13/T14 pay back within M5 week 1. Cutting tooling to save a week costs three |
+| Risk                                | P           | Mitigation                                                                                        |
+| ----------------------------------- | ----------- | ------------------------------------------------------------------------------------------------- |
+| **Over-generalisation**             | 🟠 Med-High | Two-implementations rule, enforced in review. Every interface must name its second implementation |
+| Extraction changes behaviour subtly | Med         | Replay-diff against the M2 recording. Not eyeballing                                              |
+| Building all 14 behaviours now      | Med         | Five only. The rest arrive with the enemies that need them                                        |
+| Building all 12 attack modules now  | Med         | Four only                                                                                         |
+| Tooling week cut under pressure     | **Med**     | **Do not cut it.** T13/T14 pay back within M5 week 1. Cutting tooling to save a week costs three  |
 
 ---
 
 ## Explicitly not in M4
 
-| Not doing | Milestone |
-|---|---|
-| Behaviours beyond the five | With their enemies, M5–M10 |
-| Attack modules beyond the four | With their bosses |
-| Any actual boss | M5 |
-| Levels 1-2 through 1-4 | M5 |
-| UI, save, progression, Codex | M6 |
-| World mechanics beyond World 1's | M7+ |
+| Not doing                        | Milestone                  |
+| -------------------------------- | -------------------------- |
+| Behaviours beyond the five       | With their enemies, M5–M10 |
+| Attack modules beyond the four   | With their bosses          |
+| Any actual boss                  | M5                         |
+| Levels 1-2 through 1-4           | M5                         |
+| UI, save, progression, Codex     | M6                         |
+| World mechanics beyond World 1's | M7+                        |

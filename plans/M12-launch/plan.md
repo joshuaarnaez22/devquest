@@ -28,11 +28,11 @@ something is not in the build at the start of M12, it is not in v1.0.0.
 
 **4 heroes × 3 browsers = 12 complete playthroughs.**
 
-| Axis | Values |
-|---|---|
-| Hero | Knight, Samurai, Ninja, Wizard |
-| Browser | Chrome, Firefox, Safari |
-| Assist | Off (the base experience) |
+| Axis    | Values                         |
+| ------- | ------------------------------ |
+| Hero    | Knight, Samurai, Ninja, Wizard |
+| Browser | Chrome, Firefox, Safari        |
+| Assist  | Off (the base experience)      |
 
 Every playthrough is start-to-credits. Record every anomaly, however small.
 
@@ -46,15 +46,15 @@ sections still unlock).
 The save is the one thing that can destroy a player's experience irrecoverably, so it gets
 disproportionate attention.
 
-| Test | Expected |
-|---|---|
-| Browser restart mid-run | Resumes at the last checkpoint |
-| Tab close during combat | Deferred save flushed on `visibilitychange` |
-| All historical schema versions | Migrate cleanly to current (fixture suite) |
+| Test                                                             | Expected                                                                         |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Browser restart mid-run                                          | Resumes at the last checkpoint                                                   |
+| Tab close during combat                                          | Deferred save flushed on `visibilitychange`                                      |
+| All historical schema versions                                   | Migrate cleanly to current (fixture suite)                                       |
 | Corrupt-save injection (truncated, bad checksum, malformed JSON) | Renamed to `.corrupt.<ts>`, **never deleted**, recovery dialog offers the backup |
-| `QuotaExceededError` injection | Prunes, retries, then surfaces an honest message |
-| Three slots independently | No cross-contamination |
-| Equipped charm not in `ownedCharms` | Silently unequipped on load |
+| `QuotaExceededError` injection                                   | Prunes, retries, then surfaces an honest message                                 |
+| Three slots independently                                        | No cross-contamination                                                           |
+| Equipped charm not in `ownedCharms`                              | Silently unequipped on load                                                      |
 
 ---
 
@@ -157,13 +157,13 @@ From `docs/01-Vision.md` §7.5. This is the product's definition of done, not ju
 
 ## Risks
 
-| Risk | P | Mitigation |
-|---|---|---|
-| A browser-specific bug found in final QA | Med | CI has tested three browsers since M0. A surprise here is likely Safari-specific and probably a WebGL or audio-context issue |
-| Licence problem found in legal review | Low | **Fatal if it happens.** Every pack has been archived since M3. If a pack fails, it must be replaced before launch — this is why the audit is week 1, not week 2 |
-| Scope creep in the final two weeks | **Med** | Nothing new ships in M12. Park everything in `docs/20-Future-Ideas.md` |
-| The 12-minute target missed | Low | It has been measurable since M6. If it fails now, it failed earlier and was not measured |
-| Launch-day breakage | Low | Static files, tested rollback, sub-30-minute hotfix path |
+| Risk                                     | P       | Mitigation                                                                                                                                                       |
+| ---------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A browser-specific bug found in final QA | Med     | CI has tested three browsers since M0. A surprise here is likely Safari-specific and probably a WebGL or audio-context issue                                     |
+| Licence problem found in legal review    | Low     | **Fatal if it happens.** Every pack has been archived since M3. If a pack fails, it must be replaced before launch — this is why the audit is week 1, not week 2 |
+| Scope creep in the final two weeks       | **Med** | Nothing new ships in M12. Park everything in `docs/20-Future-Ideas.md`                                                                                           |
+| The 12-minute target missed              | Low     | It has been measurable since M6. If it fails now, it failed earlier and was not measured                                                                         |
+| Launch-day breakage                      | Low     | Static files, tested rollback, sub-30-minute hotfix path                                                                                                         |
 
 ---
 

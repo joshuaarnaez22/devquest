@@ -32,15 +32,15 @@ polish has been continuous; M11 is the final pass, not the only one.
 
 All seven from `docs/13-UI-UX.md` §11.1. Reachable from Pause in **one press**.
 
-| Option | Values |
-|---|---|
-| Damage taken | 100 / 75 / 50 / 25 / 0% |
+| Option           | Values                                                    |
+| ---------------- | --------------------------------------------------------- |
+| Damage taken     | 100 / 75 / 50 / 25 / 0%                                   |
 | Extended windows | Coyote 100→150, buffer 120→180, parry 200→333, combo +50% |
-| Slow motion | 100 / 90 / 75 / 60% global time scale |
-| Infinite dash | Removes the cooldown |
-| Auto-retry | Skips the Game Over screen |
-| Combat speed | Outgoing damage 100 / 75 / 50% |
-| Skip boss fight | Contextual, after 3 deaths |
+| Slow motion      | 100 / 90 / 75 / 60% global time scale                     |
+| Infinite dash    | Removes the cooldown                                      |
+| Auto-retry       | Skips the Game Over screen                                |
+| Combat speed     | Outgoing damage 100 / 75 / 50%                            |
+| Skip boss fight  | Contextual, after 3 deaths                                |
 
 **What Assist never changes:** boss patterns, telegraph durations, level geometry, gap widths, or
 portfolio content. The game stays the game; the margin for error grows.
@@ -203,10 +203,10 @@ Then: tag `v0.11.0`, write the review.
 
 ## Risks
 
-| Risk | P | Mitigation |
-|---|---|---|
-| **Three weeks is not enough** | Med | The 20% reserve in every prior milestone means this is a final pass, not a first one. If it is genuinely a first pass, that is a prior-milestone failure surfacing late |
-| Non-gamer playtest fails | Med | Fix via Assist, never by nerfing the base game. Have a second tester lined up |
-| Perf problems found late | Low | CI has gated frame time since M2. A surprise here means the gates were too loose |
-| Assist framing drifts to "easy mode" | Med | Review every string. It is the difference between a feature people use and one they avoid |
-| P1 count does not reach zero | Med | Cut P2 work. Do not ship with open P1 |
+| Risk                                 | P   | Mitigation                                                                                                                                                              |
+| ------------------------------------ | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Three weeks is not enough**        | Med | The 20% reserve in every prior milestone means this is a final pass, not a first one. If it is genuinely a first pass, that is a prior-milestone failure surfacing late |
+| Non-gamer playtest fails             | Med | Fix via Assist, never by nerfing the base game. Have a second tester lined up                                                                                           |
+| Perf problems found late             | Low | CI has gated frame time since M2. A surprise here means the gates were too loose                                                                                        |
+| Assist framing drifts to "easy mode" | Med | Review every string. It is the difference between a feature people use and one they avoid                                                                               |
+| P1 count does not reach zero         | Med | Cut P2 work. Do not ship with open P1                                                                                                                                   |

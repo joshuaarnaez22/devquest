@@ -14,16 +14,16 @@ World 2 complete, plus **the Cut Line A decision** — the first hard scope chec
 
 ## Deliverables
 
-| # | Deliverable | Spec |
-|---|---|---|
-| 1 | Autumn Forest tileset + Fairy Tale backgrounds harmonised (~10 h) | `docs/04-Art-Direction.md` §8.3 |
-| 2 | Werewolf pack harmonised (~3 h); Werewolf Scout veteran variant | `docs/08-Enemy-System.md` §6.2 |
-| 3 | `WindZoneMechanic`, crumbling branches, updrafts | `docs/10-Level-Design.md` §7.2 |
-| 4 | **Wall-slide introduced** as the World 2 mastery beat, all four heroes | `docs/06-Characters.md` §5.6, ADR-011 |
-| 5 | Levels 2-1, 2-2, 2-3 | `docs/10-Level-Design.md` §10 |
-| 6 | Alpha Werewolf — 3 phases, arena 2-4 with active wind | `docs/09-Boss-System.md` §7.2 |
-| 7 | Projects unlock | `docs/12-Portfolio-System.md` |
-| 8 | Behaviours: `enrage`, `charge`. Attack modules: `chargeRush`, `ricochetLeap` | |
+| #   | Deliverable                                                                  | Spec                                  |
+| --- | ---------------------------------------------------------------------------- | ------------------------------------- |
+| 1   | Autumn Forest tileset + Fairy Tale backgrounds harmonised (~10 h)            | `docs/04-Art-Direction.md` §8.3       |
+| 2   | Werewolf pack harmonised (~3 h); Werewolf Scout veteran variant              | `docs/08-Enemy-System.md` §6.2        |
+| 3   | `WindZoneMechanic`, crumbling branches, updrafts                             | `docs/10-Level-Design.md` §7.2        |
+| 4   | **Wall-slide introduced** as the World 2 mastery beat, all four heroes       | `docs/06-Characters.md` §5.6, ADR-011 |
+| 5   | Levels 2-1, 2-2, 2-3                                                         | `docs/10-Level-Design.md` §10         |
+| 6   | Alpha Werewolf — 3 phases, arena 2-4 with active wind                        | `docs/09-Boss-System.md` §7.2         |
+| 7   | Projects unlock                                                              | `docs/12-Portfolio-System.md`         |
+| 8   | Behaviours: `enrage`, `charge`. Attack modules: `chargeRush`, `ricochetLeap` |                                       |
 
 ---
 
@@ -53,12 +53,12 @@ neutralises it.
 
 ## Week shape
 
-| Week | Focus |
-|---|---|
-| 1 | Asset harmonisation, `WindZoneMechanic`, crumbling branches, updrafts, wall-slide |
-| 2 | Levels 2-1 and 2-2 (greybox → art → populate) |
-| 3 | Level 2-3, Alpha Werewolf three phases |
-| 4 | Polish reserve, Projects unlock, **Cut Line A decision** |
+| Week | Focus                                                                             |
+| ---- | --------------------------------------------------------------------------------- |
+| 1    | Asset harmonisation, `WindZoneMechanic`, crumbling branches, updrafts, wall-slide |
+| 2    | Levels 2-1 and 2-2 (greybox → art → populate)                                     |
+| 3    | Level 2-3, Alpha Werewolf three phases                                            |
+| 4    | Polish reserve, Projects unlock, **Cut Line A decision**                          |
 
 ---
 
@@ -66,12 +66,12 @@ neutralises it.
 
 Assessed at the M7 gate (`docs/17-Roadmap.md` §8):
 
-| Signal | Threshold | If breached |
-|---|---|---|
-| Weeks per world (mean of M5, M7) | > 5 | Invoke |
-| Art harmonisation variance vs. estimate | > +40% | Invoke |
-| Open P1 bugs | > 8 | Invoke |
-| Castle tileset unresolved at this date | Yes | Escalate; likely Cut Line B |
+| Signal                                  | Threshold | If breached                 |
+| --------------------------------------- | --------- | --------------------------- |
+| Weeks per world (mean of M5, M7)        | > 5       | Invoke                      |
+| Art harmonisation variance vs. estimate | > +40%    | Invoke                      |
+| Open P1 bugs                            | > 8       | Invoke                      |
+| Castle tileset unresolved at this date  | Yes       | Escalate; likely Cut Line B |
 
 **If invoked:** drop Worlds 4 and 5. The Oni Lord (M8) becomes the final boss and unlocks
 Experience, Skills, **and** Contact via `fallbackUnlocks`. Product: 12 levels, 3 worlds, ~3 hours,

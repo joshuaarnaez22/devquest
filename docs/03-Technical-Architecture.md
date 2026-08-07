@@ -14,51 +14,58 @@ This document defines the **technical skeleton** of DevQuest: the module boundar
 
 It is written for an engineer who knows Phaser 3 and TypeScript but knows nothing about this project. After reading it, that engineer should be able to place any new file correctly, know which systems they may talk to, and know which patterns will be rejected in review.
 
-The architecture has one overriding objective: **the concrete cases are easy and the abstractions are earned.** DevQuest is not large enough to justify a full ECS, a dependency-injection container, or a plugin marketplace. It *is* large enough that ad-hoc coupling between twenty systems will make the last three months miserable. This document draws the line between those two failure modes.
+The architecture has one overriding objective: **the concrete cases are easy and the abstractions are earned.** DevQuest is not large enough to justify a full ECS, a dependency-injection container, or a plugin marketplace. It _is_ large enough that ad-hoc coupling between twenty systems will make the last three months miserable. This document draws the line between those two failure modes.
 
 ---
 
 ## 2. Goals
 
-| # | Goal | Success Signal |
-|---|------|----------------|
-| G1 | Define module boundaries with explicit allowed-dependency rules | An import violation fails the lint step, not code review |
-| G2 | Define the scene graph and lifecycle precisely | A new scene can be added without touching existing scenes |
-| G3 | Define the system registry and update order | Update order is data, not implicit in call-site ordering |
-| G4 | Make all content data-driven (enemies, bosses, levels, UI, characters) | Adding an enemy is a JSON file plus zero TypeScript files |
-| G5 | Define state machines as a reusable, testable primitive | Every FSM in the game shares one implementation |
-| G6 | Define the object-pooling strategy | Zero runtime allocation during steady-state gameplay |
-| G7 | Deliver the 8-second load promise | Measured in CI on a throttled connection |
-| G8 | Keep the codebase portable to Electron/Tauri for Steam | No browser-only assumption outside a thin platform layer |
-| G9 | Make every system unit-testable without a running Phaser game | ≥70% coverage on `src/core` and `src/systems` |
+| #   | Goal                                                                   | Success Signal                                            |
+| --- | ---------------------------------------------------------------------- | --------------------------------------------------------- |
+| G1  | Define module boundaries with explicit allowed-dependency rules        | An import violation fails the lint step, not code review  |
+| G2  | Define the scene graph and lifecycle precisely                         | A new scene can be added without touching existing scenes |
+| G3  | Define the system registry and update order                            | Update order is data, not implicit in call-site ordering  |
+| G4  | Make all content data-driven (enemies, bosses, levels, UI, characters) | Adding an enemy is a JSON file plus zero TypeScript files |
+| G5  | Define state machines as a reusable, testable primitive                | Every FSM in the game shares one implementation           |
+| G6  | Define the object-pooling strategy                                     | Zero runtime allocation during steady-state gameplay      |
+| G7  | Deliver the 8-second load promise                                      | Measured in CI on a throttled connection                  |
+| G8  | Keep the codebase portable to Electron/Tauri for Steam                 | No browser-only assumption outside a thin platform layer  |
+| G9  | Make every system unit-testable without a running Phaser game          | ≥70% coverage on `src/core` and `src/systems`             |
 
 ---
 
 ## 3. Design Principles
 
 ### P1 — Data Over Code
+
 Content is data. Behaviour is code. A new enemy, boss phase, level, or UI screen is authored as JSON validated against a schema, not as a subclass. The moment a designer needs an engineer to add a skeleton variant, the architecture has failed.
 
 **Concrete test:** adding a new enemy variant requires editing exactly one JSON file and zero `.ts` files.
 
 ### P2 — Composition Over Inheritance
+
 Deep class hierarchies are banned. `Enemy extends Character extends Entity extends Sprite` is exactly the structure that becomes unmaintainable at month eight. Entities are thin sprites that own **behaviour components**. An enemy is a bag of components configured by data.
 
 **Concrete test:** no class in `src/entities` has more than one level of project-authored inheritance above `Phaser.GameObjects.Sprite`.
 
 ### P3 — Explicit Over Implicit
+
 Update order is a declared array, not the order someone happened to call things. Dependencies are constructor parameters, not global reaches. Events carry typed payloads, not `any`.
 
 ### P4 — Earn Your Abstractions
+
 The rule is **two concrete implementations before one abstraction.** Do not write `IEnemyBehaviour` before you have shipped two enemies. Do not write a plugin system before you have two plugins. This is `01-Vision.md` §8.1's build order expressed as an architectural rule.
 
 ### P5 — Pool Everything That Repeats
+
 Every object created more than once per second at runtime comes from a pool. No exceptions. Garbage collection pauses are the single largest source of frame spikes in a browser game.
 
 ### P6 — The Platform Layer Is Thin
+
 `localStorage`, `navigator`, `window`, `document`, and `fetch` are accessed **only** through `src/platform/`. Everything above that layer is environment-agnostic, which is what makes the Steam port a two-week job instead of a two-month one.
 
 ### P7 — Systems Do Not Know About Scenes
+
 A system receives what it needs through its constructor and communicates outward through the event bus. A system that reaches into `this.scene.children` to find something is a bug.
 
 ---
@@ -67,19 +74,19 @@ A system receives what it needs through its constructor and communicates outward
 
 ### 4.1 Technology Stack
 
-| Layer | Choice | Version | Rationale |
-|-------|--------|---------|-----------|
-| **Engine** | Phaser | `^3.90.0` | Mature, WebGL-first, excellent Arcade Physics, tilemap support, huge community. See `19-Decisions.md` `ADR-003` |
-| **Language** | TypeScript | `^5.6` | `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` |
-| **Bundler** | Vite | `^6` | Fast HMR, native ESM, trivial code-splitting |
-| **Physics** | Arcade Physics | bundled | AABB only. Matter.js rejected — see `ADR-005` |
-| **Tests** | Vitest | `^2` | Vite-native, fast, no separate config |
-| **E2E** | Playwright | `^1.49` | Cross-browser smoke tests, deterministic input injection |
-| **Level Editor** | Tiled | `1.11+` | Exports `.tmj` (JSON), custom properties, object layers |
-| **Atlas Packer** | `free-tex-packer-core` | `^0.3` | Scriptable, deterministic output, MaxRects |
-| **Lint** | ESLint + `@typescript-eslint` | `^9` | Flat config, custom project rules |
-| **Format** | Prettier | `^3` | No debates |
-| **CI** | GitHub Actions | — | See §13 |
+| Layer            | Choice                        | Version   | Rationale                                                                                                       |
+| ---------------- | ----------------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
+| **Engine**       | Phaser                        | `^3.90.0` | Mature, WebGL-first, excellent Arcade Physics, tilemap support, huge community. See `19-Decisions.md` `ADR-003` |
+| **Language**     | TypeScript                    | `^5.6`    | `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes`                                            |
+| **Bundler**      | Vite                          | `^6`      | Fast HMR, native ESM, trivial code-splitting                                                                    |
+| **Physics**      | Arcade Physics                | bundled   | AABB only. Matter.js rejected — see `ADR-005`                                                                   |
+| **Tests**        | Vitest                        | `^2`      | Vite-native, fast, no separate config                                                                           |
+| **E2E**          | Playwright                    | `^1.49`   | Cross-browser smoke tests, deterministic input injection                                                        |
+| **Level Editor** | Tiled                         | `1.11+`   | Exports `.tmj` (JSON), custom properties, object layers                                                         |
+| **Atlas Packer** | `free-tex-packer-core`        | `^0.3`    | Scriptable, deterministic output, MaxRects                                                                      |
+| **Lint**         | ESLint + `@typescript-eslint` | `^9`      | Flat config, custom project rules                                                                               |
+| **Format**       | Prettier                      | `^3`      | No debates                                                                                                      |
+| **CI**           | GitHub Actions                | —         | See §13                                                                                                         |
 
 **Explicitly not used:** React, any UI framework, Redux/Zustand, an ECS library, a DI container, Lodash, Moment. Each of these was considered and rejected; see `19-Decisions.md`.
 
@@ -382,14 +389,22 @@ devquest/
 This is the most important structural decision in the codebase and the one most likely to be argued with.
 
 **The rejected approach:**
+
 ```ts
-class Skeleton extends Enemy { /* … */ }
-class Werewolf extends Enemy { /* … */ }
-class Yokai extends Enemy { /* … */ }
+class Skeleton extends Enemy {
+  /* … */
+}
+class Werewolf extends Enemy {
+  /* … */
+}
+class Yokai extends Enemy {
+  /* … */
+}
 // … 7 classes, 21 subclasses for variants
 ```
 
 **The chosen approach:**
+
 ```ts
 class Enemy extends Entity {
   // configured entirely from an EnemyDefinition loaded from JSON
@@ -419,8 +434,8 @@ Every FSM in the game — player, enemy, boss phase, UI focus — uses one imple
 // NORMATIVE
 
 export interface StateContext {
-  readonly time: number;   // ms since scene start
-  readonly delta: number;  // ms, already hitstop-scaled
+  readonly time: number; // ms since scene start
+  readonly delta: number; // ms, already hitstop-scaled
 }
 
 export interface State<TOwner, TStateId extends string> {
@@ -444,13 +459,15 @@ export class StateMachine<TOwner, TStateId extends string> {
   private current: State<TOwner, TStateId>;
   private timeInState = 0;
   private readonly states: ReadonlyMap<TStateId, State<TOwner, TStateId>>;
-  private readonly history: TStateId[] = [];   // dev-only ring buffer, size 32
+  private readonly history: TStateId[] = []; // dev-only ring buffer, size 32
 
   constructor(
     private readonly owner: TOwner,
     states: readonly State<TOwner, TStateId>[],
     initial: TStateId,
-  ) { /* … */ }
+  ) {
+    /* … */
+  }
 
   update(ctx: StateContext): void {
     this.timeInState += ctx.delta;
@@ -459,10 +476,16 @@ export class StateMachine<TOwner, TStateId extends string> {
   }
 
   /** Force a transition from outside (damage, death, cutscene). */
-  force(to: TStateId, ctx: StateContext): void { /* bypasses `allowed` */ }
+  force(to: TStateId, ctx: StateContext): void {
+    /* bypasses `allowed` */
+  }
 
-  get id(): TStateId { return this.current.id; }
-  get elapsed(): number { return this.timeInState; }
+  get id(): TStateId {
+    return this.current.id;
+  }
+  get elapsed(): number {
+    return this.timeInState;
+  }
 }
 ```
 
@@ -482,38 +505,44 @@ export class StateMachine<TOwner, TStateId extends string> {
 
 export interface GameEventMap {
   // Combat
-  'combat:hit':            { attacker: EntityId; victim: EntityId; damage: number; kind: HitKind; point: Vec2 };
-  'combat:kill':           { victim: EntityId; killer: EntityId; enemyId: EnemyDefId };
-  'combat:playerDamaged':  { amount: number; source: EntityId; remainingHp: number };
-  'combat:playerDied':     { atCheckpoint: CheckpointId | null };
+  'combat:hit': {
+    attacker: EntityId;
+    victim: EntityId;
+    damage: number;
+    kind: HitKind;
+    point: Vec2;
+  };
+  'combat:kill': { victim: EntityId; killer: EntityId; enemyId: EnemyDefId };
+  'combat:playerDamaged': { amount: number; source: EntityId; remainingHp: number };
+  'combat:playerDied': { atCheckpoint: CheckpointId | null };
 
   // Player
-  'player:jumped':         { fromCoyote: boolean };
-  'player:landed':         { impactSpeed: number };
-  'player:dashed':         { direction: -1 | 1 };
-  'player:abilityUsed':    { abilityId: AbilityId };
+  'player:jumped': { fromCoyote: boolean };
+  'player:landed': { impactSpeed: number };
+  'player:dashed': { direction: -1 | 1 };
+  'player:abilityUsed': { abilityId: AbilityId };
 
   // Progression
-  'progress:coinCollected':   { amount: number; total: number };
-  'progress:shardCollected':  { total: number; grantedContainer: boolean };
-  'progress:charmEquipped':   { charmId: CharmId; slot: 0 | 1 | 2 };
-  'progress:checkpointSet':   { checkpointId: CheckpointId };
-  'progress:levelCompleted':  { levelId: LevelId; timeMs: number; deaths: number };
-  'progress:worldCompleted':  { worldId: WorldId };
+  'progress:coinCollected': { amount: number; total: number };
+  'progress:shardCollected': { total: number; grantedContainer: boolean };
+  'progress:charmEquipped': { charmId: CharmId; slot: 0 | 1 | 2 };
+  'progress:checkpointSet': { checkpointId: CheckpointId };
+  'progress:levelCompleted': { levelId: LevelId; timeMs: number; deaths: number };
+  'progress:worldCompleted': { worldId: WorldId };
 
   // Boss
-  'boss:introStarted':     { bossId: BossDefId };
-  'boss:phaseChanged':     { bossId: BossDefId; from: number; to: number };
-  'boss:defeated':         { bossId: BossDefId; timeMs: number };
+  'boss:introStarted': { bossId: BossDefId };
+  'boss:phaseChanged': { bossId: BossDefId; from: number; to: number };
+  'boss:defeated': { bossId: BossDefId; timeMs: number };
 
   // Portfolio
-  'portfolio:unlocked':    { sectionId: PortfolioSectionId };
-  'portfolio:opened':      { sectionId: PortfolioSectionId };
+  'portfolio:unlocked': { sectionId: PortfolioSectionId };
+  'portfolio:opened': { sectionId: PortfolioSectionId };
 
   // System
   'system:pauseRequested': Record<string, never>;
-  'system:resumed':        Record<string, never>;
-  'system:sceneChange':    { from: SceneKey; to: SceneKey };
+  'system:resumed': Record<string, never>;
+  'system:sceneChange': { from: SceneKey; to: SceneKey };
   'system:settingChanged': { key: SettingKey; value: unknown };
 }
 
@@ -597,23 +626,24 @@ export const Registry = new RegistryImpl();
 
 Rows may import columns marked ✅.
 
-| From ↓ / To → | config | platform | core | systems | components | entities | level | ui | scenes |
-|---|---|---|---|---|---|---|---|---|---|
-| **config** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **platform** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **core** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **systems** | ✅ | ✅ | ✅ | ⚠️ | ✅ | ⚠️ types only | ❌ | ❌ | ❌ |
-| **components** | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **entities** | ✅ | ❌ | ✅ | ⚠️ types only | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **level** | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **ui** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **scenes** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ keys only |
+| From ↓ / To →  | config | platform | core | systems       | components | entities      | level | ui  | scenes       |
+| -------------- | ------ | -------- | ---- | ------------- | ---------- | ------------- | ----- | --- | ------------ |
+| **config**     | ✅     | ❌       | ❌   | ❌            | ❌         | ❌            | ❌    | ❌  | ❌           |
+| **platform**   | ✅     | ✅       | ❌   | ❌            | ❌         | ❌            | ❌    | ❌  | ❌           |
+| **core**       | ✅     | ✅       | ✅   | ❌            | ❌         | ❌            | ❌    | ❌  | ❌           |
+| **systems**    | ✅     | ✅       | ✅   | ⚠️            | ✅         | ⚠️ types only | ❌    | ❌  | ❌           |
+| **components** | ✅     | ❌       | ✅   | ❌            | ✅         | ❌            | ❌    | ❌  | ❌           |
+| **entities**   | ✅     | ❌       | ✅   | ⚠️ types only | ✅         | ✅            | ❌    | ❌  | ❌           |
+| **level**      | ✅     | ❌       | ✅   | ✅            | ✅         | ✅            | ✅    | ❌  | ❌           |
+| **ui**         | ✅     | ✅       | ✅   | ✅            | ❌         | ❌            | ❌    | ✅  | ❌           |
+| **scenes**     | ✅     | ✅       | ✅   | ✅            | ✅         | ✅            | ✅    | ✅  | ⚠️ keys only |
 
 **Legend:** ✅ allowed · ❌ forbidden · ⚠️ conditionally allowed, see §6.3
 
 ### 6.2 Why `entities` Cannot Import `systems`
 
 If `Enemy` imports `CombatSystem` directly, then:
+
 - `Enemy` cannot be unit tested without instantiating combat.
 - Changing combat's constructor breaks every entity.
 - Two-way coupling forms the instant `CombatSystem` needs to know about enemies.
@@ -624,12 +654,12 @@ Instead: entities expose **components** (`Hurtbox`, `Health`, `Poise`) that syst
 
 ### 6.3 Conditional Allowances
 
-| Case | Rule |
-|---|---|
-| `systems` → `systems` | Allowed only in the direction declared by `SYSTEM_ORDER` (§8.3). A later system may import an earlier one's *type*; runtime interaction goes through the bus. Cycles fail lint |
-| `systems` → `entities` | Type-only. A system may reference `Player` as a type but must receive the instance, never construct or import it as a value |
-| `entities` → `systems` | Type-only, for shared enums and payload types |
-| `scenes` → `scenes` | Scene **keys** only (`SceneKeys.GAME`), never the class. Scene transitions go through `this.scene.start(key)` |
+| Case                   | Rule                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `systems` → `systems`  | Allowed only in the direction declared by `SYSTEM_ORDER` (§8.3). A later system may import an earlier one's _type_; runtime interaction goes through the bus. Cycles fail lint |
+| `systems` → `entities` | Type-only. A system may reference `Player` as a type but must receive the instance, never construct or import it as a value                                                    |
+| `entities` → `systems` | Type-only, for shared enums and payload types                                                                                                                                  |
+| `scenes` → `scenes`    | Scene **keys** only (`SceneKeys.GAME`), never the class. Scene transitions go through `this.scene.start(key)`                                                                  |
 
 ### 6.4 Enforcement
 
@@ -637,44 +667,55 @@ Instead: entities expose **components** (`Hurtbox`, `Health`, `Poise`) that syst
 // eslint.config.js (excerpt)
 import boundaries from 'eslint-plugin-boundaries';
 
-export default [{
-  plugins: { boundaries },
-  settings: {
-    'boundaries/elements': [
-      { type: 'config',     pattern: 'src/config/*' },
-      { type: 'platform',   pattern: 'src/platform/*' },
-      { type: 'core',       pattern: 'src/core/*' },
-      { type: 'systems',    pattern: 'src/systems/**/*' },
-      { type: 'components', pattern: 'src/components/*' },
-      { type: 'entities',   pattern: 'src/entities/**/*' },
-      { type: 'level',      pattern: 'src/level/*' },
-      { type: 'ui',         pattern: 'src/ui/**/*' },
-      { type: 'scenes',     pattern: 'src/scenes/*' },
-    ],
-  },
-  rules: {
-    'boundaries/element-types': ['error', {
-      default: 'disallow',
-      rules: [
-        { from: 'core',       allow: ['config', 'platform', 'core'] },
-        { from: 'systems',    allow: ['config', 'platform', 'core', 'components'] },
-        { from: 'components', allow: ['config', 'core', 'components'] },
-        { from: 'entities',   allow: ['config', 'core', 'components', 'entities'] },
-        { from: 'level',      allow: ['config', 'core', 'components', 'entities', 'systems'] },
-        { from: 'ui',         allow: ['config', 'platform', 'core', 'systems', 'ui'] },
-        { from: 'scenes',     allow: ['*'] },
+export default [
+  {
+    plugins: { boundaries },
+    settings: {
+      'boundaries/elements': [
+        { type: 'config', pattern: 'src/config/*' },
+        { type: 'platform', pattern: 'src/platform/*' },
+        { type: 'core', pattern: 'src/core/*' },
+        { type: 'systems', pattern: 'src/systems/**/*' },
+        { type: 'components', pattern: 'src/components/*' },
+        { type: 'entities', pattern: 'src/entities/**/*' },
+        { type: 'level', pattern: 'src/level/*' },
+        { type: 'ui', pattern: 'src/ui/**/*' },
+        { type: 'scenes', pattern: 'src/scenes/*' },
       ],
-    }],
-    // The Pillar 1 guard: the animator may not touch physics.
-    'no-restricted-imports': ['error', {
-      patterns: [{
-        group: ['**/entities/player/PlayerAnimator*'],
-        importNames: ['*'],
-        message: 'PlayerAnimator is a read-only projection; do not import it into controllers.',
-      }],
-    }],
+    },
+    rules: {
+      'boundaries/element-types': [
+        'error',
+        {
+          default: 'disallow',
+          rules: [
+            { from: 'core', allow: ['config', 'platform', 'core'] },
+            { from: 'systems', allow: ['config', 'platform', 'core', 'components'] },
+            { from: 'components', allow: ['config', 'core', 'components'] },
+            { from: 'entities', allow: ['config', 'core', 'components', 'entities'] },
+            { from: 'level', allow: ['config', 'core', 'components', 'entities', 'systems'] },
+            { from: 'ui', allow: ['config', 'platform', 'core', 'systems', 'ui'] },
+            { from: 'scenes', allow: ['*'] },
+          ],
+        },
+      ],
+      // The Pillar 1 guard: the animator may not touch physics.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/entities/player/PlayerAnimator*'],
+              importNames: ['*'],
+              message:
+                'PlayerAnimator is a read-only projection; do not import it into controllers.',
+            },
+          ],
+        },
+      ],
+    },
   },
-}];
+];
 ```
 
 Additionally, `tools/ci/check-boundaries.ts` runs `madge --circular src/` and fails on any dependency cycle.
@@ -728,20 +769,20 @@ stateDiagram-v2
 
 ### 7.2 Scene Responsibilities
 
-| Scene | Persistent? | Owns | Never Does |
-|-------|-------------|------|-----------|
-| `BootScene` | No, runs once | Registry setup, settings load, save load, minimal loading-bar assets | Load gameplay assets |
-| `PreloadScene` | No | Core + character atlases, bitmap font, UI atlas, progress bar | Load per-world assets |
-| `TitleScene` | No | Title art, menu, version string | Own game state |
-| `CharacterSelectScene` | No | Hero preview animations, stat display | Persist the choice (that is `ProgressionSystem`) |
-| `WorldSelectScene` | No | World map, lock state, level completion markers | Load level data |
-| `GameScene` | No, one per level | Level, entities, gameplay systems, camera | Draw HUD, handle menus |
-| `UIScene` | Parallel to Game | HUD, damage numbers, toasts | Touch entities or physics |
-| `PauseScene` | Overlay | Pause menu, Assist toggles | Modify gameplay state directly |
-| `SettingsScene` | Overlay or standalone | Settings widgets | Persist (that is `SettingsStore`) |
-| `CodexScene` | Standalone | Portfolio reading UI | Know anything about gameplay |
-| `UnlockScene` | Overlay | The 4 s ceremony | Block for more than 4 s |
-| `TransitionScene` | Overlay | All wipes/fades between scenes | Contain logic |
+| Scene                  | Persistent?           | Owns                                                                 | Never Does                                       |
+| ---------------------- | --------------------- | -------------------------------------------------------------------- | ------------------------------------------------ |
+| `BootScene`            | No, runs once         | Registry setup, settings load, save load, minimal loading-bar assets | Load gameplay assets                             |
+| `PreloadScene`         | No                    | Core + character atlases, bitmap font, UI atlas, progress bar        | Load per-world assets                            |
+| `TitleScene`           | No                    | Title art, menu, version string                                      | Own game state                                   |
+| `CharacterSelectScene` | No                    | Hero preview animations, stat display                                | Persist the choice (that is `ProgressionSystem`) |
+| `WorldSelectScene`     | No                    | World map, lock state, level completion markers                      | Load level data                                  |
+| `GameScene`            | No, one per level     | Level, entities, gameplay systems, camera                            | Draw HUD, handle menus                           |
+| `UIScene`              | Parallel to Game      | HUD, damage numbers, toasts                                          | Touch entities or physics                        |
+| `PauseScene`           | Overlay               | Pause menu, Assist toggles                                           | Modify gameplay state directly                   |
+| `SettingsScene`        | Overlay or standalone | Settings widgets                                                     | Persist (that is `SettingsStore`)                |
+| `CodexScene`           | Standalone            | Portfolio reading UI                                                 | Know anything about gameplay                     |
+| `UnlockScene`          | Overlay               | The 4 s ceremony                                                     | Block for more than 4 s                          |
+| `TransitionScene`      | Overlay               | All wipes/fades between scenes                                       | Contain logic                                    |
 
 ### 7.3 GameScene + UIScene Parallelism
 
@@ -773,7 +814,9 @@ Every scene implements the same five hooks with the same responsibilities. Devia
 ```ts
 export class ExampleScene extends Phaser.Scene {
   // 1. init — receive data, set fields. NO object creation.
-  init(data: ExampleSceneData): void { this.levelId = data.levelId; }
+  init(data: ExampleSceneData): void {
+    this.levelId = data.levelId;
+  }
 
   // 2. preload — only assets not already loaded. Usually empty.
   preload(): void {}
@@ -818,13 +861,13 @@ All transitions go through `TransitionScene` so wipes are consistent and no scen
 Transition.to(this, SceneKeys.GAME, { levelId: 'w1-2' }, { kind: 'irisWipe', durationMs: 400 });
 ```
 
-| Transition | Duration | Used For |
-|---|---|---|
-| `fade` | 250 ms | Menu ↔ menu |
-| `irisWipe` | 400 ms | Entering a level |
-| `slideLeft` | 300 ms | World select navigation |
-| `flashCut` | 120 ms | Checkpoint respawn (fast, keeps momentum) |
-| `bossIris` | 900 ms | Entering a boss arena |
+| Transition  | Duration | Used For                                  |
+| ----------- | -------- | ----------------------------------------- |
+| `fade`      | 250 ms   | Menu ↔ menu                               |
+| `irisWipe`  | 400 ms   | Entering a level                          |
+| `slideLeft` | 300 ms   | World select navigation                   |
+| `flashCut`  | 120 ms   | Checkpoint respawn (fast, keeps momentum) |
+| `bossIris`  | 900 ms   | Entering a boss arena                     |
 
 Checkpoint respawn uses the fastest transition deliberately: death should be cheap. A slow respawn compounds frustration and violates the spirit of Pillar 4.
 
@@ -862,7 +905,10 @@ export class SystemRegistry {
   private readonly systems: System[] = [];
   private readonly byId = new Map<SystemId, System>();
 
-  constructor(private readonly scene: Phaser.Scene, order: readonly SystemId[]) {
+  constructor(
+    private readonly scene: Phaser.Scene,
+    order: readonly SystemId[],
+  ) {
     for (const id of order) {
       const sys = SystemFactory.create(id, scene);
       this.systems.push(sys);
@@ -870,7 +916,9 @@ export class SystemRegistry {
     }
   }
 
-  init(): void { for (const s of this.systems) s.init?.(this.scene); }
+  init(): void {
+    for (const s of this.systems) s.init?.(this.scene);
+  }
 
   update(time: number, delta: number): void {
     const paused = this.scene.scene.isPaused();
@@ -881,7 +929,9 @@ export class SystemRegistry {
     }
   }
 
-  postPhysics(time: number, delta: number): void { /* same guard, postPhysics */ }
+  postPhysics(time: number, delta: number): void {
+    /* same guard, postPhysics */
+  }
 
   destroy(): void {
     for (let i = this.systems.length - 1; i >= 0; i--) this.systems[i]!.destroy?.();
@@ -889,7 +939,9 @@ export class SystemRegistry {
     this.byId.clear();
   }
 
-  get<T extends System>(id: SystemId): T { /* … */ }
+  get<T extends System>(id: SystemId): T {
+    /* … */
+  }
 }
 ```
 
@@ -903,31 +955,31 @@ export class SystemRegistry {
 
 export const SYSTEM_ORDER_GAMEPLAY: readonly SystemId[] = [
   // --- Input & time ---
-  'input',            // sample devices, build the immutable InputFrame
-  'assist',           // apply assist modifiers to the frame and to damage scaling
-  'hitstop',          // decide whether combatants are frozen this frame
+  'input', // sample devices, build the immutable InputFrame
+  'assist', // apply assist modifiers to the frame and to damage scaling
+  'hitstop', // decide whether combatants are frozen this frame
 
   // --- Simulation (velocity writers) ---
-  'spawn',            // activate pooled entities entering the camera margin
-  'mechanics',        // world mechanics: wind force, conveyors, moving platforms
-  'ai',               // enemy + boss FSM update → velocity
+  'spawn', // activate pooled entities entering the camera margin
+  'mechanics', // world mechanics: wind force, conveyors, moving platforms
+  'ai', // enemy + boss FSM update → velocity
   // Player updates inside GameScene between 'ai' and physics (see note)
 
   // --- Physics runs here (Phaser-driven) ---
 
   // --- Resolution (post-physics readers) ---
-  'combat',           // resolve queued overlaps, apply the 9-layer stack
-  'knockback',        // integrate decaying knockback impulses
-  'checkpoint',       // detect checkpoint volumes
-  'culling',          // deactivate entities beyond the camera margin
+  'combat', // resolve queued overlaps, apply the 9-layer stack
+  'knockback', // integrate decaying knockback impulses
+  'checkpoint', // detect checkpoint volumes
+  'culling', // deactivate entities beyond the camera margin
 
   // --- Presentation ---
   'vfx',
   'particles',
   'damageNumbers',
-  'camera',           // trauma decay, follow, deadzone, clamping
+  'camera', // trauma decay, follow, deadzone, clamping
   'audio',
-  'debug',            // dev overlay, always last so it sees final state
+  'debug', // dev overlay, always last so it sees final state
 ];
 
 export const SYSTEM_ORDER_UI: readonly SystemId[] = ['focus', 'toast', 'hud'];
@@ -992,13 +1044,13 @@ flowchart LR
     PLAY -.background.-> W2["Phase 3 — Worlds 2-5<br/>~9 MB, streamed<br/>while playing World 1"]
 ```
 
-| Phase | Payload | Blocking? | Budget |
-|---|---|---|---|
-| 0 — Boot | Logo, loading bar, bitmap font | Yes | 40 KB |
-| 1 — Core | `core.png`, `chars.png`, UI JSON, settings | Yes | 3.2 MB |
-| 2 — First World | `green-zone.png`, nature backgrounds, `enemies-w1.png`, `w1/*.tmj` | Yes | 2.4 MB |
-| 3 — Rest | All other worlds | No — background | 9 MB |
-| **Total to play** | | | **≤ 5.6 MB** ✅ under the 8 MB cap |
+| Phase             | Payload                                                            | Blocking?       | Budget                             |
+| ----------------- | ------------------------------------------------------------------ | --------------- | ---------------------------------- |
+| 0 — Boot          | Logo, loading bar, bitmap font                                     | Yes             | 40 KB                              |
+| 1 — Core          | `core.png`, `chars.png`, UI JSON, settings                         | Yes             | 3.2 MB                             |
+| 2 — First World   | `green-zone.png`, nature backgrounds, `enemies-w1.png`, `w1/*.tmj` | Yes             | 2.4 MB                             |
+| 3 — Rest          | All other worlds                                                   | No — background | 9 MB                               |
+| **Total to play** |                                                                    |                 | **≤ 5.6 MB** ✅ under the 8 MB cap |
 
 ### 9.2 Background Streaming
 
@@ -1007,9 +1059,7 @@ flowchart LR
 export class AssetStreamSystem {
   /** Called once gameplay has started and the first frame has rendered. */
   beginBackgroundLoad(currentWorld: WorldId): void {
-    const queue = WORLD_ORDER
-      .filter(w => w !== currentWorld)
-      .flatMap(w => ASSET_MANIFEST.world(w));
+    const queue = WORLD_ORDER.filter(w => w !== currentWorld).flatMap(w => ASSET_MANIFEST.world(w));
 
     // Load one bundle at a time so the network never competes with gameplay.
     this.loadSequentially(queue, {
@@ -1023,13 +1073,13 @@ export class AssetStreamSystem {
 
 ### 9.3 Atlas Organisation
 
-| Atlas | Contents | Size | Loaded |
-|---|---|---|---|
-| `core` | UI widgets, icons, VFX (slash, explosion, dust, sparkle), particles, damage-number font glyphs | 1024×1024 | Phase 1 |
-| `chars` | All 4 heroes, all animations | 2048×2048 | Phase 1 |
-| `enemies-w1` … `enemies-w5` | Per-world enemy + boss frames | 1024×1024 each | Phase 2 / 3 |
-| Tilesets | Loaded as plain images, not atlased (Phaser tilemaps need contiguous tile images) | 512×512 each | Per world |
-| Backgrounds | Loaded as plain images, one per parallax layer | varies | Per world |
+| Atlas                       | Contents                                                                                       | Size           | Loaded      |
+| --------------------------- | ---------------------------------------------------------------------------------------------- | -------------- | ----------- |
+| `core`                      | UI widgets, icons, VFX (slash, explosion, dust, sparkle), particles, damage-number font glyphs | 1024×1024      | Phase 1     |
+| `chars`                     | All 4 heroes, all animations                                                                   | 2048×2048      | Phase 1     |
+| `enemies-w1` … `enemies-w5` | Per-world enemy + boss frames                                                                  | 1024×1024 each | Phase 2 / 3 |
+| Tilesets                    | Loaded as plain images, not atlased (Phaser tilemaps need contiguous tile images)              | 512×512 each   | Per world   |
+| Backgrounds                 | Loaded as plain images, one per parallax layer                                                 | varies         | Per world   |
 
 **Why characters get their own 2048 atlas:** all four heroes are always loaded (character select previews, and the player may restart with a different hero without a reload). Splitting them per-character would add three texture binds during character select for no memory benefit.
 
@@ -1086,29 +1136,33 @@ export class ObjectPool<T extends Poolable> {
   }
 
   release(obj: T): void {
-    if (!this.live.delete(obj)) return;   // double-release is a no-op, not a crash
+    if (!this.live.delete(obj)) return; // double-release is a no-op, not a crash
     obj.onDespawn();
     obj.active = false;
     this.free.push(obj);
   }
 
-  releaseAll(): void { for (const o of [...this.live]) this.release(o); }
+  releaseAll(): void {
+    for (const o of [...this.live]) this.release(o);
+  }
 
-  get stats(): { free: number; live: number; peak: number } { /* … */ }
+  get stats(): { free: number; live: number; peak: number } {
+    /* … */
+  }
 }
 ```
 
 **Pool sizes (initial / max):**
 
-| Pool | Initial | Max | Rationale |
-|---|---|---|---|
-| Particles | 200 | 200 | Hard cap from `00-README.md` §5.5 |
-| VFX sprites | 24 | 32 | Slashes, explosions, dust |
-| Damage numbers | 12 | 20 | Rarely more than 6 on screen |
-| Projectiles | 16 | 32 | Wizard bolts, witch orbs, turret shots |
-| Enemies (per type) | 6 | 12 | Per active enemy definition in the level |
-| Pickups | 24 | 48 | Coin scatter on enemy death |
-| Afterimages | 9 | 12 | 3 per dash × 4 possible simultaneous dashers |
+| Pool               | Initial | Max | Rationale                                    |
+| ------------------ | ------- | --- | -------------------------------------------- |
+| Particles          | 200     | 200 | Hard cap from `00-README.md` §5.5            |
+| VFX sprites        | 24      | 32  | Slashes, explosions, dust                    |
+| Damage numbers     | 12      | 20  | Rarely more than 6 on screen                 |
+| Projectiles        | 16      | 32  | Wizard bolts, witch orbs, turret shots       |
+| Enemies (per type) | 6       | 12  | Per active enemy definition in the level     |
+| Pickups            | 24      | 48  | Coin scatter on enemy death                  |
+| Afterimages        | 9       | 12  | 3 per dash × 4 possible simultaneous dashers |
 
 **Peak tracking is mandatory.** In dev builds, the debug overlay reports each pool's peak usage. A pool that hits its cap during normal play is either undersized or leaking; both are bugs.
 
@@ -1218,9 +1272,9 @@ export const SAVE_SCHEMA_VERSION = 3;
 export interface SaveData {
   readonly version: number;
   readonly slotId: 0 | 1 | 2;
-  readonly createdAt: string;      // ISO 8601
+  readonly createdAt: string; // ISO 8601
   readonly updatedAt: string;
-  readonly checksum: string;       // FNV-1a over the canonical JSON of everything below
+  readonly checksum: string; // FNV-1a over the canonical JSON of everything below
 
   readonly character: CharacterId;
   readonly progress: {
@@ -1236,7 +1290,7 @@ export interface SaveData {
     readonly heartShards: number;
     readonly healthContainers: number;
     readonly ownedCharms: readonly CharmId[];
-    readonly equippedCharms: readonly (CharmId | null)[];   // length 3
+    readonly equippedCharms: readonly (CharmId | null)[]; // length 3
     readonly foundSecrets: readonly SecretId[];
   };
   readonly stats: {
@@ -1293,13 +1347,13 @@ export function migrate(raw: Record<string, unknown>): Result<SaveData, SaveErro
 import { DISPLAY, PHYSICS } from './GameConstants';
 
 export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
-  type: Phaser.WEBGL,               // not AUTO — we want to know if WebGL is unavailable
+  type: Phaser.WEBGL, // not AUTO — we want to know if WebGL is unavailable
   width: DISPLAY.WIDTH,
   height: DISPLAY.HEIGHT,
   parent: 'game-root',
   backgroundColor: '#0d0b14',
 
-  pixelArt: true,                   // sets NEAREST filtering on every texture
+  pixelArt: true, // sets NEAREST filtering on every texture
   antialias: false,
   roundPixels: true,
   powerPreference: 'high-performance',
@@ -1319,7 +1373,7 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
     powerPreference: 'high-performance',
     // Batch size tuned in 15-Performance §5.
     batchSize: 4096,
-    maxTextures: -1,                // let Phaser query the GPU limit
+    maxTextures: -1, // let Phaser query the GPU limit
   },
 
   physics: {
@@ -1328,7 +1382,7 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
       gravity: { x: 0, y: PHYSICS.GRAVITY_Y },
       tileBias: PHYSICS.TILE_BIAS,
       fps: 60,
-      fixedStep: true,              // decouple physics from render rate
+      fixedStep: true, // decouple physics from render rate
       debug: import.meta.env.DEV,
       debugShowVelocity: false,
     },
@@ -1348,7 +1402,7 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
 
   disableContextMenu: true,
   banner: false,
-  scene: [],                        // scenes added programmatically in main.ts
+  scene: [], // scenes added programmatically in main.ts
 };
 ```
 
@@ -1370,7 +1424,7 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
 
     "strict": true,
-    "noUncheckedIndexedAccess": true,      // arr[i] is T | undefined. Catches real bugs.
+    "noUncheckedIndexedAccess": true, // arr[i] is T | undefined. Catches real bugs.
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
@@ -1378,18 +1432,25 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
     "useUnknownInCatchVariables": true,
 
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,          // makes `import type` explicit and enforceable
+    "verbatimModuleSyntax": true, // makes `import type` explicit and enforceable
     "skipLibCheck": true,
     "resolveJsonModule": true,
 
     "baseUrl": "./src",
     "paths": {
-      "@core/*": ["core/*"], "@systems/*": ["systems/*"], "@entities/*": ["entities/*"],
-      "@components/*": ["components/*"], "@scenes/*": ["scenes/*"], "@config/*": ["config/*"],
-      "@ui/*": ["ui/*"], "@level/*": ["level/*"], "@data/*": ["data/*"], "@platform/*": ["platform/*"]
-    }
+      "@core/*": ["core/*"],
+      "@systems/*": ["systems/*"],
+      "@entities/*": ["entities/*"],
+      "@components/*": ["components/*"],
+      "@scenes/*": ["scenes/*"],
+      "@config/*": ["config/*"],
+      "@ui/*": ["ui/*"],
+      "@level/*": ["level/*"],
+      "@data/*": ["data/*"],
+      "@platform/*": ["platform/*"],
+    },
   },
-  "include": ["src/**/*", "tools/**/*", "tests/**/*"]
+  "include": ["src/**/*", "tools/**/*", "tests/**/*"],
 }
 ```
 
@@ -1402,16 +1463,16 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
 declare const brand: unique symbol;
 type Brand<T, B extends string> = T & { readonly [brand]: B };
 
-export type EntityId        = Brand<number, 'EntityId'>;
-export type EnemyDefId      = Brand<string, 'EnemyDefId'>;
-export type BossDefId       = Brand<string, 'BossDefId'>;
-export type CharacterId     = Brand<string, 'CharacterId'>;
-export type LevelId         = Brand<string, 'LevelId'>;
-export type WorldId         = Brand<string, 'WorldId'>;
-export type CharmId         = Brand<string, 'CharmId'>;
-export type CheckpointId    = Brand<string, 'CheckpointId'>;
-export type SecretId        = Brand<string, 'SecretId'>;
-export type AbilityId       = Brand<string, 'AbilityId'>;
+export type EntityId = Brand<number, 'EntityId'>;
+export type EnemyDefId = Brand<string, 'EnemyDefId'>;
+export type BossDefId = Brand<string, 'BossDefId'>;
+export type CharacterId = Brand<string, 'CharacterId'>;
+export type LevelId = Brand<string, 'LevelId'>;
+export type WorldId = Brand<string, 'WorldId'>;
+export type CharmId = Brand<string, 'CharmId'>;
+export type CheckpointId = Brand<string, 'CheckpointId'>;
+export type SecretId = Brand<string, 'SecretId'>;
+export type AbilityId = Brand<string, 'AbilityId'>;
 export type PortfolioSectionId = 'about' | 'projects' | 'experience' | 'skills' | 'contact';
 ```
 
@@ -1451,17 +1512,32 @@ The debug overlay (`DebugSystem`) is the one exception to dev-only stripping: it
   "atlas": "enemies-w1",
   "animPrefix": "skeleton_archer",
   "stats": {
-    "maxHp": 24, "contactDamage": 6, "moveSpeed": 28, "chaseSpeed": 28,
-    "poise": 12, "knockbackResist": 0.1, "scoreValue": 15
+    "maxHp": 24,
+    "contactDamage": 6,
+    "moveSpeed": 28,
+    "chaseSpeed": 28,
+    "poise": 12,
+    "knockbackResist": 0.1,
+    "scoreValue": 15
   },
   "body": { "width": 10, "height": 26, "offsetX": 11, "offsetY": 6, "gravityScale": 1 },
-  "senses": { "sightRange": 140, "sightAngleDeg": 100, "hearRange": 60, "loseSightMs": 3000, "ledgeCheck": true },
+  "senses": {
+    "sightRange": 140,
+    "sightAngleDeg": 100,
+    "hearRange": 60,
+    "loseSightMs": 3000,
+    "ledgeCheck": true
+  },
   "behaviours": ["patrol", "ranged"],
   "behaviourConfig": {
     "patrol": { "waypointMode": "ledgeToLedge", "pauseAtEndMs": 800 },
     "ranged": {
-      "projectileId": "bone_arrow", "preferredRange": [80, 140],
-      "windupMs": 500, "recoverMs": 400, "cooldownMs": 1800, "retreatIfCloserThan": 56
+      "projectileId": "bone_arrow",
+      "preferredRange": [80, 140],
+      "windupMs": 500,
+      "recoverMs": 400,
+      "cooldownMs": 1800,
+      "retreatIfCloserThan": 56
     }
   },
   "drops": [
@@ -1469,12 +1545,12 @@ The debug overlay (`DebugSystem`) is the one exception to dev-only stripping: it
     { "kind": "heartShard", "min": 1, "max": 1, "chance": 0.02 }
   ],
   "animations": {
-    "idle":   { "frames": [0, 3],   "frameRate": 6,  "repeat": -1 },
-    "run":    { "frames": [4, 11],  "frameRate": 10, "repeat": -1 },
+    "idle": { "frames": [0, 3], "frameRate": 6, "repeat": -1 },
+    "run": { "frames": [4, 11], "frameRate": 10, "repeat": -1 },
     "windup": { "frames": [12, 16], "frameRate": 10, "repeat": 0 },
-    "shoot":  { "frames": [17, 19], "frameRate": 14, "repeat": 0 },
-    "hurt":   { "frames": [20, 22], "frameRate": 14, "repeat": 0 },
-    "death":  { "frames": [23, 30], "frameRate": 12, "repeat": 0 }
+    "shoot": { "frames": [17, 19], "frameRate": 14, "repeat": 0 },
+    "hurt": { "frames": [20, 22], "frameRate": 14, "repeat": 0 },
+    "death": { "frames": [23, 30], "frameRate": 12, "repeat": 0 }
   }
 }
 ```
@@ -1494,9 +1570,9 @@ export class WindZoneMechanic implements MechanicPlugin {
   createFromObject(obj: TiledObject): void {
     this.zones.push({
       rect: new Phaser.Geom.Rectangle(obj.x, obj.y, obj.width, obj.height),
-      force: numberProp(obj, 'force', 140),               // px/s²
+      force: numberProp(obj, 'force', 140), // px/s²
       direction: numberProp(obj, 'direction', 1) as -1 | 1,
-      oscillateMs: numberProp(obj, 'oscillateMs', 0),      // 0 = constant
+      oscillateMs: numberProp(obj, 'oscillateMs', 0), // 0 = constant
       affectsEnemies: boolProp(obj, 'affectsEnemies', false),
     });
   }
@@ -1511,7 +1587,9 @@ export class WindZoneMechanic implements MechanicPlugin {
     }
   }
 
-  destroy(): void { this.zones.length = 0; }
+  destroy(): void {
+    this.zones.length = 0;
+  }
 }
 
 // Registered once:
@@ -1559,18 +1637,19 @@ t=0.380  Skeleton HURT → CHASE (re-acquires the player).
 
 ### 13.1 Testing Strategy
 
-| Layer | Tool | Coverage Target | What It Tests |
-|---|---|---|---|
-| **Unit** | Vitest | 70% of `core` + `systems` | Pure logic: state machines, pools, math, migrations, schema validation, damage formulas |
-| **Integration** | Vitest + headless Phaser | Key flows | Level loading, entity spawning, combat resolution, save round-trip |
-| **E2E** | Playwright | Smoke paths | Boot → title → character select → 1-1 → first kill → checkpoint → quit → resume |
-| **Pillar** | Custom (`test:pillars`) | All automatable targets | `02-Game-Pillars.md` §6.3 |
-| **Visual** | Playwright screenshots | Per-scene | Pixel-diff against golden images; catches accidental scaling/filter regressions |
-| **Performance** | Playwright + CDP traces | Per-world | Frame time p99, draw calls, heap growth |
+| Layer           | Tool                     | Coverage Target           | What It Tests                                                                           |
+| --------------- | ------------------------ | ------------------------- | --------------------------------------------------------------------------------------- |
+| **Unit**        | Vitest                   | 70% of `core` + `systems` | Pure logic: state machines, pools, math, migrations, schema validation, damage formulas |
+| **Integration** | Vitest + headless Phaser | Key flows                 | Level loading, entity spawning, combat resolution, save round-trip                      |
+| **E2E**         | Playwright               | Smoke paths               | Boot → title → character select → 1-1 → first kill → checkpoint → quit → resume         |
+| **Pillar**      | Custom (`test:pillars`)  | All automatable targets   | `02-Game-Pillars.md` §6.3                                                               |
+| **Visual**      | Playwright screenshots   | Per-scene                 | Pixel-diff against golden images; catches accidental scaling/filter regressions         |
+| **Performance** | Playwright + CDP traces  | Per-world                 | Frame time p99, draw calls, heap growth                                                 |
 
 **What is deliberately not unit tested:** Phaser rendering, Arcade Physics internals, and anything requiring a real GPU. These are covered by E2E and visual tests instead. Writing unit tests for framework code is a common way to feel productive while testing nothing.
 
 **The most valuable tests in the suite**, in order:
+
 1. Save migration fixtures — a broken migration destroys player data.
 2. `StateMachine` `allowed`-transition enforcement — catches the widest class of gameplay bugs.
 3. Schema validation of all content JSON — catches designer typos at boot, not at spawn.
@@ -1602,6 +1681,7 @@ Refs: #142
 ```
 
 **Pull request requirements:**
+
 - All CI checks green.
 - One approval (two for anything touching `core/` or `GameConstants.ts`).
 - If a doc-owned value changed, the doc is updated in the same PR.
@@ -1627,18 +1707,18 @@ flowchart LR
     PERF --> OK[✅ mergeable]
 ```
 
-| Gate | Fails If |
-|---|---|
-| `lint` | Any ESLint error, including boundary violations |
-| `typecheck` | Any TS error under strict config |
-| `boundaries` | Any import-layer violation or dependency cycle (`madge --circular`) |
-| `unit` | Any failing test, or coverage below 70% on `core`/`systems` |
-| `schema` | Any content JSON fails its schema |
-| `pillars` | Any automated pillar target regresses |
-| `size` | Phase 0+1+2 payload exceeds 8 MB, or the JS bundle exceeds 1.2 MB gzipped |
-| `e2e` | The smoke path fails in any of the three browsers |
-| `visual` | Any scene screenshot differs by more than 0.1% of pixels |
-| `perf` | p99 frame time on 1-1 exceeds 16.67 ms, or heap grows over a 60 s capture |
+| Gate         | Fails If                                                                  |
+| ------------ | ------------------------------------------------------------------------- |
+| `lint`       | Any ESLint error, including boundary violations                           |
+| `typecheck`  | Any TS error under strict config                                          |
+| `boundaries` | Any import-layer violation or dependency cycle (`madge --circular`)       |
+| `unit`       | Any failing test, or coverage below 70% on `core`/`systems`               |
+| `schema`     | Any content JSON fails its schema                                         |
+| `pillars`    | Any automated pillar target regresses                                     |
+| `size`       | Phase 0+1+2 payload exceeds 8 MB, or the JS bundle exceeds 1.2 MB gzipped |
+| `e2e`        | The smoke path fails in any of the three browsers                         |
+| `visual`     | Any scene screenshot differs by more than 0.1% of pixels                  |
+| `perf`       | p99 frame time on 1-1 exceeds 16.67 ms, or heap grows over a 60 s capture |
 
 **Deployment:** merging to `main` triggers a static build deployed to the hosting target. The `/resume` static page is built and deployed in the same step. There is no server, so deployment is a file upload — this is a deliberate architectural benefit of having no backend.
 
@@ -1650,37 +1730,37 @@ The Steam port is out of scope for the twelve months, but the architecture is bu
 
 ### 14.1 The Wrapper Decision
 
-| Option | Bundle Size | Verdict |
-|---|---|---|
-| **Electron** | ~120 MB | Rejected — bundle size is embarrassing for a 15 MB game |
-| **Tauri v2** | ~8 MB | **Preferred.** Uses the OS webview, Rust host, tiny binary |
-| **NW.js** | ~100 MB | Rejected, same reason as Electron |
+| Option       | Bundle Size | Verdict                                                    |
+| ------------ | ----------- | ---------------------------------------------------------- |
+| **Electron** | ~120 MB     | Rejected — bundle size is embarrassing for a 15 MB game    |
+| **Tauri v2** | ~8 MB       | **Preferred.** Uses the OS webview, Rust host, tiny binary |
+| **NW.js**    | ~100 MB     | Rejected, same reason as Electron                          |
 
 **Risk with Tauri:** it uses the system webview, so behaviour varies by OS (WebKitGTK on Linux, WebView2 on Windows, WKWebView on macOS). This must be smoke-tested per platform. Mitigation: the game already targets three browser engines in CI, so engine variance is already a tested dimension.
 
 ### 14.2 What Must Stay True
 
-| Requirement | Why | Enforced By |
-|---|---|---|
-| No browser API outside `src/platform/` | Steam build swaps the platform layer wholesale | ESLint `no-restricted-globals` on `window`, `document`, `localStorage`, `navigator` outside `src/platform/` |
-| Save data is JSON, not `localStorage`-shaped | Steam build writes to the filesystem and Steam Cloud | `Storage` interface has `get`/`set`/`remove` only; no storage-event assumptions |
-| No hardcoded URLs | Steam build has no origin | All asset paths relative; `base: './'` in Vite |
-| Resolution independence | Steam users have 4K and ultrawide displays | Already handled by `Phaser.Scale.FIT` + integer zoom |
-| Input abstraction | Steam Input remaps controllers | `InputSystem` consumes an abstract `InputFrame`; the device layer is swappable |
-| No `alert`/`confirm`/`prompt` | Native dialogs look wrong in a game | ESLint ban |
+| Requirement                                  | Why                                                  | Enforced By                                                                                                 |
+| -------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| No browser API outside `src/platform/`       | Steam build swaps the platform layer wholesale       | ESLint `no-restricted-globals` on `window`, `document`, `localStorage`, `navigator` outside `src/platform/` |
+| Save data is JSON, not `localStorage`-shaped | Steam build writes to the filesystem and Steam Cloud | `Storage` interface has `get`/`set`/`remove` only; no storage-event assumptions                             |
+| No hardcoded URLs                            | Steam build has no origin                            | All asset paths relative; `base: './'` in Vite                                                              |
+| Resolution independence                      | Steam users have 4K and ultrawide displays           | Already handled by `Phaser.Scale.FIT` + integer zoom                                                        |
+| Input abstraction                            | Steam Input remaps controllers                       | `InputSystem` consumes an abstract `InputFrame`; the device layer is swappable                              |
+| No `alert`/`confirm`/`prompt`                | Native dialogs look wrong in a game                  | ESLint ban                                                                                                  |
 
 ### 14.3 What the Steam Build Adds
 
-| Feature | Effort | Notes |
-|---|---|---|
-| Steamworks init + shutdown | 1 day | `steamworks.js` via a Tauri command |
-| Achievements | 3 days | Map existing `progress:*` events to achievement calls. The event bus makes this purely additive |
-| Steam Cloud saves | 2 days | Swap `Storage` implementation; the save schema needs no change |
-| Rich Presence | 1 day | Driven by `system:sceneChange` |
-| Steam Input | 2 days | Replaces `GamepadAdapter` |
-| Native fullscreen / display modes | 2 days | Replaces `Fullscreen` |
-| Build + upload pipeline | 3 days | `steamcmd` in CI |
-| Per-platform QA | 5 days | The real cost |
+| Feature                           | Effort | Notes                                                                                           |
+| --------------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
+| Steamworks init + shutdown        | 1 day  | `steamworks.js` via a Tauri command                                                             |
+| Achievements                      | 3 days | Map existing `progress:*` events to achievement calls. The event bus makes this purely additive |
+| Steam Cloud saves                 | 2 days | Swap `Storage` implementation; the save schema needs no change                                  |
+| Rich Presence                     | 1 day  | Driven by `system:sceneChange`                                                                  |
+| Steam Input                       | 2 days | Replaces `GamepadAdapter`                                                                       |
+| Native fullscreen / display modes | 2 days | Replaces `Fullscreen`                                                                           |
+| Build + upload pipeline           | 3 days | `steamcmd` in CI                                                                                |
+| Per-platform QA                   | 5 days | The real cost                                                                                   |
 
 **Total estimate: ~4 weeks**, of which nearly half is QA. The engineering is small precisely because of P6 (thin platform layer). Every hour spent keeping `window` out of `src/systems/` during the twelve months buys a day here.
 
@@ -1706,8 +1786,8 @@ Consolidated from the sections above; these are the types every engineer will to
 // The input frame — immutable, rebuilt each frame, consumed by everything.
 export interface InputFrame {
   readonly moveX: -1 | 0 | 1;
-  readonly jumpPressed: boolean;      // edge
-  readonly jumpHeld: boolean;         // level
+  readonly jumpPressed: boolean; // edge
+  readonly jumpHeld: boolean; // level
   readonly attackPressed: boolean;
   readonly dashPressed: boolean;
   readonly specialPressed: boolean;
@@ -1722,7 +1802,7 @@ export interface HitResolution {
   readonly attacker: EntityId;
   readonly victim: EntityId;
   readonly damage: number;
-  readonly kind: HitKind;                 // 'light' | 'heavy' | 'ranged' | 'contact'
+  readonly kind: HitKind; // 'light' | 'heavy' | 'ranged' | 'contact'
   readonly point: Readonly<Vec2>;
   readonly hitStopMs: number;
   readonly knockback: Readonly<{ speed: number; dirX: -1 | 1; liftY: number; decayMs: number }>;
@@ -1747,7 +1827,10 @@ export interface MechanicPlugin {
 export interface MechanicContext {
   readonly time: number;
   readonly player: Player;
-  bodiesIn(rect: Phaser.Geom.Rectangle, includeEnemies: boolean): Iterable<Phaser.Physics.Arcade.Body>;
+  bodiesIn(
+    rect: Phaser.Geom.Rectangle,
+    includeEnemies: boolean,
+  ): Iterable<Phaser.Physics.Arcade.Body>;
   readonly bus: EventBus;
 }
 
@@ -1769,17 +1852,17 @@ export interface ContentDatabase {
 
 ## 16. Future Expansion
 
-| Item | Trigger | Architectural Impact |
-|---|---|---|
-| **Fifth character** | Post-launch | Zero. One JSON + one ability module + one atlas page |
-| **New world** | Post-launch | Zero code. One mechanic plugin if the mechanic is new |
-| **Time Trial mode** | Post-launch | New scene + a `TimerSystem`. Level data unchanged |
-| **Boss Rush** | Post-launch | New scene + a level-sequence definition. Zero framework change |
-| **Level editor** | Post-launch | Large. Would need a serialiser back to `.tmj` and an in-game edit mode |
-| **Replay / ghost recording** | Post-launch | Feasible because input is an immutable frame and physics is fixed-step. Record `InputFrame[]`, replay deterministically. **Requires** replacing `Math.random` with the seeded `Rng` everywhere — already done, precisely to keep this door open |
-| **Steam port** | Post-launch | §14 |
-| **Mod support** | Unlikely | Content is already JSON; would need a loader for external files and a sandbox story |
-| **Migration to an ECS** | Only if entity count exceeds ~500 | Not anticipated. The 40-entity budget makes an ECS pure overhead |
+| Item                         | Trigger                           | Architectural Impact                                                                                                                                                                                                                            |
+| ---------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fifth character**          | Post-launch                       | Zero. One JSON + one ability module + one atlas page                                                                                                                                                                                            |
+| **New world**                | Post-launch                       | Zero code. One mechanic plugin if the mechanic is new                                                                                                                                                                                           |
+| **Time Trial mode**          | Post-launch                       | New scene + a `TimerSystem`. Level data unchanged                                                                                                                                                                                               |
+| **Boss Rush**                | Post-launch                       | New scene + a level-sequence definition. Zero framework change                                                                                                                                                                                  |
+| **Level editor**             | Post-launch                       | Large. Would need a serialiser back to `.tmj` and an in-game edit mode                                                                                                                                                                          |
+| **Replay / ghost recording** | Post-launch                       | Feasible because input is an immutable frame and physics is fixed-step. Record `InputFrame[]`, replay deterministically. **Requires** replacing `Math.random` with the seeded `Rng` everywhere — already done, precisely to keep this door open |
+| **Steam port**               | Post-launch                       | §14                                                                                                                                                                                                                                             |
+| **Mod support**              | Unlikely                          | Content is already JSON; would need a loader for external files and a sandbox story                                                                                                                                                             |
+| **Migration to an ECS**      | Only if entity count exceeds ~500 | Not anticipated. The 40-entity budget makes an ECS pure overhead                                                                                                                                                                                |
 
 **Note on determinism:** the decision to route all randomness through a seeded `Rng` (`src/core/Rng.ts`) rather than `Math.random` costs nothing today and is what makes replays, ghost races, and deterministic bug reproduction possible later. `tools/ci/check-portability.ts` also fails the build on any `Math.random()` outside `Rng.ts`.
 
@@ -1807,41 +1890,41 @@ export interface ContentDatabase {
 
 ## 18. Out of Scope
 
-| Excluded | Reason |
-|---|---|
-| **A full ECS** | 40 active entities does not justify the indirection. Composition via components gives the flexibility without the archetype machinery |
-| **A DI container** | The typed `Registry` plus constructor injection covers every real case. A container adds a lifecycle model nobody needs |
-| **A UI framework (React/Vue)** | Two renderers fighting over one canvas. All UI is Phaser GameObjects built by `UiBuilder` from JSON |
-| **A state-management library** | Game state lives in systems; UI state is local. Redux would add ceremony with no benefit |
-| **Matter.js physics** | Arcade AABB is sufficient and 5–10× faster. Rotation and soft bodies are not needed. See `ADR-005` |
-| **Server-side anything** | No backend. See `01-Vision.md` §14 |
-| **Hot-reloading of content JSON in production** | Dev-only convenience via Vite HMR; production loads once at boot |
-| **Multi-threading / Web Workers** | Nothing in the frame budget justifies the serialisation cost at this scale |
-| **WASM modules** | No hot path is CPU-bound enough to warrant it |
-| **A custom renderer** | Phaser's batched WebGL renderer meets the 40-draw-call budget comfortably |
-| **Runtime asset decompression** | Atlases ship as PNG. The browser decodes them; we do not |
+| Excluded                                        | Reason                                                                                                                                |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **A full ECS**                                  | 40 active entities does not justify the indirection. Composition via components gives the flexibility without the archetype machinery |
+| **A DI container**                              | The typed `Registry` plus constructor injection covers every real case. A container adds a lifecycle model nobody needs               |
+| **A UI framework (React/Vue)**                  | Two renderers fighting over one canvas. All UI is Phaser GameObjects built by `UiBuilder` from JSON                                   |
+| **A state-management library**                  | Game state lives in systems; UI state is local. Redux would add ceremony with no benefit                                              |
+| **Matter.js physics**                           | Arcade AABB is sufficient and 5–10× faster. Rotation and soft bodies are not needed. See `ADR-005`                                    |
+| **Server-side anything**                        | No backend. See `01-Vision.md` §14                                                                                                    |
+| **Hot-reloading of content JSON in production** | Dev-only convenience via Vite HMR; production loads once at boot                                                                      |
+| **Multi-threading / Web Workers**               | Nothing in the frame budget justifies the serialisation cost at this scale                                                            |
+| **WASM modules**                                | No hot path is CPU-bound enough to warrant it                                                                                         |
+| **A custom renderer**                           | Phaser's batched WebGL renderer meets the 40-draw-call budget comfortably                                                             |
+| **Runtime asset decompression**                 | Atlases ship as PNG. The browser decodes them; we do not                                                                              |
 
 ---
 
 ## 19. Cross References
 
-| Topic | Document |
-|-------|----------|
-| Canonical constants mirrored in `GameConstants.ts` | `00-README.md` §5 |
-| The 8-second load promise this architecture serves | `01-Vision.md` §5.2 |
-| The build order that defers frameworks until after the vertical slice | `01-Vision.md` §8.1 |
-| Pillar invariants enforced by lint rules | `02-Game-Pillars.md` §6.1 |
-| Atlas budgets and the packer configuration | `05-Asset-Pipeline.md` §7 |
-| `CharacterDefinition` schema and ability modules | `06-Characters.md` §9 |
-| `HitResolution` and the nine-layer stack | `07-Combat.md` §6 |
-| `EnemyDefinition` schema and behaviour modules | `08-Enemy-System.md` §9 |
-| `BossDefinition` schema and the phase machine | `09-Boss-System.md` §9 |
-| Tiled conventions, custom properties, `ObjectFactory` dispatch | `10-Level-Design.md` §8 |
-| `SaveData` consumers and progression rules | `11-Progression.md` §8 |
-| `PortfolioSystem` isolation and the Deletion Test boundary | `12-Portfolio-System.md` §5 |
-| `UiBuilder`, `FocusManager`, and widget schemas | `13-UI-UX.md` §7 |
-| Animation naming that `EnemyAnimator` depends on | `14-Animation-Standards.md` §5 |
-| Pooling sizes, culling margins, and the perf budget | `15-Performance.md` §5 |
-| Naming, formatting, and review standards | `16-Coding-Standards.md` |
-| When each framework is built | `17-Roadmap.md` §5 |
-| ADR-003 (Phaser), ADR-005 (Arcade over Matter) | `19-Decisions.md` |
+| Topic                                                                 | Document                       |
+| --------------------------------------------------------------------- | ------------------------------ |
+| Canonical constants mirrored in `GameConstants.ts`                    | `00-README.md` §5              |
+| The 8-second load promise this architecture serves                    | `01-Vision.md` §5.2            |
+| The build order that defers frameworks until after the vertical slice | `01-Vision.md` §8.1            |
+| Pillar invariants enforced by lint rules                              | `02-Game-Pillars.md` §6.1      |
+| Atlas budgets and the packer configuration                            | `05-Asset-Pipeline.md` §7      |
+| `CharacterDefinition` schema and ability modules                      | `06-Characters.md` §9          |
+| `HitResolution` and the nine-layer stack                              | `07-Combat.md` §6              |
+| `EnemyDefinition` schema and behaviour modules                        | `08-Enemy-System.md` §9        |
+| `BossDefinition` schema and the phase machine                         | `09-Boss-System.md` §9         |
+| Tiled conventions, custom properties, `ObjectFactory` dispatch        | `10-Level-Design.md` §8        |
+| `SaveData` consumers and progression rules                            | `11-Progression.md` §8         |
+| `PortfolioSystem` isolation and the Deletion Test boundary            | `12-Portfolio-System.md` §5    |
+| `UiBuilder`, `FocusManager`, and widget schemas                       | `13-UI-UX.md` §7               |
+| Animation naming that `EnemyAnimator` depends on                      | `14-Animation-Standards.md` §5 |
+| Pooling sizes, culling margins, and the perf budget                   | `15-Performance.md` §5         |
+| Naming, formatting, and review standards                              | `16-Coding-Standards.md`       |
+| When each framework is built                                          | `17-Roadmap.md` §5             |
+| ADR-003 (Phaser), ADR-005 (Arcade over Matter)                        | `19-Decisions.md`              |

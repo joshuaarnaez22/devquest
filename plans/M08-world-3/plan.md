@@ -17,15 +17,15 @@ layer. Everything after M8 makes the product better rather than making it exist.
 
 ## Deliverables
 
-| # | Deliverable | Spec |
-|---|---|---|
-| 1 | Forbidden Graveyard tileset + Fairy Tale night backgrounds (~10 h) | `docs/04-Art-Direction.md` §8.3 |
-| 2 | Yokai and Witch packs harmonised (~5 h) | `docs/08-Enemy-System.md` §6.3, §6.4 |
-| 3 | `LanternMechanic` — light mask, soul-braziers, fog banks | `docs/10-Level-Design.md` §7.3 |
-| 4 | Levels 3-1, 3-2, 3-3 | `docs/10-Level-Design.md` §10 |
-| 5 | Oni Lord — 3 phases, shadow copies, brazier extinguishing | `docs/09-Boss-System.md` §7.3 |
-| 6 | Experience unlock | |
-| 7 | Behaviours: `teleport`, `summon`, `flee`, `hover`. Attack module: `blinkStrike`, `projectileHoming` | |
+| #   | Deliverable                                                                                         | Spec                                 |
+| --- | --------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1   | Forbidden Graveyard tileset + Fairy Tale night backgrounds (~10 h)                                  | `docs/04-Art-Direction.md` §8.3      |
+| 2   | Yokai and Witch packs harmonised (~5 h)                                                             | `docs/08-Enemy-System.md` §6.3, §6.4 |
+| 3   | `LanternMechanic` — light mask, soul-braziers, fog banks                                            | `docs/10-Level-Design.md` §7.3       |
+| 4   | Levels 3-1, 3-2, 3-3                                                                                | `docs/10-Level-Design.md` §10        |
+| 5   | Oni Lord — 3 phases, shadow copies, brazier extinguishing                                           | `docs/09-Boss-System.md` §7.3        |
+| 6   | Experience unlock                                                                                   |                                      |
+| 7   | Behaviours: `teleport`, `summon`, `flee`, `hover`. Attack module: `blinkStrike`, `projectileHoming` |                                      |
 
 ---
 
@@ -64,12 +64,12 @@ without it, killing her is pointless once she has summoned.
 
 ## Week shape
 
-| Week | Focus |
-|---|---|
-| 1 | Asset harmonisation, `LanternMechanic` + light mask, **`check-dark-hazards.ts`**, perf-measure the mask |
-| 2 | Levels 3-1 and 3-2, `teleport`/`summon`/`flee`/`hover` behaviours |
-| 3 | Level 3-3, Oni Lord three phases |
-| 4 | Polish reserve, Experience unlock, **Cut-Line-A shipping verification if invoked** |
+| Week | Focus                                                                                                   |
+| ---- | ------------------------------------------------------------------------------------------------------- |
+| 1    | Asset harmonisation, `LanternMechanic` + light mask, **`check-dark-hazards.ts`**, perf-measure the mask |
+| 2    | Levels 3-1 and 3-2, `teleport`/`summon`/`flee`/`hover` behaviours                                       |
+| 3    | Level 3-3, Oni Lord three phases                                                                        |
+| 4    | Polish reserve, Experience unlock, **Cut-Line-A shipping verification if invoked**                      |
 
 ---
 

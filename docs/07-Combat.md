@@ -20,36 +20,42 @@ The system is deliberately **shallow in mechanics and deep in feel.** There is n
 
 ## 2. Goals
 
-| # | Goal | Success Signal |
-|---|------|----------------|
-| G1 | Define hitbox/hurtbox geometry and lifecycle exactly | Two implementers produce identical collision behaviour |
-| G2 | Guarantee all nine feedback layers fire on every hit | `HitResolution` makes omitting a layer a compile error |
-| G3 | Define damage calculation with no hidden terms | Any damage number can be derived by hand |
-| G4 | Define poise and stagger so enemy reactions are predictable | The player learns which enemies flinch and which do not |
-| G5 | Make hit stop correct — participants freeze, world does not | Playtesters never describe hit stop as a stutter |
-| G6 | Define i-frames, hit priority, and multi-hit resolution | No ambiguity when two hits land on the same frame |
-| G7 | Keep combat resolution under 1 ms per frame | Perf budget, `15-Performance.md` §4 |
+| #   | Goal                                                        | Success Signal                                          |
+| --- | ----------------------------------------------------------- | ------------------------------------------------------- |
+| G1  | Define hitbox/hurtbox geometry and lifecycle exactly        | Two implementers produce identical collision behaviour  |
+| G2  | Guarantee all nine feedback layers fire on every hit        | `HitResolution` makes omitting a layer a compile error  |
+| G3  | Define damage calculation with no hidden terms              | Any damage number can be derived by hand                |
+| G4  | Define poise and stagger so enemy reactions are predictable | The player learns which enemies flinch and which do not |
+| G5  | Make hit stop correct — participants freeze, world does not | Playtesters never describe hit stop as a stutter        |
+| G6  | Define i-frames, hit priority, and multi-hit resolution     | No ambiguity when two hits land on the same frame       |
+| G7  | Keep combat resolution under 1 ms per frame                 | Perf budget, `15-Performance.md` §4                     |
 
 ---
 
 ## 3. Design Principles
 
 ### P1 — Feedback Is Not Optional
+
 The nine layers are a package. A hit that fires eight of them is a bug, not a variation. The `HitResolution` type has no optional fields for this reason.
 
 ### P2 — Freeze the Participants, Not the World
+
 Hit stop stops the attacker and the victim. VFX, particles, camera shake, parallax, and the rest of the scene continue at full speed. This is the difference between "impact" and "the game hitched."
 
 ### P3 — Never Freeze Input
+
 Input during hit stop is buffered and applied on the first unfrozen frame. The player must never feel that control was taken away.
 
 ### P4 — Generous Hitboxes, Honest Hurtboxes
+
 The player's attack hitboxes are slightly larger than the visual. The player's hurtbox is slightly smaller than the visual. Enemy hitboxes are exactly the visual; enemy hurtboxes are slightly larger. This asymmetry is invisible and makes combat feel fair. It is a standard technique and it is not cheating — it corrects for the fact that players judge contact by sprite overlap, which is coarser than the underlying geometry.
 
 ### P5 — Deterministic, Not Random
+
 There is no damage variance, no critical-hit RNG, no dodge chance. A hit for 22 always does 22. Randomness in a skill-based combat system converts player mastery into noise.
 
 ### P6 — Every Number Is Reachable by Hand
+
 No hidden multipliers, no scaling curves that only exist in code. A player who reads this document can predict every damage number in the game.
 
 ---
@@ -90,17 +96,17 @@ sequenceDiagram
 
 ### 4.2 The Nine Layers — Summary
 
-| # | Layer | Owner System | Fires At |
-|---|---|---|---|
-| 1 | Hit stop | `HitStopSystem` | `t = 0` |
-| 2 | Hit flash | `CombatSystem` (direct tint) | `t = 0` |
-| 3 | Knockback | `KnockbackSystem` | `t = 0` |
-| 4 | Slash VFX | `VfxSystem` | `t = 0` |
-| 5 | Camera shake | `CameraSystem` | `t = 0` |
-| 6 | Stagger | Victim FSM via `force()` | `t = hitstop end` |
-| 7 | Damage number | `DamageNumberSystem` | `t = hitstop end` |
-| 8 | Impact particles | `ParticleSystem` | `t = 0` |
-| 9 | Death explosion | `VfxSystem` + others | on kill only |
+| #   | Layer            | Owner System                 | Fires At          |
+| --- | ---------------- | ---------------------------- | ----------------- |
+| 1   | Hit stop         | `HitStopSystem`              | `t = 0`           |
+| 2   | Hit flash        | `CombatSystem` (direct tint) | `t = 0`           |
+| 3   | Knockback        | `KnockbackSystem`            | `t = 0`           |
+| 4   | Slash VFX        | `VfxSystem`                  | `t = 0`           |
+| 5   | Camera shake     | `CameraSystem`               | `t = 0`           |
+| 6   | Stagger          | Victim FSM via `force()`     | `t = hitstop end` |
+| 7   | Damage number    | `DamageNumberSystem`         | `t = hitstop end` |
+| 8   | Impact particles | `ParticleSystem`             | `t = 0`           |
+| 9   | Death explosion  | `VfxSystem` + others         | on kill only      |
 
 ### 4.3 What Combat Does Not Have
 
@@ -128,8 +134,8 @@ Both are axis-aligned rectangles. No circles, no polygons, no rotation.
 export interface HitboxSpec {
   readonly width: number;
   readonly height: number;
-  readonly offsetX: number;    // from the owner's pivot, positive = forward
-  readonly offsetY: number;    // positive = down
+  readonly offsetX: number; // from the owner's pivot, positive = forward
+  readonly offsetY: number; // positive = down
 }
 
 export class Hitbox {
@@ -163,8 +169,12 @@ export class Hitbox {
     );
   }
 
-  canHit(victim: EntityId): boolean { return !this.alreadyHit.has(victim); }
-  markHit(victim: EntityId): void { this.alreadyHit.add(victim); }
+  canHit(victim: EntityId): boolean {
+    return !this.alreadyHit.has(victim);
+  }
+  markHit(victim: EntityId): void {
+    this.alreadyHit.add(victim);
+  }
 }
 ```
 
@@ -172,13 +182,13 @@ export class Hitbox {
 
 ### 5.2 The Generosity Asymmetry (P4)
 
-| Entity | Hitbox vs. Visual | Hurtbox vs. Visual |
-|---|---|---|
-| **Player** | **+3 px** on the leading edge, +2 px vertically | **−2 px** each side, **−3 px** top |
-| **Enemy** | Exactly the visual | **+2 px** each side, **+1 px** top |
-| **Boss** | Exactly the visual | Exactly the visual (bosses are large; generosity is unnecessary and would read as unfair) |
-| **Projectile** | Exactly the visual | N/A |
-| **Hazard (spikes)** | **−2 px** each side | N/A |
+| Entity              | Hitbox vs. Visual                               | Hurtbox vs. Visual                                                                        |
+| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Player**          | **+3 px** on the leading edge, +2 px vertically | **−2 px** each side, **−3 px** top                                                        |
+| **Enemy**           | Exactly the visual                              | **+2 px** each side, **+1 px** top                                                        |
+| **Boss**            | Exactly the visual                              | Exactly the visual (bosses are large; generosity is unnecessary and would read as unfair) |
+| **Projectile**      | Exactly the visual                              | N/A                                                                                       |
+| **Hazard (spikes)** | **−2 px** each side                             | N/A                                                                                       |
 
 **Net effect:** the player's sword reaches 3 px further than it looks, the player is 4 px narrower than they look, and enemies are 4 px wider than they look. In a game where the player is 14 px wide, this is a meaningful bias — roughly a 28% wider effective attack window and a 29% narrower effective damage window.
 
@@ -186,18 +196,18 @@ export class Hitbox {
 
 ### 5.3 Standard Body Sizes
 
-| Entity | Body W × H | Offset X, Y | Notes |
-|---|---|---|---|
-| Player (all heroes) | 14 × 28 | 4, 4 | Uniform across heroes so level geometry works for all |
-| Player crouching | 14 × 17 | 4, 15 | 60% height, bottom-aligned |
-| Skeleton | 12 × 26 | 10, 6 | |
-| Skeleton Archer | 12 × 26 | 10, 6 | |
-| Werewolf | 22 × 26 | 4, 8 | Wide, low |
-| Yokai | 16 × 26 | 3, 4 | Floats 2 px above ground |
-| Orc | 20 × 34 | 4, 4 | |
-| Golem | 32 × 44 | 4, 4 | |
-| Witch | 14 × 28 | 5, 4 | |
-| Gorgon | 44 × 56 | 6, 8 | |
+| Entity              | Body W × H | Offset X, Y | Notes                                                 |
+| ------------------- | ---------- | ----------- | ----------------------------------------------------- |
+| Player (all heroes) | 14 × 28    | 4, 4        | Uniform across heroes so level geometry works for all |
+| Player crouching    | 14 × 17    | 4, 15       | 60% height, bottom-aligned                            |
+| Skeleton            | 12 × 26    | 10, 6       |                                                       |
+| Skeleton Archer     | 12 × 26    | 10, 6       |                                                       |
+| Werewolf            | 22 × 26    | 4, 8        | Wide, low                                             |
+| Yokai               | 16 × 26    | 3, 4        | Floats 2 px above ground                              |
+| Orc                 | 20 × 34    | 4, 4        |                                                       |
+| Golem               | 32 × 44    | 4, 4        |                                                       |
+| Witch               | 14 × 28    | 5, 4        |                                                       |
+| Gorgon              | 44 × 56    | 6, 8        |                                                       |
 
 **The player body is 14 × 28 for every hero** despite differing sprite widths (16–22 px). This is deliberate: level geometry is authored once, and a wider Knight body would make some gaps impassable for one hero, violating `06-Characters.md` P3.
 
@@ -205,32 +215,32 @@ export class Hitbox {
 
 ```ts
 export const CollisionGroup = {
-  PLAYER_BODY:      1 << 0,
-  PLAYER_HITBOX:    1 << 1,
-  PLAYER_HURTBOX:   1 << 2,
-  ENEMY_BODY:       1 << 3,
-  ENEMY_HITBOX:     1 << 4,
-  ENEMY_HURTBOX:    1 << 5,
+  PLAYER_BODY: 1 << 0,
+  PLAYER_HITBOX: 1 << 1,
+  PLAYER_HURTBOX: 1 << 2,
+  ENEMY_BODY: 1 << 3,
+  ENEMY_HITBOX: 1 << 4,
+  ENEMY_HURTBOX: 1 << 5,
   PLAYER_PROJECTILE: 1 << 6,
-  ENEMY_PROJECTILE:  1 << 7,
-  TERRAIN:          1 << 8,
-  ONE_WAY:          1 << 9,
-  HAZARD:           1 << 10,
-  PICKUP:           1 << 11,
-  TRIGGER:          1 << 12,
+  ENEMY_PROJECTILE: 1 << 7,
+  TERRAIN: 1 << 8,
+  ONE_WAY: 1 << 9,
+  HAZARD: 1 << 10,
+  PICKUP: 1 << 11,
+  TRIGGER: 1 << 12,
 } as const;
 ```
 
-| Overlap Pair | Result |
-|---|---|
-| `PLAYER_HITBOX` × `ENEMY_HURTBOX` | Queue a hit (player → enemy) |
-| `ENEMY_HITBOX` × `PLAYER_HURTBOX` | Queue a hit (enemy → player) |
-| `PLAYER_PROJECTILE` × `ENEMY_HURTBOX` | Queue a hit, then despawn unless piercing |
-| `ENEMY_PROJECTILE` × `PLAYER_HURTBOX` | Queue a hit, despawn |
-| `ENEMY_BODY` × `PLAYER_HURTBOX` | Queue a **contact** hit (lower damage, no hitstop escalation) |
-| `HAZARD` × `PLAYER_HURTBOX` | Queue a hazard hit |
-| `PLAYER_BODY` × `TERRAIN` | Physics collide |
-| `PLAYER_BODY` × `ENEMY_BODY` | **No collision** — entities pass through each other |
+| Overlap Pair                          | Result                                                        |
+| ------------------------------------- | ------------------------------------------------------------- |
+| `PLAYER_HITBOX` × `ENEMY_HURTBOX`     | Queue a hit (player → enemy)                                  |
+| `ENEMY_HITBOX` × `PLAYER_HURTBOX`     | Queue a hit (enemy → player)                                  |
+| `PLAYER_PROJECTILE` × `ENEMY_HURTBOX` | Queue a hit, then despawn unless piercing                     |
+| `ENEMY_PROJECTILE` × `PLAYER_HURTBOX` | Queue a hit, despawn                                          |
+| `ENEMY_BODY` × `PLAYER_HURTBOX`       | Queue a **contact** hit (lower damage, no hitstop escalation) |
+| `HAZARD` × `PLAYER_HURTBOX`           | Queue a hazard hit                                            |
+| `PLAYER_BODY` × `TERRAIN`             | Physics collide                                               |
+| `PLAYER_BODY` × `ENEMY_BODY`          | **No collision** — entities pass through each other           |
 
 **Entities do not collide with each other.** Only with terrain. This is a deliberate choice: enemy bodies blocking the player produces constant unintentional shoving, corner-trapping, and platforming failures caused by an enemy standing in a landing zone. Contact damage handles the "you should not stand inside an enemy" problem without the physics headaches.
 
@@ -266,7 +276,7 @@ export interface HitResolution {
   readonly attacker: EntityId;
   readonly victim: EntityId;
   readonly attackInstanceId: number;
-  readonly point: Readonly<Vec2>;          // world-space contact point
+  readonly point: Readonly<Vec2>; // world-space contact point
   readonly kind: HitKind;
 
   // Damage
@@ -315,25 +325,25 @@ export interface HitResolution {
 
 ### 6.2 Layer 1 — Hit Stop
 
-| Hit Kind | Duration | Notes |
-|---|---|---|
-| `light` | 60 ms | Standard melee, first two combo hits |
-| `heavy` | 110 ms | Combo finishers, charged attacks, heavy enemy attacks |
-| `magic` | 90 ms | Wizard bolts, witch orbs |
-| `ranged` | 50 ms | Arrows, thrown weapons. Shortest — a projectile has less "weight" |
-| `contact` | 40 ms | Walking into an enemy. Minimal, so it does not interrupt movement |
-| `hazard` | 0 ms | Spikes and pits produce no hit stop — they produce a death or a knockback |
-| **Kill bonus** | **+30 ms** | Added to whatever the base was. A light hit that kills = 90 ms |
+| Hit Kind       | Duration   | Notes                                                                     |
+| -------------- | ---------- | ------------------------------------------------------------------------- |
+| `light`        | 60 ms      | Standard melee, first two combo hits                                      |
+| `heavy`        | 110 ms     | Combo finishers, charged attacks, heavy enemy attacks                     |
+| `magic`        | 90 ms      | Wizard bolts, witch orbs                                                  |
+| `ranged`       | 50 ms      | Arrows, thrown weapons. Shortest — a projectile has less "weight"         |
+| `contact`      | 40 ms      | Walking into an enemy. Minimal, so it does not interrupt movement         |
+| `hazard`       | 0 ms       | Spikes and pits produce no hit stop — they produce a death or a knockback |
+| **Kill bonus** | **+30 ms** | Added to whatever the base was. A light hit that kills = 90 ms            |
 
 Special cases:
 
-| Case | Duration |
-|---|---|
-| Knight parry | 140 ms |
-| Samurai charged Iai | 140 ms |
-| Wizard Nova | 140 ms |
-| Boss phase-transition hit | 200 ms |
-| Boss death | 400 ms |
+| Case                      | Duration |
+| ------------------------- | -------- |
+| Knight parry              | 140 ms   |
+| Samurai charged Iai       | 140 ms   |
+| Wizard Nova               | 140 ms   |
+| Boss phase-transition hit | 200 ms   |
+| Boss death                | 400 ms   |
 
 **Implementation rules:**
 
@@ -373,21 +383,23 @@ update(time: number, rawDelta: number): void {
 
 ### 6.3 Layer 2 — Hit Flash
 
-| Property | Value |
-|---|---|
-| Method | `sprite.setTintFill(colour)` — **fill**, not tint. `setTint` multiplies; `setTintFill` replaces |
-| Colour (normal) | `0xf2f0f5` (Palette N7) |
-| Colour (fatal) | `0xffffff` pure white |
-| Colour (blocked) | `0x9a97a6` (Palette N5) |
-| Duration | 80 ms full, then a 40 ms fade back to no tint |
-| Applies to | The victim only |
-| During hit stop | Yes — the flash is visible during the freeze, which is most of its duration |
+| Property         | Value                                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| Method           | `sprite.setTintFill(colour)` — **fill**, not tint. `setTint` multiplies; `setTintFill` replaces |
+| Colour (normal)  | `0xf2f0f5` (Palette N7)                                                                         |
+| Colour (fatal)   | `0xffffff` pure white                                                                           |
+| Colour (blocked) | `0x9a97a6` (Palette N5)                                                                         |
+| Duration         | 80 ms full, then a 40 ms fade back to no tint                                                   |
+| Applies to       | The victim only                                                                                 |
+| During hit stop  | Yes — the flash is visible during the freeze, which is most of its duration                     |
 
 ```ts
 victim.sprite.setTintFill(res.flashColour);
 scene.time.delayedCall(res.flashMs, () => {
   scene.tweens.addCounter({
-    from: 1, to: 0, duration: 40,
+    from: 1,
+    to: 0,
+    duration: 40,
     onUpdate: t => {
       const v = t.getValue();
       // Fading a tintFill: lerp toward the sprite's natural colour by reducing fill alpha.
@@ -402,14 +414,14 @@ scene.time.delayedCall(res.flashMs, () => {
 
 ### 6.4 Layer 3 — Knockback
 
-| Hit Kind | Speed | Lift | Decay |
-|---|---|---|---|
-| `light` | 70 px/s | 0 | 200 ms |
-| `heavy` | 140 px/s | −60 px/s | 260 ms |
-| `magic` | 100 px/s | −30 px/s | 220 ms |
-| `ranged` | 50 px/s | 0 | 150 ms |
-| `contact` | 90 px/s | −40 px/s | 200 ms |
-| `hazard` | 120 px/s | −80 px/s | 250 ms |
+| Hit Kind  | Speed    | Lift     | Decay  |
+| --------- | -------- | -------- | ------ |
+| `light`   | 70 px/s  | 0        | 200 ms |
+| `heavy`   | 140 px/s | −60 px/s | 260 ms |
+| `magic`   | 100 px/s | −30 px/s | 220 ms |
+| `ranged`  | 50 px/s  | 0        | 150 ms |
+| `contact` | 90 px/s  | −40 px/s | 200 ms |
+| `hazard`  | 120 px/s | −80 px/s | 250 ms |
 
 **Direction:** away from the attacker, on the X axis only. Computed as `Math.sign(victim.x - attacker.x)`, defaulting to the attacker's facing if they are exactly aligned.
 
@@ -428,7 +440,7 @@ poiseScale = victim.poiseBroken ? 1.0 : 0.35
 
 **An enemy with unbroken poise receives only 35% knockback.** This is what makes the Golem feel heavy — it takes light hits without moving, and only when its poise breaks does it get launched. See §8.
 
-**Decay curve:** linear to zero over `decayMs`, applied as a velocity *addition* that shrinks, not as a velocity override. This means a running player knocked back still retains their own input velocity underneath, which prevents knockback from feeling like a total loss of control.
+**Decay curve:** linear to zero over `decayMs`, applied as a velocity _addition_ that shrinks, not as a velocity override. This means a running player knocked back still retains their own input velocity underneath, which prevents knockback from feeling like a total loss of control.
 
 ```ts
 // src/systems/KnockbackSystem.ts
@@ -447,26 +459,26 @@ update(_time: number, delta: number): void {
 
 ### 6.5 Layer 4 — Slash / Impact VFX
 
-| Hit Kind | VFX | Size | Blend | Frames |
-|---|---|---|---|---|
-| `light` | `slash_light` | 32×32 | ADD | 5 @ 60 fps = 83 ms |
-| `heavy` | `slash_heavy` | 48×48 | ADD | 7 @ 60 fps = 116 ms |
-| `magic` | `slash_magic` | 40×40 | ADD | 6 @ 60 fps = 100 ms |
-| `ranged` | `impact_small` | 16×16 | ADD | 4 @ 60 fps = 66 ms |
-| `contact` | `impact_small` | 16×16 | ADD | 4 |
-| `hazard` | `impact_spike` | 24×24 | ADD | 5 |
+| Hit Kind  | VFX            | Size  | Blend | Frames              |
+| --------- | -------------- | ----- | ----- | ------------------- |
+| `light`   | `slash_light`  | 32×32 | ADD   | 5 @ 60 fps = 83 ms  |
+| `heavy`   | `slash_heavy`  | 48×48 | ADD   | 7 @ 60 fps = 116 ms |
+| `magic`   | `slash_magic`  | 40×40 | ADD   | 6 @ 60 fps = 100 ms |
+| `ranged`  | `impact_small` | 16×16 | ADD   | 4 @ 60 fps = 66 ms  |
+| `contact` | `impact_small` | 16×16 | ADD   | 4                   |
+| `hazard`  | `impact_spike` | 24×24 | ADD   | 5                   |
 
 **Positioning:** at the contact point, **offset 40% of the way toward the victim's centre.** Not at the attacker, not at the victim's centre — at the point of contact biased toward the victim. Positioning slash VFX on the attacker is a common mistake that makes hits read as whiffs.
 
 **Rotation:** `vfxAngleDeg` derived from the attack's arc:
 
-| Attack | Angle |
-|---|---|
-| Horizontal slash | 0° (flipped by facing) |
-| Overhead slam | −60° |
-| Rising slash | +45° |
-| Spinning finisher | Rotates 360° over the effect's lifetime |
-| Air attack (downward) | +75° |
+| Attack                | Angle                                   |
+| --------------------- | --------------------------------------- |
+| Horizontal slash      | 0° (flipped by facing)                  |
+| Overhead slam         | −60°                                    |
+| Rising slash          | +45°                                    |
+| Spinning finisher     | Rotates 360° over the effect's lifetime |
+| Air attack (downward) | +75°                                    |
 
 Rotation on radially symmetric VFX is permitted per `04-Art-Direction.md` §5.1.
 
@@ -495,17 +507,17 @@ update(_time: number, delta: number): void {
 }
 ```
 
-| Event | Trauma Added |
-|---|---|
-| Light hit | 0.14 |
-| Heavy hit | 0.26 |
-| Magic hit | 0.20 |
-| Ranged hit | 0.08 |
-| Kill | +0.10 on top of the hit |
-| Player takes damage | 0.30 |
-| Explosion | 0.35 |
-| Boss slam | 0.45 |
-| Boss phase transition | 0.60 |
+| Event                 | Trauma Added            |
+| --------------------- | ----------------------- |
+| Light hit             | 0.14                    |
+| Heavy hit             | 0.26                    |
+| Magic hit             | 0.20                    |
+| Ranged hit            | 0.08                    |
+| Kill                  | +0.10 on top of the hit |
+| Player takes damage   | 0.30                    |
+| Explosion             | 0.35                    |
+| Boss slam             | 0.45                    |
+| Boss phase transition | 0.60                    |
 
 **Three things make this work:**
 
@@ -523,10 +535,10 @@ Applied **after** hit stop ends, so the stagger animation is visible rather than
 staggerMs = baseStagger × (1 - victim.poiseResist)
 ```
 
-| Poise Remaining After Hit | Stagger |
-|---|---|
-| Poise broken (≤ 0) | Full stagger — 180–600 ms by enemy type |
-| Poise intact | **Flinch only** — 100 ms, the enemy plays 2 frames of `hurt` but does not lose AI control |
+| Poise Remaining After Hit | Stagger                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| Poise broken (≤ 0)        | Full stagger — 180–600 ms by enemy type                                                   |
+| Poise intact              | **Flinch only** — 100 ms, the enemy plays 2 frames of `hurt` but does not lose AI control |
 
 The distinction is the core of enemy weight (§8). A Skeleton (poise 12) breaks on the first hit and staggers fully. A Golem (poise 90) absorbs four hits before staggering at all.
 
@@ -534,47 +546,47 @@ The distinction is the core of enemy weight (§8). A Skeleton (poise 12) breaks 
 
 ### 6.8 Layer 7 — Damage Numbers
 
-| Property | Value |
-|---|---|
-| Font | `devquest-6px` (normal) / `devquest-8px` (critical, player damage) |
-| Spawn position | Contact point, +8 px vertical jitter, ±6 px horizontal jitter |
-| Motion | Rises 12 px over 500 ms, `Quad.easeOut` |
-| Fade | Alpha 1 → 0 over the final 200 ms |
-| Depth | `Depth.DAMAGE_NUMBER` (60) |
-| Pooled | Yes, 12 initial / 20 max |
-| Stacking | If a number spawns within 8 px of a live one, offset it by 10 px vertically |
+| Property       | Value                                                                       |
+| -------------- | --------------------------------------------------------------------------- |
+| Font           | `devquest-6px` (normal) / `devquest-8px` (critical, player damage)          |
+| Spawn position | Contact point, +8 px vertical jitter, ±6 px horizontal jitter               |
+| Motion         | Rises 12 px over 500 ms, `Quad.easeOut`                                     |
+| Fade           | Alpha 1 → 0 over the final 200 ms                                           |
+| Depth          | `Depth.DAMAGE_NUMBER` (60)                                                  |
+| Pooled         | Yes, 12 initial / 20 max                                                    |
+| Stacking       | If a number spawns within 8 px of a live one, offset it by 10 px vertically |
 
-| Style | Colour | Font | Trigger |
-|---|---|---|---|
-| `normal` | `#f2f0f5` (N7) | 6 px | Standard player hit |
-| `critical` | `#ffd23f` (S3) | 8 px | Parry-critical, charged Iai |
-| `magic` | `#bd6fd1` (M4) | 6 px | Wizard damage |
-| `playerDamage` | `#f04a4a` (S1) | 8 px | Damage taken by the player |
-| `heal` | `#2fbf6b` (S2) | 6 px | Healing |
-| `blocked` | `#9a97a6` (N5) | 6 px | Shows "BLOCK" instead of a number |
+| Style          | Colour         | Font | Trigger                           |
+| -------------- | -------------- | ---- | --------------------------------- |
+| `normal`       | `#f2f0f5` (N7) | 6 px | Standard player hit               |
+| `critical`     | `#ffd23f` (S3) | 8 px | Parry-critical, charged Iai       |
+| `magic`        | `#bd6fd1` (M4) | 6 px | Wizard damage                     |
+| `playerDamage` | `#f04a4a` (S1) | 8 px | Damage taken by the player        |
+| `heal`         | `#2fbf6b` (S2) | 6 px | Healing                           |
+| `blocked`      | `#9a97a6` (N5) | 6 px | Shows "BLOCK" instead of a number |
 
 **Damage numbers can be disabled** in settings without affecting any other layer. Some players find them noisy. The other eight layers are not disableable.
 
 ### 6.9 Layer 8 — Impact Particles
 
-| Hit Kind | Particle | Count | Spread | Lifetime |
-|---|---|---|---|---|
-| `light` | `spark` | 6 | 60° cone along the attack normal | 300 ms |
-| `heavy` | `spark` | 10 | 90° cone | 380 ms |
-| `magic` | `arcane_mote` | 8 | 360° | 400 ms |
-| `ranged` | `spark` | 4 | 45° cone | 250 ms |
-| `contact` | `dust` | 3 | 120° | 220 ms |
-| `hazard` | `spark` | 8 | 180° upward | 300 ms |
+| Hit Kind  | Particle      | Count | Spread                           | Lifetime |
+| --------- | ------------- | ----- | -------------------------------- | -------- |
+| `light`   | `spark`       | 6     | 60° cone along the attack normal | 300 ms   |
+| `heavy`   | `spark`       | 10    | 90° cone                         | 380 ms   |
+| `magic`   | `arcane_mote` | 8     | 360°                             | 400 ms   |
+| `ranged`  | `spark`       | 4     | 45° cone                         | 250 ms   |
+| `contact` | `dust`        | 3     | 120°                             | 220 ms   |
+| `hazard`  | `spark`       | 8     | 180° upward                      | 300 ms   |
 
 **Material-aware particles.** Each enemy declares a `material` in its definition, which selects the particle:
 
-| Material | Particle | Enemies |
-|---|---|---|
-| `bone` | `bone_chip` (white, angular) | Skeleton family |
-| `flesh` | `blood_mote` (dark red, S0-derived) | Werewolf, Orc |
-| `spirit` | `spirit_wisp` (M-ramp, drifts upward) | Yokai, Witch |
-| `stone` | `rock_chip` (grey, heavy, falls fast) | Golem |
-| `scale` | `scale_flake` (green, G-ramp) | Gorgon |
+| Material | Particle                              | Enemies         |
+| -------- | ------------------------------------- | --------------- |
+| `bone`   | `bone_chip` (white, angular)          | Skeleton family |
+| `flesh`  | `blood_mote` (dark red, S0-derived)   | Werewolf, Orc   |
+| `spirit` | `spirit_wisp` (M-ramp, drifts upward) | Yokai, Witch    |
+| `stone`  | `rock_chip` (grey, heavy, falls fast) | Golem           |
+| `scale`  | `scale_flake` (green, G-ramp)         | Gorgon          |
 
 This is a cheap, high-value detail: hitting a skeleton and hitting a golem produce visibly different debris, which reinforces the weight difference already communicated by poise.
 
@@ -582,16 +594,16 @@ This is a cheap, high-value detail: hitting a skeleton and hitting a golem produ
 
 Fires only when `fatal === true`. It is layers 1–8 **plus**:
 
-| Element | Spec |
-|---|---|
-| Hit stop | Base + 30 ms (a light killing blow = 90 ms) |
-| Explosion | `explosion_small` (32×32, 8 frames) for normal enemies; `explosion_large` (64×64, 12 frames) for elites and bosses |
-| Radial flash | A 200 ms white circle at 20% alpha, expanding from 8 px to 40 px |
-| Camera trauma | +0.10 on top of the hit's own trauma |
-| Particles | Material particles ×3 the normal count |
-| Coin scatter | Per the enemy's `drops` array. Coins spawn with random upward velocity (−80 to −140 px/s) and ±60 px/s horizontal, then arc to the ground and become collectible after 300 ms |
-| Sprite | Plays the `death` animation, then despawns to the pool. The sprite is **not** destroyed |
-| Event | `bus.emit('combat:kill', { victim, killer, enemyId })` |
+| Element       | Spec                                                                                                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hit stop      | Base + 30 ms (a light killing blow = 90 ms)                                                                                                                                   |
+| Explosion     | `explosion_small` (32×32, 8 frames) for normal enemies; `explosion_large` (64×64, 12 frames) for elites and bosses                                                            |
+| Radial flash  | A 200 ms white circle at 20% alpha, expanding from 8 px to 40 px                                                                                                              |
+| Camera trauma | +0.10 on top of the hit's own trauma                                                                                                                                          |
+| Particles     | Material particles ×3 the normal count                                                                                                                                        |
+| Coin scatter  | Per the enemy's `drops` array. Coins spawn with random upward velocity (−80 to −140 px/s) and ±60 px/s horizontal, then arc to the ground and become collectible after 300 ms |
+| Sprite        | Plays the `death` animation, then despawns to the pool. The sprite is **not** destroyed                                                                                       |
+| Event         | `bus.emit('combat:kill', { victim, killer, enemyId })`                                                                                                                        |
 
 **The 300 ms collection delay on coins** prevents them being auto-collected while the player is still mid-swing at the same position, which would make the coin sparkle invisible under the death explosion.
 
@@ -677,19 +689,19 @@ poiseDamage = baseDamage
 
 Enemy attack damage is defined per attack in the enemy definition. The full table is in `08-Enemy-System.md` §6. Representative values:
 
-| Source | Damage | vs. Knight (140 HP) | vs. Ninja (70 HP) |
-|---|---|---|---|
-| Skeleton melee | 10 | 14 hits | 7 hits |
-| Skeleton arrow | 8 | 17 hits | 8 hits |
-| Werewolf claw | 14 | 10 hits | 5 hits |
-| Werewolf leap | 18 | 7 hits | 3 hits |
-| Yokai bolt | 12 | 11 hits | 5 hits |
-| Orc cleave | 22 | 6 hits | 3 hits |
-| Golem slam | 30 | 4 hits | 2 hits |
-| Witch curse | 16 | 8 hits | 4 hits |
-| Contact damage (any enemy) | 6–12 | | |
-| Spikes | 20 | 7 hits | 3 hits |
-| Pit | Instant respawn | — | — |
+| Source                     | Damage          | vs. Knight (140 HP) | vs. Ninja (70 HP) |
+| -------------------------- | --------------- | ------------------- | ----------------- |
+| Skeleton melee             | 10              | 14 hits             | 7 hits            |
+| Skeleton arrow             | 8               | 17 hits             | 8 hits            |
+| Werewolf claw              | 14              | 10 hits             | 5 hits            |
+| Werewolf leap              | 18              | 7 hits              | 3 hits            |
+| Yokai bolt                 | 12              | 11 hits             | 5 hits            |
+| Orc cleave                 | 22              | 6 hits              | 3 hits            |
+| Golem slam                 | 30              | 4 hits              | 2 hits            |
+| Witch curse                | 16              | 8 hits              | 4 hits            |
+| Contact damage (any enemy) | 6–12            |                     |                   |
+| Spikes                     | 20              | 7 hits              | 3 hits            |
+| Pit                        | Instant respawn | —                   | —                 |
 
 **The Ninja's 3-hit death against a Werewolf leap is the intended difficulty expression.** It is also why the Ninja has i-frame dashes.
 
@@ -701,27 +713,27 @@ Enemy attack damage is defined per attack in the enemy definition. The full tabl
 
 Poise is a **depleting pool that regenerates**, not a threshold.
 
-| Property | Behaviour |
-|---|---|
-| Maximum | Per enemy, 6–120 |
-| Depletion | `poiseDamage` (= base damage) per hit |
-| Regeneration | Full poise restored after `poiseRegenDelayMs` with no hits taken |
-| On break (poise ≤ 0) | Full stagger, then poise resets to maximum |
-| While intact | Flinch only (100 ms, 2 frames of `hurt`, AI continues) |
+| Property             | Behaviour                                                        |
+| -------------------- | ---------------------------------------------------------------- |
+| Maximum              | Per enemy, 6–120                                                 |
+| Depletion            | `poiseDamage` (= base damage) per hit                            |
+| Regeneration         | Full poise restored after `poiseRegenDelayMs` with no hits taken |
+| On break (poise ≤ 0) | Full stagger, then poise resets to maximum                       |
+| While intact         | Flinch only (100 ms, 2 frames of `hurt`, AI continues)           |
 
 ### 8.2 Poise Values
 
-| Entity | Poise | Regen Delay | Hits to Break (vs. Samurai, 22 dmg) | Full Stagger |
-|---|---|---|---|---|
-| Skeleton | 12 | 1500 ms | 1 | 220 ms |
-| Skeleton Archer | 10 | 1500 ms | 1 | 240 ms |
-| Werewolf | 20 | 1200 ms | 1 | 180 ms |
-| Yokai | 14 | 2000 ms | 1 | 260 ms |
-| Orc | 60 | 1800 ms | 3 | 400 ms |
-| Golem | 90 | 2500 ms | 5 | 600 ms |
-| Witch | 8 | 2000 ms | 1 | 300 ms |
-| Elite (any) | ×1.6 | ×1.0 | — | ×0.8 |
-| Boss | 150–260 | 3000 ms | 7–12 | 500–900 ms |
+| Entity          | Poise   | Regen Delay | Hits to Break (vs. Samurai, 22 dmg) | Full Stagger |
+| --------------- | ------- | ----------- | ----------------------------------- | ------------ |
+| Skeleton        | 12      | 1500 ms     | 1                                   | 220 ms       |
+| Skeleton Archer | 10      | 1500 ms     | 1                                   | 240 ms       |
+| Werewolf        | 20      | 1200 ms     | 1                                   | 180 ms       |
+| Yokai           | 14      | 2000 ms     | 1                                   | 260 ms       |
+| Orc             | 60      | 1800 ms     | 3                                   | 400 ms       |
+| Golem           | 90      | 2500 ms     | 5                                   | 600 ms       |
+| Witch           | 8       | 2000 ms     | 1                                   | 300 ms       |
+| Elite (any)     | ×1.6    | ×1.0        | —                                   | ×0.8         |
+| Boss            | 150–260 | 3000 ms     | 7–12                                | 500–900 ms   |
 
 ### 8.3 What Poise Communicates
 
@@ -744,7 +756,7 @@ The poise-break spark is what makes the moment legible. Without it, players cann
 
 ### 8.4 Poise Against Bosses
 
-Bosses **never fully stagger during an attack animation.** Breaking a boss's poise during its attack causes the attack to complete and *then* the stagger to apply. This prevents stagger-locking a boss out of its own patterns, which would trivialise every encounter.
+Bosses **never fully stagger during an attack animation.** Breaking a boss's poise during its attack causes the attack to complete and _then_ the stagger to apply. This prevents stagger-locking a boss out of its own patterns, which would trivialise every encounter.
 
 Breaking a boss's poise while it is idle or recovering produces a full stagger and a guaranteed damage window. This makes poise management a real strategy in boss fights: save your heavy hits for the recovery frames.
 
@@ -754,14 +766,14 @@ Breaking a boss's poise while it is idle or recovering produces a full stagger a
 
 ### 9.1 Player I-Frames
 
-| Source | Duration | Notes |
-|---|---|---|
-| Taking damage | 800 ms | Flickers at 100 ms period |
-| Ninja dash | 170 ms + 80 ms grace | Full dash duration |
-| Ninja Shadow Step | 200 ms | |
-| Samurai charged Iai | Duration + 100 ms | |
-| Wizard Nova | 200 ms from release | |
-| Respawn at checkpoint | 1200 ms | Prevents spawn-camping |
+| Source                | Duration             | Notes                     |
+| --------------------- | -------------------- | ------------------------- |
+| Taking damage         | 800 ms               | Flickers at 100 ms period |
+| Ninja dash            | 170 ms + 80 ms grace | Full dash duration        |
+| Ninja Shadow Step     | 200 ms               |                           |
+| Samurai charged Iai   | Duration + 100 ms    |                           |
+| Wizard Nova           | 200 ms from release  |                           |
+| Respawn at checkpoint | 1200 ms              | Prevents spawn-camping    |
 
 **I-frames do not stack; the longest active window wins.** Taking damage during a Ninja dash's grace period is impossible, so the 800 ms damage i-frames simply begin when the dash i-frames would have ended — there is no gap.
 
@@ -797,16 +809,16 @@ When multiple hits resolve on the same frame:
 
 ### 9.4 Attack Cancellation Rules
 
-| From | Can Cancel Into | Timing |
-|---|---|---|
-| `ATTACK_1` windup | Dash, jump | Any time |
-| `ATTACK_1` active | Dash, jump | Any time — the hitbox clears immediately |
-| `ATTACK_1` recovery | Dash, jump, `ATTACK_2` | Any time |
-| `ATTACK_2/3` | Same as above | |
-| `AIR_ATTACK` | Dash | Any time |
-| `DASH` | Nothing (committed) | — |
-| `SPECIAL` | Per ability | Knight's guard: any time. Samurai's Iai: not during the slash. Wizard's Nova: not after release |
-| `HURT` | Nothing | — |
+| From                | Can Cancel Into        | Timing                                                                                          |
+| ------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- |
+| `ATTACK_1` windup   | Dash, jump             | Any time                                                                                        |
+| `ATTACK_1` active   | Dash, jump             | Any time — the hitbox clears immediately                                                        |
+| `ATTACK_1` recovery | Dash, jump, `ATTACK_2` | Any time                                                                                        |
+| `ATTACK_2/3`        | Same as above          |                                                                                                 |
+| `AIR_ATTACK`        | Dash                   | Any time                                                                                        |
+| `DASH`              | Nothing (committed)    | —                                                                                               |
+| `SPECIAL`           | Per ability            | Knight's guard: any time. Samurai's Iai: not during the slash. Wizard's Nova: not after release |
+| `HURT`              | Nothing                | —                                                                                               |
 
 **Attacks are fully cancellable into movement.** This is a Pillar 1 requirement — the player must never feel locked into a whiffed swing. The cost of a whiff is the time already spent, not additional lockout.
 
@@ -882,7 +894,7 @@ Queuing during the step and resolving after it eliminates all three:
 ```ts
 // In GameScene.create()
 this.physics.add.overlap(playerHitboxGroup, enemyHurtboxGroup, (hb, hurt) => {
-  this.combat.queueHit(hb as Hitbox, hurt as Hurtbox);   // just enqueue
+  this.combat.queueHit(hb as Hitbox, hurt as Hurtbox); // just enqueue
 });
 
 // In the system order, AFTER physics:
@@ -960,48 +972,48 @@ private applyResolution(res: HitResolution, victim: Entity): void {
 
 Target: **≤ 1 ms** for `resolveQueuedHits()` in the worst case (Wizard Nova hitting 8 enemies).
 
-| Optimisation | Effect |
-|---|---|
-| Queue is a pre-allocated array, reused via `length = 0` | Zero allocation per frame |
-| `HitResolution` objects come from a pool of 16 | Zero allocation per hit |
-| `delayedCall` uses Phaser's timer pool | No `setTimeout` |
-| Sort only when `queue.length > 1` | Avoids sort overhead in the common single-hit case |
-| VFX, particles, damage numbers all pooled | No allocation |
-| Trauma is a single float, not a list of shake events | O(1) regardless of hit count |
+| Optimisation                                            | Effect                                             |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| Queue is a pre-allocated array, reused via `length = 0` | Zero allocation per frame                          |
+| `HitResolution` objects come from a pool of 16          | Zero allocation per hit                            |
+| `delayedCall` uses Phaser's timer pool                  | No `setTimeout`                                    |
+| Sort only when `queue.length > 1`                       | Avoids sort overhead in the common single-hit case |
+| VFX, particles, damage numbers all pooled               | No allocation                                      |
+| Trauma is a single float, not a list of shake events    | O(1) regardless of hit count                       |
 
 Measured worst case in profiling: **0.34 ms** for 8 simultaneous hits. Comfortably inside budget.
 
 ### 11.3 Common Combat Bugs and Their Fixes
 
-| Bug | Symptom | Fix |
-|---|---|---|
-| Multi-hit from one swing | Enemy dies instantly to one attack | `alreadyHit` set per `instanceId` (§5.1) |
-| Resolving inside the overlap callback | Physics corruption, random crashes | Queue and resolve after the step (§10.1) |
-| Hit stop applied to the whole scene | Reads as a frame drop | Freeze only the participants (§6.2) |
-| Gravity accumulating during hit stop | Enemy drops suddenly after the freeze | `allowGravity = false` while frozen |
-| Velocity lost across hit stop | Knockback disappears after the freeze | Save and restore velocity (§6.2) |
-| Additive hit stop | Long freezes when two hits land together | Longest wins, never sum |
-| Additive camera shake | Nausea | Trauma model with a cap (§6.6) |
-| Unrounded shake offset | Pixel shimmer during combat | `Math.round` the offset |
-| Damage numbers overlapping | Unreadable | 8 px proximity check, 10 px vertical offset |
-| Stagger during hit stop | Stagger animation invisible | Defer layers 6 and 7 by `hitStopMs` |
-| Coins auto-collected under the explosion | Coin feedback invisible | 300 ms collection delay |
-| Enemy hurtbox not following the sprite | Hits miss visually-connecting swings | Update hurtbox position in `postPhysics`, not `update` |
+| Bug                                      | Symptom                                  | Fix                                                    |
+| ---------------------------------------- | ---------------------------------------- | ------------------------------------------------------ |
+| Multi-hit from one swing                 | Enemy dies instantly to one attack       | `alreadyHit` set per `instanceId` (§5.1)               |
+| Resolving inside the overlap callback    | Physics corruption, random crashes       | Queue and resolve after the step (§10.1)               |
+| Hit stop applied to the whole scene      | Reads as a frame drop                    | Freeze only the participants (§6.2)                    |
+| Gravity accumulating during hit stop     | Enemy drops suddenly after the freeze    | `allowGravity = false` while frozen                    |
+| Velocity lost across hit stop            | Knockback disappears after the freeze    | Save and restore velocity (§6.2)                       |
+| Additive hit stop                        | Long freezes when two hits land together | Longest wins, never sum                                |
+| Additive camera shake                    | Nausea                                   | Trauma model with a cap (§6.6)                         |
+| Unrounded shake offset                   | Pixel shimmer during combat              | `Math.round` the offset                                |
+| Damage numbers overlapping               | Unreadable                               | 8 px proximity check, 10 px vertical offset            |
+| Stagger during hit stop                  | Stagger animation invisible              | Defer layers 6 and 7 by `hitStopMs`                    |
+| Coins auto-collected under the explosion | Coin feedback invisible                  | 300 ms collection delay                                |
+| Enemy hurtbox not following the sprite   | Hits miss visually-connecting swings     | Update hurtbox position in `postPhysics`, not `update` |
 
 ### 11.4 Debug Visualisation
 
 The debug overlay (`Ctrl+Shift+D`) renders:
 
-| Element | Colour |
-|---|---|
-| Active player hitbox | `#3fc4ff` at 40% |
-| Inactive scheduled hitbox | `#3fc4ff` at 12% |
-| Player hurtbox | `#2fbf6b` at 40% |
-| Enemy hitbox | `#c42b3a` at 40% |
-| Enemy hurtbox | `#ffd23f` at 30% |
-| I-frame active | Green outline on the hurtbox |
-| Poise bar | A 1 px bar above each enemy showing current/max |
-| Hit stop active | A red border on the frozen entities |
+| Element                   | Colour                                          |
+| ------------------------- | ----------------------------------------------- |
+| Active player hitbox      | `#3fc4ff` at 40%                                |
+| Inactive scheduled hitbox | `#3fc4ff` at 12%                                |
+| Player hurtbox            | `#2fbf6b` at 40%                                |
+| Enemy hitbox              | `#c42b3a` at 40%                                |
+| Enemy hurtbox             | `#ffd23f` at 30%                                |
+| I-frame active            | Green outline on the hurtbox                    |
+| Poise bar                 | A 1 px bar above each enemy showing current/max |
+| Hit stop active           | A red border on the frozen entities             |
 
 Plus a text readout: queued hits this frame, resolution time in ms, active trauma, live damage numbers, and pool utilisation.
 
@@ -1013,13 +1025,27 @@ Plus a text readout: queued hits this frame, resolution time in ms, active traum
 // src/components/Health.ts
 export class Health {
   private current: number;
-  constructor(public readonly max: number) { this.current = max; }
-  get value(): number { return this.current; }
-  get normalised(): number { return this.current / this.max; }
-  get isDead(): boolean { return this.current <= 0; }
-  damage(amount: number): void { this.current = Math.max(0, this.current - amount); }
-  heal(amount: number): void { this.current = Math.min(this.max, this.current + amount); }
-  reset(): void { this.current = this.max; }
+  constructor(public readonly max: number) {
+    this.current = max;
+  }
+  get value(): number {
+    return this.current;
+  }
+  get normalised(): number {
+    return this.current / this.max;
+  }
+  get isDead(): boolean {
+    return this.current <= 0;
+  }
+  damage(amount: number): void {
+    this.current = Math.max(0, this.current - amount);
+  }
+  heal(amount: number): void {
+    this.current = Math.min(this.max, this.current + amount);
+  }
+  reset(): void {
+    this.current = this.max;
+  }
 }
 
 // src/components/Poise.ts
@@ -1031,13 +1057,18 @@ export class Poise {
     public readonly max: number,
     private readonly regenDelayMs: number,
     private readonly clock: Clock,
-  ) { this.current = max; }
+  ) {
+    this.current = max;
+  }
 
   /** Returns true if this hit BROKE poise. */
   damage(amount: number): boolean {
     this.lastHitAt = this.clock.now();
     this.current -= amount;
-    if (this.current <= 0) { this.current = this.max; return true; }
+    if (this.current <= 0) {
+      this.current = this.max;
+      return true;
+    }
     return false;
   }
 
@@ -1046,17 +1077,23 @@ export class Poise {
     if (this.clock.now() - this.lastHitAt >= this.regenDelayMs) this.current = this.max;
   }
 
-  get normalised(): number { return this.current / this.max; }
+  get normalised(): number {
+    return this.current / this.max;
+  }
 }
 
 // src/components/IFrames.ts
 export class IFrames {
   private expiresAt = 0;
   grant(durationMs: number, now: number): void {
-    this.expiresAt = Math.max(this.expiresAt, now + durationMs);   // longest wins
+    this.expiresAt = Math.max(this.expiresAt, now + durationMs); // longest wins
   }
-  isActive(now: number): boolean { return now < this.expiresAt; }
-  clear(): void { this.expiresAt = 0; }
+  isActive(now: number): boolean {
+    return now < this.expiresAt;
+  }
+  clear(): void {
+    this.expiresAt = 0;
+  }
 }
 ```
 
@@ -1068,26 +1105,85 @@ export interface QueuedHit {
   readonly victimId: EntityId;
   readonly point: Vec2;
   readonly source: 'melee' | 'projectile' | 'contact' | 'hazard';
-  readonly step: AttackStep | EnemyAttackStep | null;   // null for contact/hazard
+  readonly step: AttackStep | EnemyAttackStep | null; // null for contact/hazard
 }
 
 // Feedback tier lookup, keyed by HitKind. NORMATIVE.
-export const HIT_TIERS: Readonly<Record<HitKind, {
-  readonly hitStopMs: number;
-  readonly flashMs: number;
-  readonly knockbackSpeed: number;
-  readonly knockbackLift: number;
-  readonly knockbackDecayMs: number;
-  readonly trauma: number;
-  readonly vfxId: VfxId;
-  readonly particleCount: number;
-}>> = {
-  light:   { hitStopMs: 60,  flashMs: 80, knockbackSpeed: 70,  knockbackLift: 0,   knockbackDecayMs: 200, trauma: 0.14, vfxId: 'slash_light',  particleCount: 6  },
-  heavy:   { hitStopMs: 110, flashMs: 80, knockbackSpeed: 140, knockbackLift: -60, knockbackDecayMs: 260, trauma: 0.26, vfxId: 'slash_heavy',  particleCount: 10 },
-  magic:   { hitStopMs: 90,  flashMs: 80, knockbackSpeed: 100, knockbackLift: -30, knockbackDecayMs: 220, trauma: 0.20, vfxId: 'slash_magic',  particleCount: 8  },
-  ranged:  { hitStopMs: 50,  flashMs: 80, knockbackSpeed: 50,  knockbackLift: 0,   knockbackDecayMs: 150, trauma: 0.08, vfxId: 'impact_small', particleCount: 4  },
-  contact: { hitStopMs: 40,  flashMs: 80, knockbackSpeed: 90,  knockbackLift: -40, knockbackDecayMs: 200, trauma: 0.12, vfxId: 'impact_small', particleCount: 3  },
-  hazard:  { hitStopMs: 0,   flashMs: 80, knockbackSpeed: 120, knockbackLift: -80, knockbackDecayMs: 250, trauma: 0.30, vfxId: 'impact_spike', particleCount: 8  },
+export const HIT_TIERS: Readonly<
+  Record<
+    HitKind,
+    {
+      readonly hitStopMs: number;
+      readonly flashMs: number;
+      readonly knockbackSpeed: number;
+      readonly knockbackLift: number;
+      readonly knockbackDecayMs: number;
+      readonly trauma: number;
+      readonly vfxId: VfxId;
+      readonly particleCount: number;
+    }
+  >
+> = {
+  light: {
+    hitStopMs: 60,
+    flashMs: 80,
+    knockbackSpeed: 70,
+    knockbackLift: 0,
+    knockbackDecayMs: 200,
+    trauma: 0.14,
+    vfxId: 'slash_light',
+    particleCount: 6,
+  },
+  heavy: {
+    hitStopMs: 110,
+    flashMs: 80,
+    knockbackSpeed: 140,
+    knockbackLift: -60,
+    knockbackDecayMs: 260,
+    trauma: 0.26,
+    vfxId: 'slash_heavy',
+    particleCount: 10,
+  },
+  magic: {
+    hitStopMs: 90,
+    flashMs: 80,
+    knockbackSpeed: 100,
+    knockbackLift: -30,
+    knockbackDecayMs: 220,
+    trauma: 0.2,
+    vfxId: 'slash_magic',
+    particleCount: 8,
+  },
+  ranged: {
+    hitStopMs: 50,
+    flashMs: 80,
+    knockbackSpeed: 50,
+    knockbackLift: 0,
+    knockbackDecayMs: 150,
+    trauma: 0.08,
+    vfxId: 'impact_small',
+    particleCount: 4,
+  },
+  contact: {
+    hitStopMs: 40,
+    flashMs: 80,
+    knockbackSpeed: 90,
+    knockbackLift: -40,
+    knockbackDecayMs: 200,
+    trauma: 0.12,
+    vfxId: 'impact_small',
+    particleCount: 3,
+  },
+  hazard: {
+    hitStopMs: 0,
+    flashMs: 80,
+    knockbackSpeed: 120,
+    knockbackLift: -80,
+    knockbackDecayMs: 250,
+    trauma: 0.3,
+    vfxId: 'impact_spike',
+    particleCount: 8,
+  },
 } as const;
 ```
 
@@ -1206,57 +1302,57 @@ t=0.260  Werewolf's third claw connects.
 
 ## 15. Future Expansion
 
-| Item | Trigger | Notes |
-|---|---|---|
-| **Directional blocking for enemies** | If a boss needs it | The `guardMultiplier` term already exists in the formula; enemies would need a guard state |
-| **Environmental kills** | Post-launch | Knocking an enemy into spikes. The knockback system already produces the motion; needs a hazard-damage-from-enemy path |
-| **Chain / multi-hit attacks** | If a new hero needs it | `alreadyHit` would need per-tick clearing on a timer rather than per-instance |
-| **Parry for other heroes** | Rejected — see `19-Decisions.md` ADR-012 | |
-| **Damage-over-time** | Rejected | No status system. Petrify (World 5) is scripted, not systemic |
-| **Combo counter / score** | Post-launch, Time Trial mode | Purely presentational; would read `combat:hit` events |
-| **Hit-pause scaling by remaining HP** | Considered, rejected | Makes hit stop inconsistent, violating §6.2's "scale with weight, not damage" rule |
-| **Directional attacks (up/down)** | Post-launch | Would need new animations per hero and a re-tune of every encounter |
-| **Weapon variety** | Rejected | RPG drift. `01-Vision.md` §7.2 |
+| Item                                  | Trigger                                  | Notes                                                                                                                  |
+| ------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Directional blocking for enemies**  | If a boss needs it                       | The `guardMultiplier` term already exists in the formula; enemies would need a guard state                             |
+| **Environmental kills**               | Post-launch                              | Knocking an enemy into spikes. The knockback system already produces the motion; needs a hazard-damage-from-enemy path |
+| **Chain / multi-hit attacks**         | If a new hero needs it                   | `alreadyHit` would need per-tick clearing on a timer rather than per-instance                                          |
+| **Parry for other heroes**            | Rejected — see `19-Decisions.md` ADR-012 |                                                                                                                        |
+| **Damage-over-time**                  | Rejected                                 | No status system. Petrify (World 5) is scripted, not systemic                                                          |
+| **Combo counter / score**             | Post-launch, Time Trial mode             | Purely presentational; would read `combat:hit` events                                                                  |
+| **Hit-pause scaling by remaining HP** | Considered, rejected                     | Makes hit stop inconsistent, violating §6.2's "scale with weight, not damage" rule                                     |
+| **Directional attacks (up/down)**     | Post-launch                              | Would need new animations per hero and a re-tune of every encounter                                                    |
+| **Weapon variety**                    | Rejected                                 | RPG drift. `01-Vision.md` §7.2                                                                                         |
 
 ---
 
 ## 16. Out of Scope
 
-| Excluded | Reason |
-|---|---|
-| **Damage RNG / variance** | P5. Determinism is what lets players learn |
-| **Critical-hit chance** | Same. The parry critical is deterministic |
-| **Dodge / accuracy stats** | Same |
-| **Elemental types and resistances** | Adds a chart to memorise for no feel benefit |
-| **Status effects** (poison, burn, freeze) | No status system. World 5's petrify is a scripted one-off |
-| **Lifesteal / thorns / reflect** | Passive-value creep with no skill expression |
-| **Enemy i-frames** | §9.2. Would break the poise-break reward |
-| **Player-vs-player** | No multiplayer |
-| **Physics-driven ragdolls** | Arcade Physics has no such thing, and it would not match the art style |
-| **Blood / gore beyond particle motes** | Style choice; the game stays at a broad-audience presentation |
-| **Combo scoring in the main game** | Deferred to Time Trial mode if it ships |
+| Excluded                                  | Reason                                                                 |
+| ----------------------------------------- | ---------------------------------------------------------------------- |
+| **Damage RNG / variance**                 | P5. Determinism is what lets players learn                             |
+| **Critical-hit chance**                   | Same. The parry critical is deterministic                              |
+| **Dodge / accuracy stats**                | Same                                                                   |
+| **Elemental types and resistances**       | Adds a chart to memorise for no feel benefit                           |
+| **Status effects** (poison, burn, freeze) | No status system. World 5's petrify is a scripted one-off              |
+| **Lifesteal / thorns / reflect**          | Passive-value creep with no skill expression                           |
+| **Enemy i-frames**                        | §9.2. Would break the poise-break reward                               |
+| **Player-vs-player**                      | No multiplayer                                                         |
+| **Physics-driven ragdolls**               | Arcade Physics has no such thing, and it would not match the art style |
+| **Blood / gore beyond particle motes**    | Style choice; the game stays at a broad-audience presentation          |
+| **Combo scoring in the main game**        | Deferred to Time Trial mode if it ships                                |
 
 ---
 
 ## 17. Cross References
 
-| Topic | Document |
-|-------|----------|
-| Hit stop, flash, knockback, and shake constants | `00-README.md` §5.4 |
-| Pillar 2's nine-layer requirement and falsification tests | `02-Game-Pillars.md` §5.2 |
-| Why hit stop cannot be cut | `02-Game-Pillars.md` §8.4, `19-Decisions.md` ADR-014 |
-| `HitStopSystem` and the delta-scaling mechanism | `03-Technical-Architecture.md` §8.4 |
-| System update order (why combat runs post-physics) | `03-Technical-Architecture.md` §8.3 |
-| Object pooling for VFX, particles, and damage numbers | `03-Technical-Architecture.md` §10.1 |
-| Signal-ramp colours for damage numbers | `04-Art-Direction.md` §6.2 |
-| VFX catalogue, sizes, and blend modes | `04-Art-Direction.md` §7.2 |
-| Per-hero attack steps and combo timings | `06-Characters.md` §7 |
-| Character poise and knockback-taken values | `06-Characters.md` §5.2 |
-| The `Ability.onIncomingDamage` hook used by Guard | `06-Characters.md` §9.1 |
-| Enemy poise, armour, and attack damage tables | `08-Enemy-System.md` §6 |
-| Enemy telegraph and readability requirements | `08-Enemy-System.md` §7 |
-| Boss poise rules and unblockable attacks | `09-Boss-System.md` §6 |
-| Charm damage modifiers | `11-Progression.md` §7 |
-| Assist Options damage scaling | `13-UI-UX.md` §11 |
-| Animation/hitbox timing alignment | `14-Animation-Standards.md` §7 |
-| Combat resolution performance budget | `15-Performance.md` §4 |
+| Topic                                                     | Document                                             |
+| --------------------------------------------------------- | ---------------------------------------------------- |
+| Hit stop, flash, knockback, and shake constants           | `00-README.md` §5.4                                  |
+| Pillar 2's nine-layer requirement and falsification tests | `02-Game-Pillars.md` §5.2                            |
+| Why hit stop cannot be cut                                | `02-Game-Pillars.md` §8.4, `19-Decisions.md` ADR-014 |
+| `HitStopSystem` and the delta-scaling mechanism           | `03-Technical-Architecture.md` §8.4                  |
+| System update order (why combat runs post-physics)        | `03-Technical-Architecture.md` §8.3                  |
+| Object pooling for VFX, particles, and damage numbers     | `03-Technical-Architecture.md` §10.1                 |
+| Signal-ramp colours for damage numbers                    | `04-Art-Direction.md` §6.2                           |
+| VFX catalogue, sizes, and blend modes                     | `04-Art-Direction.md` §7.2                           |
+| Per-hero attack steps and combo timings                   | `06-Characters.md` §7                                |
+| Character poise and knockback-taken values                | `06-Characters.md` §5.2                              |
+| The `Ability.onIncomingDamage` hook used by Guard         | `06-Characters.md` §9.1                              |
+| Enemy poise, armour, and attack damage tables             | `08-Enemy-System.md` §6                              |
+| Enemy telegraph and readability requirements              | `08-Enemy-System.md` §7                              |
+| Boss poise rules and unblockable attacks                  | `09-Boss-System.md` §6                               |
+| Charm damage modifiers                                    | `11-Progression.md` §7                               |
+| Assist Options damage scaling                             | `13-UI-UX.md` §11                                    |
+| Animation/hitbox timing alignment                         | `14-Animation-Standards.md` §7                       |
+| Combat resolution performance budget                      | `15-Performance.md` §4                               |

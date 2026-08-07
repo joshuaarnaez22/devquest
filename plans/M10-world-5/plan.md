@@ -20,10 +20,10 @@
 
 `docs/05-Asset-Pipeline.md` §9.1 has both paths costed:
 
-| Path | Hours | Notes |
-|---|---|---|
-| **Licensed CraftPix castle/dungeon tileset** | 8 | Search the pixel-art-tilesets category, Gate 1 evaluate. Needs stone floor/wall/pillar/stair, one-way platform, spike trap, portcullis, animated torch, banner, rubble, breakable block |
-| **Fallback: graveyard recolour** | 16 | The Forbidden Graveyard set already has stone architecture. Recolour to Neutral+Magenta, author ~15 custom tiles (portcullis, banner, spike trap) |
+| Path                                         | Hours | Notes                                                                                                                                                                                   |
+| -------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Licensed CraftPix castle/dungeon tileset** | 8     | Search the pixel-art-tilesets category, Gate 1 evaluate. Needs stone floor/wall/pillar/stair, one-way platform, spike trap, portcullis, animated torch, banner, rubble, breakable block |
+| **Fallback: graveyard recolour**             | 16    | The Forbidden Graveyard set already has stone architecture. Recolour to Neutral+Magenta, author ~15 custom tiles (portcullis, banner, spike trap)                                       |
 
 **Decide in week 1, day 1.** Do not spend a week searching. If two Gate-1 evaluations fail, execute
 the fallback — it is fully costed and produces a serviceable castle.
@@ -32,15 +32,15 @@ the fallback — it is fully costed and produces a serviceable castle.
 
 ## Deliverables
 
-| # | Deliverable | Spec |
-|---|---|---|
-| 1 | Castle tileset resolved (8–16 h) + Fairy Tale storm backgrounds | §9.1 above |
-| 2 | Gorgon pack harmonised (~8 h) **including a phase-2 recolour variant** | `docs/05-Asset-Pipeline.md` §6.2 |
-| 3 | `TimedGateMechanic`, wall turrets, petrify zones, crushers | `docs/10-Level-Design.md` §7.5 |
-| 4 | Levels 5-1, 5-2, 5-3 | `docs/10-Level-Design.md` §10 |
-| 5 | Gorgon — **4 phases**, escalating gaze, collapsing arena | `docs/09-Boss-System.md` §7.5 |
-| 6 | Contact unlock, the ending, `VictoryScene`, credits | `docs/13-UI-UX.md` §8.9 |
-| 7 | Attack module: `gazeCone` | |
+| #   | Deliverable                                                            | Spec                             |
+| --- | ---------------------------------------------------------------------- | -------------------------------- |
+| 1   | Castle tileset resolved (8–16 h) + Fairy Tale storm backgrounds        | §9.1 above                       |
+| 2   | Gorgon pack harmonised (~8 h) **including a phase-2 recolour variant** | `docs/05-Asset-Pipeline.md` §6.2 |
+| 3   | `TimedGateMechanic`, wall turrets, petrify zones, crushers             | `docs/10-Level-Design.md` §7.5   |
+| 4   | Levels 5-1, 5-2, 5-3                                                   | `docs/10-Level-Design.md` §10    |
+| 5   | Gorgon — **4 phases**, escalating gaze, collapsing arena               | `docs/09-Boss-System.md` §7.5    |
+| 6   | Contact unlock, the ending, `VictoryScene`, credits                    | `docs/13-UI-UX.md` §8.9          |
+| 7   | Attack module: `gazeCone`                                              |                                  |
 
 ---
 
@@ -75,13 +75,13 @@ positioning test, which is the correct final exam for a platformer.
 
 ## Week shape
 
-| Week | Focus |
-|---|---|
-| 1 | **Castle tileset decision + execution.** Gorgon pack + phase-2 recolour |
-| 2 | `TimedGateMechanic`, turrets, petrify zones, crushers. Level 5-1 |
-| 3 | Levels 5-2 and 5-3 (the synthesis gauntlets) |
-| 4 | Gorgon four phases, collapsing arena, perf verification |
-| 5 | Polish reserve, Contact unlock, ending, Victory scene, credits |
+| Week | Focus                                                                   |
+| ---- | ----------------------------------------------------------------------- |
+| 1    | **Castle tileset decision + execution.** Gorgon pack + phase-2 recolour |
+| 2    | `TimedGateMechanic`, turrets, petrify zones, crushers. Level 5-1        |
+| 3    | Levels 5-2 and 5-3 (the synthesis gauntlets)                            |
+| 4    | Gorgon four phases, collapsing arena, perf verification                 |
+| 5    | Polish reserve, Contact unlock, ending, Victory scene, credits          |
 
 ---
 
@@ -108,10 +108,10 @@ Then: tag `v0.10.0` — **content complete**.
 
 ## Risks
 
-| Risk | P | Mitigation |
-|---|---|---|
-| **Castle tileset unresolved** | 🟠 Med | Fallback fully costed at 16 h. Decide day 1, execute week 1 |
-| Four-phase boss overruns | Med | Phases 1–3 are the fight; phase 4 is short. If time runs out, merge 3 and 4 and record an ADR |
-| Synthesis rooms become noise | Med | Two mechanics per room max. Three is the 3-3-5 exception and it is not repeated |
-| Perf at phase 4 | Med | Measure in week 4. Degradation ladder tiers 1–3 are available |
-| Ending scope creep | **Med** | Four beats, ~10 s. Not a cinematic. `docs/13-UI-UX.md` §8.9 |
+| Risk                          | P       | Mitigation                                                                                    |
+| ----------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| **Castle tileset unresolved** | 🟠 Med  | Fallback fully costed at 16 h. Decide day 1, execute week 1                                   |
+| Four-phase boss overruns      | Med     | Phases 1–3 are the fight; phase 4 is short. If time runs out, merge 3 and 4 and record an ADR |
+| Synthesis rooms become noise  | Med     | Two mechanics per room max. Three is the 3-3-5 exception and it is not repeated               |
+| Perf at phase 4               | Med     | Measure in week 4. Degradation ladder tiers 1–3 are available                                 |
+| Ending scope creep            | **Med** | Four beats, ~10 s. Not a cinematic. `docs/13-UI-UX.md` §8.9                                   |

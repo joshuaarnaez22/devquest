@@ -10,11 +10,18 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
+playwright-report
+test-results
 *.local
 
-# Editor directories and files
+# Atlas build artifacts (regenerated)
+public/assets/atlas/
+
+# Editor
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo

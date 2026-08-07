@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: format
+        run: npm run format:check
+      - name: eslint
+        run: npm run lint
+      - name: typecheck
+        run: npm run typecheck
+      - name: boundaries
+        run: npm run ci:boundaries
+      - name: unit
+        run: npm run test:coverage
+      - name: schema
+        run: npm run ci:schema
+      - name: migrations
+        run: npm run ci:migrations
+      - name: docs
+        run: npm run docs:check
+      - name: portability
+        run: npm run ci:portability
+      - name: scenes
+        run: npm run ci:scenes
+      - name: build
+        run: npm run build
+      - name: size
+        run: npm run ci:size
+      - name: spelling
+        run: npm run spell
+      - name: atlas determinism
+        run: |
+          npm run assets:build
+          H1=$(node -e "console.log(require('./tools/atlas/atlas-hashes.json').sha256)")
+          npm run assets:build
+          H2=$(node -e "console.log(require('./tools/atlas/atlas-hashes.json').sha256)")
+          test "$H1" = "$H2"
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: gates
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

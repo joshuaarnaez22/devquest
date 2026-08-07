@@ -1,0 +1,51 @@
+// NORMATIVE — generated from art/palettes/devquest-master.gpl (docs/04 §12).
+
+export const Palette = {
+  N0: 0x0d0b14,
+  N1: 0x1c1a2a,
+  N2: 0x2e2b40,
+  N3: 0x474459,
+  N4: 0x6b6878,
+  N5: 0x9a97a6,
+  N6: 0xc8c6d0,
+  N7: 0xf2f0f5,
+  W0: 0x2b1410,
+  W1: 0x4d2418,
+  W2: 0x7a3b1f,
+  W3: 0xa85a2c,
+  W4: 0xd4813f,
+  W5: 0xe8a75f,
+  W6: 0xf4cd8e,
+  W7: 0xfdeec4,
+  C0: 0x0f1a2b,
+  C1: 0x1d2f4a,
+  C2: 0x2f4a6b,
+  C3: 0x456b94,
+  C4: 0x5f8fb9,
+  C5: 0x8bb4d4,
+  C6: 0xb8d6e8,
+  C7: 0xe4f2fa,
+  G0: 0x14240f,
+  G1: 0x254019,
+  G2: 0x3d6626,
+  G3: 0x5f9438,
+  G4: 0x8ac04f,
+  G5: 0xc2e876,
+  M0: 0x1e0f2b,
+  M1: 0x3a1d4d,
+  M2: 0x5f2e78,
+  M3: 0x8f47a8,
+  M4: 0xbd6fd1,
+  M5: 0xe8b0f2,
+  S0: 0xc42b3a,
+  S1: 0xf04a4a,
+  S2: 0x2fbf6b,
+  S3: 0xffd23f,
+  S4: 0x3fc4ff,
+  S5: 0xff8fd4,
+} as const;
+
+export type PaletteKey = keyof typeof Palette;
+
+/** Colours no environment or background asset may use. */
+export const RESERVED_SIGNAL: readonly PaletteKey[] = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5'];

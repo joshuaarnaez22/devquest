@@ -3,8 +3,8 @@
 One plan per milestone. Each plan turns a milestone from `docs/17-Roadmap.md` into
 numbered, dependency-ordered tasks with files, estimates, and verification steps.
 
-**The docs say *what*. These plans say *in what order, in which files, and how you
-know it works*.**
+**The docs say _what_. These plans say _in what order, in which files, and how you
+know it works_.**
 
 Each milestone lives in its own folder: `plans/<id>/plan.md` (plus extras like results).
 
@@ -12,22 +12,22 @@ Each milestone lives in its own folder: `plans/<id>/plan.md` (plus extras like r
 
 ## The plans
 
-| Plan | Milestone | Duration | Detail | Status |
-|---|---|---|---|---|
-| [spike-00/plan.md](spike-00/plan.md) | Feel probe (pre-M0) | 1 day | 🔵 Full | ✅ Done — [results](spike-00/results.md) |
-| [M00-foundation/plan.md](M00-foundation/plan.md) | M0 Foundation | 3 wk | 🔵 Full | ⬜ Not started |
-| [M01-feel-prototype/plan.md](M01-feel-prototype/plan.md) | M1 Feel Prototype | 5 wk | 🔵 Full | ⬜ Not started |
-| [M02-combat-feel/plan.md](M02-combat-feel/plan.md) | M2 Combat Feel | 4 wk | 🔵 Full | ⬜ Not started |
-| [M03-vertical-slice/plan.md](M03-vertical-slice/plan.md) | M3 Vertical Slice | 5 wk | 🔵 Full | ⬜ Not started |
-| [M04-frameworks/plan.md](M04-frameworks/plan.md) | M4 Frameworks | 4 wk | 🔵 Full | ⬜ Not started |
-| [M05-world-1/plan.md](M05-world-1/plan.md) | M5 World 1 | 4 wk | 🟡 Medium | ⬜ Not started |
-| [M06-meta-layer/plan.md](M06-meta-layer/plan.md) | M6 Meta Layer | 4 wk | 🟡 Medium | ⬜ Not started |
-| [M07-world-2/plan.md](M07-world-2/plan.md) | M7 World 2 | 4 wk | ⚪ Outline | ⬜ Not started |
-| [M08-world-3/plan.md](M08-world-3/plan.md) | M8 World 3 | 4 wk | ⚪ Outline | ⬜ Not started |
-| [M09-world-4/plan.md](M09-world-4/plan.md) | M9 World 4 | 5 wk | ⚪ Outline | ⬜ Not started |
-| [M10-world-5/plan.md](M10-world-5/plan.md) | M10 World 5 | 5 wk | ⚪ Outline | ⬜ Not started |
-| [M11-polish-accessibility/plan.md](M11-polish-accessibility/plan.md) | M11 Polish & A11y | 3 wk | 🟡 Medium | ⬜ Not started |
-| [M12-launch/plan.md](M12-launch/plan.md) | M12 Launch | 2 wk | 🟡 Medium | ⬜ Not started |
+| Plan                                                                 | Milestone           | Duration | Detail     | Status                                   |
+| -------------------------------------------------------------------- | ------------------- | -------- | ---------- | ---------------------------------------- |
+| [spike-00/plan.md](spike-00/plan.md)                                 | Feel probe (pre-M0) | 1 day    | 🔵 Full    | ✅ Done — [results](spike-00/results.md) |
+| [M00-foundation/plan.md](M00-foundation/plan.md)                     | M0 Foundation       | 3 wk     | 🔵 Full    | ✅ Done — [audit](../docs/audits/milestone-M0.md) |
+| [M01-feel-prototype/plan.md](M01-feel-prototype/plan.md)             | M1 Feel Prototype   | 5 wk     | 🔵 Full    | ⬜ Not started                           |
+| [M02-combat-feel/plan.md](M02-combat-feel/plan.md)                   | M2 Combat Feel      | 4 wk     | 🔵 Full    | ⬜ Not started                           |
+| [M03-vertical-slice/plan.md](M03-vertical-slice/plan.md)             | M3 Vertical Slice   | 5 wk     | 🔵 Full    | ⬜ Not started                           |
+| [M04-frameworks/plan.md](M04-frameworks/plan.md)                     | M4 Frameworks       | 4 wk     | 🔵 Full    | ⬜ Not started                           |
+| [M05-world-1/plan.md](M05-world-1/plan.md)                           | M5 World 1          | 4 wk     | 🟡 Medium  | ⬜ Not started                           |
+| [M06-meta-layer/plan.md](M06-meta-layer/plan.md)                     | M6 Meta Layer       | 4 wk     | 🟡 Medium  | ⬜ Not started                           |
+| [M07-world-2/plan.md](M07-world-2/plan.md)                           | M7 World 2          | 4 wk     | ⚪ Outline | ⬜ Not started                           |
+| [M08-world-3/plan.md](M08-world-3/plan.md)                           | M8 World 3          | 4 wk     | ⚪ Outline | ⬜ Not started                           |
+| [M09-world-4/plan.md](M09-world-4/plan.md)                           | M9 World 4          | 5 wk     | ⚪ Outline | ⬜ Not started                           |
+| [M10-world-5/plan.md](M10-world-5/plan.md)                           | M10 World 5         | 5 wk     | ⚪ Outline | ⬜ Not started                           |
+| [M11-polish-accessibility/plan.md](M11-polish-accessibility/plan.md) | M11 Polish & A11y   | 3 wk     | 🟡 Medium  | ⬜ Not started                           |
+| [M12-launch/plan.md](M12-launch/plan.md)                             | M12 Launch          | 2 wk     | 🟡 Medium  | ⬜ Not started                           |
 
 ---
 
@@ -39,13 +39,13 @@ and possibly the scope (cut lines at M7 and M9 exist precisely because of this).
 
 So:
 
-| Detail | Applies To | Contains |
-|---|---|---|
-| 🔵 **Full** | The next 2–3 milestones | Numbered tasks, files to create, hour estimates, dependencies, per-task verification |
-| 🟡 **Medium** | Milestones with novel work | Task groups, key files, day-level estimates, the hard parts called out |
-| ⚪ **Outline** | Repetitive content milestones | Structure, deliverables, known risks, and a pointer to the template plan |
+| Detail         | Applies To                    | Contains                                                                             |
+| -------------- | ----------------------------- | ------------------------------------------------------------------------------------ |
+| 🔵 **Full**    | The next 2–3 milestones       | Numbered tasks, files to create, hour estimates, dependencies, per-task verification |
+| 🟡 **Medium**  | Milestones with novel work    | Task groups, key files, day-level estimates, the hard parts called out               |
+| ⚪ **Outline** | Repetitive content milestones | Structure, deliverables, known risks, and a pointer to the template plan             |
 
-**Expansion rule:** at each milestone gate, expand the *next-but-one* plan from its
+**Expansion rule:** at each milestone gate, expand the _next-but-one_ plan from its
 current level to 🔵 Full. So closing M2 means expanding M4 to full detail.
 
 The outline plans (M7–M10) are all the same shape — build a world — and
@@ -136,17 +136,17 @@ Red = critical path with a hard end date. A slip here is absorbed by a cut line,
 Asset work does not fit the milestone sequence cleanly — it has long lead times and
 blocks content milestones. It runs as a parallel track with its own checkpoints:
 
-| When | Asset work | Blocks |
-|---|---|---|
-| **Now (spike week)** | Download and Gate-1 the four hero packs. Measure density, check for `hurt` | Nothing yet, but findings change M3 estimates |
-| **M2** | Gate-1 the Skeleton pack | M2-T9 |
-| **M3** | Harmonise Knight, Skeleton, Green Zone, Nature bg, VFX (~25 h) | M3 |
-| **M5** | Collectibles and props (~10 h) | M5 |
-| **M6** | GUI kit + icons (~34 h) — **largest custom-art risk** | M6 |
-| **M7** | Autumn Forest, Werewolf, Fairy Tale bg (~15 h) | M7 |
-| **M8** | Graveyard, Yokai, Witch (~17 h) | M8 |
-| **M9** | Crystal Cave, Orc, Golem (~15 h) | M9 |
-| **M10** | **Castle tileset — unresolved.** Licensed or graveyard-recolour fallback (8–16 h) | M10 |
+| When                 | Asset work                                                                        | Blocks                                        |
+| -------------------- | --------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Now (spike week)** | Download and Gate-1 the four hero packs. Measure density, check for `hurt`        | Nothing yet, but findings change M3 estimates |
+| **M2**               | Gate-1 the Skeleton pack                                                          | M2-T9                                         |
+| **M3**               | Harmonise Knight, Skeleton, Green Zone, Nature bg, VFX (~25 h)                    | M3                                            |
+| **M5**               | Collectibles and props (~10 h)                                                    | M5                                            |
+| **M6**               | GUI kit + icons (~34 h) — **largest custom-art risk**                             | M6                                            |
+| **M7**               | Autumn Forest, Werewolf, Fairy Tale bg (~15 h)                                    | M7                                            |
+| **M8**               | Graveyard, Yokai, Witch (~17 h)                                                   | M8                                            |
+| **M9**               | Crystal Cave, Orc, Golem (~15 h)                                                  | M9                                            |
+| **M10**              | **Castle tileset — unresolved.** Licensed or graveyard-recolour fallback (8–16 h) | M10                                           |
 
 Full estimates and the harmonisation procedure: `docs/04-Art-Direction.md` §8.3,
 `docs/05-Asset-Pipeline.md` §9.7.
@@ -158,16 +158,16 @@ Full estimates and the harmonisation procedure: `docs/04-Art-Direction.md` §8.3
 Two pre-planned scope reductions with dates and trigger thresholds
 (`docs/17-Roadmap.md` §8).
 
-| | Decided at | Drops | Saves | Product after |
-|---|---|---|---|---|
-| **Cut Line A** | M7 close, 2027-03-26 | Worlds 4 and 5 | 10 wk | 12 levels, 3 worlds, ~3 h |
-| **Cut Line B** | M9 close, 2027-05-28 | World 5 | 5 wk | 16 levels, 4 worlds, ~3.5 h |
+|                | Decided at           | Drops          | Saves | Product after               |
+| -------------- | -------------------- | -------------- | ----- | --------------------------- |
+| **Cut Line A** | M7 close, 2027-03-26 | Worlds 4 and 5 | 10 wk | 12 levels, 3 worlds, ~3 h   |
+| **Cut Line B** | M9 close, 2027-05-28 | World 5        | 5 wk  | 16 levels, 4 worlds, ~3.5 h |
 
 **Neither cut orphans a portfolio section.** The last shipped world's boss unlocks
 its own section plus any fallbacks (`docs/01-Vision.md` §11). `check-cutlines.ts`
 enforces this.
 
-**A cut decision produces an ADR either way** — including the decision *not* to cut.
+**A cut decision produces an ADR either way** — including the decision _not_ to cut.
 
 ---
 
@@ -176,7 +176,7 @@ enforces this.
 Tick these as milestones close. This is the fastest read of project state.
 
 - [x] spike-00 — feel probe
-- [ ] M0 — Foundation · gate 2026-08-28
+- [x] M0 — Foundation · gate 2026-08-28
 - [ ] M1 — Feel Prototype · gate 2026-10-02 · **constants lock**
 - [ ] M2 — Combat Feel · gate 2026-10-30
 - [ ] M3 — Vertical Slice · gate 2026-12-04 · **art cost measured**

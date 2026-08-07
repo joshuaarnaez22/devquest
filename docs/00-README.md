@@ -20,35 +20,41 @@ The documentation set as a whole is written to a single standard: **an experienc
 
 ## 2. Goals
 
-| # | Goal | Success Signal |
-|---|------|----------------|
-| G1 | Provide a single navigable index to all project documentation | Any contributor finds the right document in under 60 seconds |
-| G2 | Establish canonical constants used across every document | No document defines a conflicting value for resolution, tile size, gravity, or FPS |
-| G3 | Define documentation conventions (structure, diagrams, versioning) | Every document in `docs/` conforms to the 13-section template |
-| G4 | Define the onboarding path for new contributors by role | A new engineer is productive on day one; a new artist on day one |
-| G5 | Record documentation status and ownership | Every document has an owner and a status flag |
-| G6 | Define the change-control process for documentation | Design changes flow through `19-Decisions.md`, not through silent edits |
+| #   | Goal                                                               | Success Signal                                                                     |
+| --- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| G1  | Provide a single navigable index to all project documentation      | Any contributor finds the right document in under 60 seconds                       |
+| G2  | Establish canonical constants used across every document           | No document defines a conflicting value for resolution, tile size, gravity, or FPS |
+| G3  | Define documentation conventions (structure, diagrams, versioning) | Every document in `docs/` conforms to the 13-section template                      |
+| G4  | Define the onboarding path for new contributors by role            | A new engineer is productive on day one; a new artist on day one                   |
+| G5  | Record documentation status and ownership                          | Every document has an owner and a status flag                                      |
+| G6  | Define the change-control process for documentation                | Design changes flow through `19-Decisions.md`, not through silent edits            |
 
 ---
 
 ## 3. Design Principles
 
 ### P1 — Documentation is Code
+
 Documentation lives in the repository, is reviewed via pull request, and is versioned alongside the source. A change to combat tuning that is not reflected in `07-Combat.md` is an incomplete change.
 
 ### P2 — Single Source of Truth
+
 Every fact lives in exactly one document. Other documents **link** to it, they do not **restate** it. The canonical-constants table in §5 of this document is the root of that tree.
 
 ### P3 — Specification Over Description
+
 "The player dashes" is description. "Dash applies a horizontal velocity of 260 px/s for 150 ms, ignores input during the dash, and enters a 500 ms cooldown measured from dash start" is specification. Every document targets the second register.
 
 ### P4 — Rationale Is Mandatory
+
 Numbers without rationale rot. Every tuned value carries a one-line justification, and every architectural choice carries a "why not the alternative" note. This is what allows a future contributor to change a value safely.
 
 ### P5 — No Placeholders
+
 A section that says "TBD" is acceptable **only** when accompanied by an owner and a target date. A section that says "details to be determined later" with no owner is a defect and should be caught in review.
 
 ### P6 — Diagrams for Structure, Prose for Nuance
+
 Mermaid diagrams express state machines, flows, and dependencies. Prose expresses intent, edge cases, and rationale. Neither substitutes for the other.
 
 ---
@@ -104,96 +110,96 @@ Defeating a boss triggers a **Codex Unlock** — a diegetic, in-fiction presenta
 
 ### 5.1 Display
 
-| Constant | Value | Rationale |
-|----------|-------|-----------|
-| `GAME_WIDTH` | `320` | Internal render width in pixels |
-| `GAME_HEIGHT` | `180` | Internal render height. 16:9, integer-scales to 720p (×4) and 1080p (×6) |
-| `TILE_SIZE` | `16` | Tile edge in pixels. Screen is exactly 20 × 11.25 tiles |
-| `RENDER_MODE` | `WebGL` | Canvas fallback permitted but untuned |
-| `SCALE_MODE` | `Phaser.Scale.FIT` | With `autoRound: true` and integer zoom snapping |
-| `PIXEL_ART` | `true` | Sets `NEAREST` texture filtering globally |
-| `ROUND_PIXELS` | `true` | Prevents sub-pixel sprite placement |
-| `ANTIALIAS` | `false` | Non-negotiable for the art style |
-| `TARGET_FPS` | `60` | Hard target on a 2019 MacBook Air baseline |
-| `MAX_DELTA_MS` | `33.34` | Delta clamp — two frames. Prevents tunnelling after a stall |
+| Constant       | Value              | Rationale                                                                |
+| -------------- | ------------------ | ------------------------------------------------------------------------ |
+| `GAME_WIDTH`   | `320`              | Internal render width in pixels                                          |
+| `GAME_HEIGHT`  | `180`              | Internal render height. 16:9, integer-scales to 720p (×4) and 1080p (×6) |
+| `TILE_SIZE`    | `16`               | Tile edge in pixels. Screen is exactly 20 × 11.25 tiles                  |
+| `RENDER_MODE`  | `WebGL`            | Canvas fallback permitted but untuned                                    |
+| `SCALE_MODE`   | `Phaser.Scale.FIT` | With `autoRound: true` and integer zoom snapping                         |
+| `PIXEL_ART`    | `true`             | Sets `NEAREST` texture filtering globally                                |
+| `ROUND_PIXELS` | `true`             | Prevents sub-pixel sprite placement                                      |
+| `ANTIALIAS`    | `false`            | Non-negotiable for the art style                                         |
+| `TARGET_FPS`   | `60`               | Hard target on a 2019 MacBook Air baseline                               |
+| `MAX_DELTA_MS` | `33.34`            | Delta clamp — two frames. Prevents tunnelling after a stall              |
 
 ### 5.2 Physics
 
-| Constant | Value | Unit | Rationale |
-|----------|-------|------|-----------|
-| `GRAVITY_Y` | `900` | px/s² | Tuned so a 240 px/s jump peaks at exactly 32 px (2 tiles) |
-| `MAX_FALL_SPEED` | `300` | px/s | Terminal velocity; keeps falls readable at 320×180 |
-| `FALL_GRAVITY_MULT` | `1.35` | × | Applied while `vy > 0`. Makes jumps feel snappy, not floaty |
-| `APEX_GRAVITY_MULT` | `0.70` | × | Applied while `abs(vy) < 40`. Extends apex "hang time" |
-| `APEX_THRESHOLD` | `40` | px/s | Velocity window that counts as apex |
-| `PHYSICS_FPS` | `60` | Hz | Arcade Physics fixed step |
-| `TILE_BIAS` | `8` | px | Arcade tile bias. Prevents corner-catching on 16 px tiles |
+| Constant            | Value  | Unit  | Rationale                                                   |
+| ------------------- | ------ | ----- | ----------------------------------------------------------- |
+| `GRAVITY_Y`         | `900`  | px/s² | Tuned so a 240 px/s jump peaks at exactly 32 px (2 tiles)   |
+| `MAX_FALL_SPEED`    | `300`  | px/s  | Terminal velocity; keeps falls readable at 320×180          |
+| `FALL_GRAVITY_MULT` | `1.35` | ×     | Applied while `vy > 0`. Makes jumps feel snappy, not floaty |
+| `APEX_GRAVITY_MULT` | `0.70` | ×     | Applied while `abs(vy) < 40`. Extends apex "hang time"      |
+| `APEX_THRESHOLD`    | `40`   | px/s  | Velocity window that counts as apex                         |
+| `PHYSICS_FPS`       | `60`   | Hz    | Arcade Physics fixed step                                   |
+| `TILE_BIAS`         | `8`    | px    | Arcade tile bias. Prevents corner-catching on 16 px tiles   |
 
 ### 5.3 Feel
 
-| Constant | Value | Unit | Rationale |
-|----------|-------|------|-----------|
-| `COYOTE_TIME` | `100` | ms | 6 frames. Celeste ships 5; 6 suits our slower base speed |
-| `JUMP_BUFFER` | `120` | ms | ~7 frames. Buffers a jump pressed before landing |
-| `VARIABLE_JUMP_CUT` | `0.45` | × | `vy *= 0.45` on early jump-button release |
-| `DASH_SPEED` | `260` | px/s | Default; per-character overrides in `06-Characters.md` |
-| `DASH_DURATION` | `150` | ms | Travels ~39 px ≈ 2.4 tiles |
-| `DASH_COOLDOWN` | `500` | ms | Measured from dash **start**, not end |
-| `PLAYER_IFRAME_MS` | `800` | ms | Post-damage invulnerability |
-| `IFRAME_FLICKER_MS` | `100` | ms | Alpha toggle period during i-frames |
+| Constant            | Value  | Unit | Rationale                                                |
+| ------------------- | ------ | ---- | -------------------------------------------------------- |
+| `COYOTE_TIME`       | `100`  | ms   | 6 frames. Celeste ships 5; 6 suits our slower base speed |
+| `JUMP_BUFFER`       | `120`  | ms   | ~7 frames. Buffers a jump pressed before landing         |
+| `VARIABLE_JUMP_CUT` | `0.45` | ×    | `vy *= 0.45` on early jump-button release                |
+| `DASH_SPEED`        | `260`  | px/s | Default; per-character overrides in `06-Characters.md`   |
+| `DASH_DURATION`     | `150`  | ms   | Travels ~39 px ≈ 2.4 tiles                               |
+| `DASH_COOLDOWN`     | `500`  | ms   | Measured from dash **start**, not end                    |
+| `PLAYER_IFRAME_MS`  | `800`  | ms   | Post-damage invulnerability                              |
+| `IFRAME_FLICKER_MS` | `100`  | ms   | Alpha toggle period during i-frames                      |
 
 ### 5.4 Combat Feedback
 
-| Constant | Value | Unit | Rationale |
-|----------|-------|------|-----------|
-| `HITSTOP_LIGHT` | `60` | ms | Standard hit |
-| `HITSTOP_HEAVY` | `110` | ms | Charged / heavy attack |
-| `HITSTOP_KILL` | `140` | ms | Killing blow |
-| `HITFLASH_MS` | `80` | ms | White `tintFill` duration |
-| `SHAKE_LIGHT` | `0.004 / 90ms` | amp/dur | Standard hit |
-| `SHAKE_HEAVY` | `0.008 / 150ms` | amp/dur | Boss slam, explosion |
-| `KNOCKBACK_LIGHT` | `70` | px/s | Applied horizontally, decays over 200 ms |
-| `KNOCKBACK_HEAVY` | `140` | px/s | With a −60 px/s vertical pop |
+| Constant          | Value           | Unit    | Rationale                                |
+| ----------------- | --------------- | ------- | ---------------------------------------- |
+| `HITSTOP_LIGHT`   | `60`            | ms      | Standard hit                             |
+| `HITSTOP_HEAVY`   | `110`           | ms      | Charged / heavy attack                   |
+| `HITSTOP_KILL`    | `140`           | ms      | Killing blow                             |
+| `HITFLASH_MS`     | `80`            | ms      | White `tintFill` duration                |
+| `SHAKE_LIGHT`     | `0.004 / 90ms`  | amp/dur | Standard hit                             |
+| `SHAKE_HEAVY`     | `0.008 / 150ms` | amp/dur | Boss slam, explosion                     |
+| `KNOCKBACK_LIGHT` | `70`            | px/s    | Applied horizontally, decays over 200 ms |
+| `KNOCKBACK_HEAVY` | `140`           | px/s    | With a −60 px/s vertical pop             |
 
 ### 5.5 Performance Budget
 
-| Budget | Value | Enforcement |
-|--------|-------|-------------|
-| Frame budget | `16.67 ms` | Perf HUD warns above 14 ms |
-| Logic update | `≤ 6 ms` | Profiled per-system in dev builds |
-| Render | `≤ 6 ms` | Draw-call counter in Spector.js |
-| Draw calls | `≤ 40` | Atlas discipline; see `15-Performance.md` |
-| Texture memory | `≤ 128 MB` | Enforced by atlas budget in build step |
-| Active entities | `≤ 40` | Off-screen culling and pooling |
-| Live particles | `≤ 200` | Hard pool cap |
-| Initial download | `≤ 8 MB` | Boot + Hub + World 1 |
+| Budget           | Value      | Enforcement                               |
+| ---------------- | ---------- | ----------------------------------------- |
+| Frame budget     | `16.67 ms` | Perf HUD warns above 14 ms                |
+| Logic update     | `≤ 6 ms`   | Profiled per-system in dev builds         |
+| Render           | `≤ 6 ms`   | Draw-call counter in Spector.js           |
+| Draw calls       | `≤ 40`     | Atlas discipline; see `15-Performance.md` |
+| Texture memory   | `≤ 128 MB` | Enforced by atlas budget in build step    |
+| Active entities  | `≤ 40`     | Off-screen culling and pooling            |
+| Live particles   | `≤ 200`    | Hard pool cap                             |
+| Initial download | `≤ 8 MB`   | Boot + Hub + World 1                      |
 
 ### 5.6 Content Scope
 
-| Item | Count |
-|------|-------|
-| Playable characters | 4 |
-| Worlds | 5 |
-| Levels per world | 4 (3 stages + 1 boss arena) |
-| Total levels | 20 |
-| Enemy base types | 7 |
-| Enemy variants (incl. elites) | 21 |
-| Bosses | 5 |
-| Portfolio sections | 5 |
-| Target playtime (first clear) | 3.5 – 4.5 hours |
-| Target playtime (100%) | 7 – 9 hours |
+| Item                          | Count                       |
+| ----------------------------- | --------------------------- |
+| Playable characters           | 4                           |
+| Worlds                        | 5                           |
+| Levels per world              | 4 (3 stages + 1 boss arena) |
+| Total levels                  | 20                          |
+| Enemy base types              | 7                           |
+| Enemy variants (incl. elites) | 21                          |
+| Bosses                        | 5                           |
+| Portfolio sections            | 5                           |
+| Target playtime (first clear) | 3.5 – 4.5 hours             |
+| Target playtime (100%)        | 7 – 9 hours                 |
 
 ---
 
 ## 6. World and Unlock Map
 
-| # | World | Tileset | Backdrop | New Mechanic | Boss | Portfolio Unlock |
-|---|-------|---------|----------|--------------|------|------------------|
-| 1 | **Verdant Ascent** | Green Zone | Nature | Moving & one-way platforms, bounce caps | Skeleton Warlord | **About Me** |
-| 2 | **Autumn Reach** | Autumn Forest | Fairy Tale | Wind zones, crumbling branches, updrafts | Alpha Werewolf | **Projects** |
-| 3 | **Hollow Barrow** | Forbidden Graveyard | Fairy Tale (night) | Lantern light radius, fog, soul-braziers | Oni Lord (Yokai) | **Experience** |
-| 4 | **Crystal Deep** | Crystal Cave | Custom gradient | Refracted light beams, low-gravity fields, conveyors | Golem Sovereign | **Skills** |
-| 5 | **Gorgon's Spire** | Castle *(pack TBD — see `05-Asset-Pipeline.md` §9)* | Fairy Tale (storm) | Timed gate sequences, turrets, petrify gaze zones | **Gorgon** | **Contact** |
+| #   | World              | Tileset                                             | Backdrop           | New Mechanic                                         | Boss             | Portfolio Unlock |
+| --- | ------------------ | --------------------------------------------------- | ------------------ | ---------------------------------------------------- | ---------------- | ---------------- |
+| 1   | **Verdant Ascent** | Green Zone                                          | Nature             | Moving & one-way platforms, bounce caps              | Skeleton Warlord | **About Me**     |
+| 2   | **Autumn Reach**   | Autumn Forest                                       | Fairy Tale         | Wind zones, crumbling branches, updrafts             | Alpha Werewolf   | **Projects**     |
+| 3   | **Hollow Barrow**  | Forbidden Graveyard                                 | Fairy Tale (night) | Lantern light radius, fog, soul-braziers             | Oni Lord (Yokai) | **Experience**   |
+| 4   | **Crystal Deep**   | Crystal Cave                                        | Custom gradient    | Refracted light beams, low-gravity fields, conveyors | Golem Sovereign  | **Skills**       |
+| 5   | **Gorgon's Spire** | Castle _(pack TBD — see `05-Asset-Pipeline.md` §9)_ | Fairy Tale (storm) | Timed gate sequences, turrets, petrify gaze zones    | **Gorgon**       | **Contact**      |
 
 Full level-by-level breakdowns are in `10-Level-Design.md`.
 
@@ -203,29 +209,29 @@ Full level-by-level breakdowns are in `10-Level-Design.md`.
 
 Each document follows the 13-section template defined in §9.
 
-| Doc | Title | Owner | Status | Read If You Are… |
-|-----|-------|-------|--------|------------------|
-| `00-README.md` | Documentation Index | Tech Director | ✅ Stable | Anyone. Start here. |
-| `01-Vision.md` | Vision & Product Definition | Game Director | ✅ Stable | Anyone. Read second. |
-| `02-Game-Pillars.md` | Game Pillars | Game Director | ✅ Stable | Anyone making a design call |
-| `03-Technical-Architecture.md` | Technical Architecture | Tech Director | ✅ Stable | Every engineer |
-| `04-Art-Direction.md` | Art Direction | Art Director | ✅ Stable | Artists, VFX, UI |
-| `05-Asset-Pipeline.md` | Asset Pipeline | Art Director | ✅ Stable | Artists, tools engineers |
-| `06-Characters.md` | Playable Characters | Lead Designer | ✅ Stable | Gameplay engineers, animators |
-| `07-Combat.md` | Combat System | Lead Designer | ✅ Stable | Gameplay engineers |
-| `08-Enemy-System.md` | Enemy Framework | Lead Designer | ✅ Stable | Gameplay engineers, AI |
-| `09-Boss-System.md` | Boss Framework | Lead Designer | ✅ Stable | Gameplay engineers |
-| `10-Level-Design.md` | Level Design | Level Designer | ✅ Stable | Level designers, tools |
-| `11-Progression.md` | Progression & Economy | Lead Designer | ✅ Stable | Designers, systems engineers |
-| `12-Portfolio-System.md` | Portfolio / Codex System | Game Director | ✅ Stable | UI engineers, content |
-| `13-UI-UX.md` | UI & UX | UX Designer | ✅ Stable | UI engineers, designers |
-| `14-Animation-Standards.md` | Animation Standards | Art Director | ✅ Stable | Animators, engineers |
-| `15-Performance.md` | Performance & Memory | Tech Director | ✅ Stable | Every engineer |
-| `16-Coding-Standards.md` | Coding Standards | Tech Director | ✅ Stable | Every engineer |
-| `17-Roadmap.md` | 12-Month Roadmap | Producer | 🔄 Living | Everyone, monthly |
-| `18-Glossary.md` | Glossary | Tech Director | 🔄 Living | Anyone confused by a term |
-| `19-Decisions.md` | Decision Log (ADRs) | Tech Director | 🔄 Living | Anyone questioning a choice |
-| `20-Future-Ideas.md` | Future Ideas / Icebox | Game Director | 🔄 Living | Anyone with an idea |
+| Doc                            | Title                       | Owner          | Status    | Read If You Are…              |
+| ------------------------------ | --------------------------- | -------------- | --------- | ----------------------------- |
+| `00-README.md`                 | Documentation Index         | Tech Director  | ✅ Stable | Anyone. Start here.           |
+| `01-Vision.md`                 | Vision & Product Definition | Game Director  | ✅ Stable | Anyone. Read second.          |
+| `02-Game-Pillars.md`           | Game Pillars                | Game Director  | ✅ Stable | Anyone making a design call   |
+| `03-Technical-Architecture.md` | Technical Architecture      | Tech Director  | ✅ Stable | Every engineer                |
+| `04-Art-Direction.md`          | Art Direction               | Art Director   | ✅ Stable | Artists, VFX, UI              |
+| `05-Asset-Pipeline.md`         | Asset Pipeline              | Art Director   | ✅ Stable | Artists, tools engineers      |
+| `06-Characters.md`             | Playable Characters         | Lead Designer  | ✅ Stable | Gameplay engineers, animators |
+| `07-Combat.md`                 | Combat System               | Lead Designer  | ✅ Stable | Gameplay engineers            |
+| `08-Enemy-System.md`           | Enemy Framework             | Lead Designer  | ✅ Stable | Gameplay engineers, AI        |
+| `09-Boss-System.md`            | Boss Framework              | Lead Designer  | ✅ Stable | Gameplay engineers            |
+| `10-Level-Design.md`           | Level Design                | Level Designer | ✅ Stable | Level designers, tools        |
+| `11-Progression.md`            | Progression & Economy       | Lead Designer  | ✅ Stable | Designers, systems engineers  |
+| `12-Portfolio-System.md`       | Portfolio / Codex System    | Game Director  | ✅ Stable | UI engineers, content         |
+| `13-UI-UX.md`                  | UI & UX                     | UX Designer    | ✅ Stable | UI engineers, designers       |
+| `14-Animation-Standards.md`    | Animation Standards         | Art Director   | ✅ Stable | Animators, engineers          |
+| `15-Performance.md`            | Performance & Memory        | Tech Director  | ✅ Stable | Every engineer                |
+| `16-Coding-Standards.md`       | Coding Standards            | Tech Director  | ✅ Stable | Every engineer                |
+| `17-Roadmap.md`                | 12-Month Roadmap            | Producer       | 🔄 Living | Everyone, monthly             |
+| `18-Glossary.md`               | Glossary                    | Tech Director  | 🔄 Living | Anyone confused by a term     |
+| `19-Decisions.md`              | Decision Log (ADRs)         | Tech Director  | 🔄 Living | Anyone questioning a choice   |
+| `20-Future-Ideas.md`           | Future Ideas / Icebox       | Game Director  | 🔄 Living | Anyone with an idea           |
 
 **Status legend:** ✅ Stable (changes require an ADR) · 🔄 Living (append freely) · ⚠️ Draft (do not implement from this yet)
 
@@ -309,13 +315,13 @@ Documents may insert additional numbered sections between these where the materi
 
 All diagrams are Mermaid, rendered inline. No binary image files in `docs/` except reference screenshots in `docs/assets/`.
 
-| Diagram Type | Mermaid Kind | Used For |
-|---|---|---|
-| System dependency | `flowchart TD` | Module and system relationships |
-| Entity behaviour | `stateDiagram-v2` | Any finite state machine |
-| Runtime sequence | `sequenceDiagram` | Cross-system message flows |
-| Data model | `classDiagram` | Interface and type relationships |
-| Timeline | `gantt` | Roadmap only |
+| Diagram Type      | Mermaid Kind      | Used For                         |
+| ----------------- | ----------------- | -------------------------------- |
+| System dependency | `flowchart TD`    | Module and system relationships  |
+| Entity behaviour  | `stateDiagram-v2` | Any finite state machine         |
+| Runtime sequence  | `sequenceDiagram` | Cross-system message flows       |
+| Data model        | `classDiagram`    | Interface and type relationships |
+| Timeline          | `gantt`           | Roadmap only                     |
 
 **Rule:** every state machine described in prose must also appear as a `stateDiagram-v2`. There are no exceptions to this — state machines are where implementations diverge from specs.
 
@@ -369,13 +375,13 @@ devquest/
 
 ### 10.2 CI Checks on Documentation
 
-| Check | Script | Failure Condition |
-|-------|--------|-------------------|
-| Template conformance | `tools/docs/check-template.ts` | A doc `01`–`20` is missing a required heading |
-| Constant parity | `tools/docs/check-constants.ts` | §5 table diverges from `GameConstants.ts` |
-| Link integrity | `markdown-link-check` | A relative link resolves to nothing |
-| Mermaid validity | `mmdc --validate` | A diagram fails to parse |
-| Spelling | `cspell` | Unknown word not in `project-words.txt` |
+| Check                | Script                          | Failure Condition                             |
+| -------------------- | ------------------------------- | --------------------------------------------- |
+| Template conformance | `tools/docs/check-template.ts`  | A doc `01`–`20` is missing a required heading |
+| Constant parity      | `tools/docs/check-constants.ts` | §5 table diverges from `GameConstants.ts`     |
+| Link integrity       | `markdown-link-check`           | A relative link resolves to nothing           |
+| Mermaid validity     | `mmdc --validate`               | A diagram fails to parse                      |
+| Spelling             | `cspell`                        | Unknown word not in `project-words.txt`       |
 
 These run on every pull request that touches `docs/**` or `src/config/GameConstants.ts`.
 
@@ -410,7 +416,7 @@ npm i -D @types/node
 
 ### 11.2 What Documentation Cannot Do
 
-Documentation cannot capture **feel**. The numbers in §5.3 are a starting point derived from analysis of comparable games; they are expected to change during the Feel Prototype milestone (`17-Roadmap.md` M1). When they change, the table changes with them. Do not treat pre-prototype tuning values as sacred — treat the *process* of tuning them as sacred.
+Documentation cannot capture **feel**. The numbers in §5.3 are a starting point derived from analysis of comparable games; they are expected to change during the Feel Prototype milestone (`17-Roadmap.md` M1). When they change, the table changes with them. Do not treat pre-prototype tuning values as sacred — treat the _process_ of tuning them as sacred.
 
 ### 11.3 Handling Contradictions
 
@@ -508,7 +514,7 @@ export const PHYSICS = {
   GRAVITY_Y: 900,
   MAX_FALL_SPEED: 300,
   FALL_GRAVITY_MULT: 1.35,
-  APEX_GRAVITY_MULT: 0.70,
+  APEX_GRAVITY_MULT: 0.7,
   APEX_THRESHOLD: 40,
   TILE_BIAS: 8,
 } as const;
@@ -553,13 +559,13 @@ Deep-freezing is unnecessary — `as const` plus `noUncheckedIndexedAccess` in `
 
 ## 15. Future Expansion
 
-| Item | Trigger | Notes |
-|------|---------|-------|
-| Localised documentation | First non-English contributor | Only `01`, `02`, `17` would be translated; technical docs stay English |
-| Auto-generated API reference | Codebase exceeds ~150 modules | TypeDoc into `docs/api/`, excluded from the PDF export |
-| Living tuning dashboard | Feel Prototype complete | A dev-build overlay that reads and writes §5 constants live, then emits a diff to paste into the table |
-| Video reference library | Vertical Slice complete | Screen recordings of each boss and each new mechanic, linked from the relevant doc |
-| Steam-specific supplement | Steam port greenlit | New `21-Steam-Port.md`; see `03-Technical-Architecture.md` §14 for current considerations |
+| Item                         | Trigger                       | Notes                                                                                                  |
+| ---------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Localised documentation      | First non-English contributor | Only `01`, `02`, `17` would be translated; technical docs stay English                                 |
+| Auto-generated API reference | Codebase exceeds ~150 modules | TypeDoc into `docs/api/`, excluded from the PDF export                                                 |
+| Living tuning dashboard      | Feel Prototype complete       | A dev-build overlay that reads and writes §5 constants live, then emits a diff to paste into the table |
+| Video reference library      | Vertical Slice complete       | Screen recordings of each boss and each new mechanic, linked from the relevant doc                     |
+| Steam-specific supplement    | Steam port greenlit           | New `21-Steam-Port.md`; see `03-Technical-Architecture.md` §14 for current considerations              |
 
 ---
 
@@ -582,9 +588,9 @@ This document is complete and correct when:
 The following are explicitly **not** covered by this documentation set, and requests to cover them should be redirected:
 
 - **Marketing, store pages, and press materials.** Owned by the Producer outside `docs/`.
-- **Legal review of asset licences.** `05-Asset-Pipeline.md` records licence *status* and the verification procedure; it is not legal advice, and a lawyer signs off before commercial release.
-- **The actual portfolio copy** (the text of About Me, Projects, etc.). `12-Portfolio-System.md` defines the *system* and the *content schema*; the prose lives in `src/data/portfolio/*.json` and is authored by the developer.
-- **Audio design.** No audio assets are locked (see the brief). A future `21-Audio.md` will be written when an audio pack is selected; until then, `13-UI-UX.md` and `07-Combat.md` specify only the *hook points* where audio will attach.
+- **Legal review of asset licences.** `05-Asset-Pipeline.md` records licence _status_ and the verification procedure; it is not legal advice, and a lawyer signs off before commercial release.
+- **The actual portfolio copy** (the text of About Me, Projects, etc.). `12-Portfolio-System.md` defines the _system_ and the _content schema_; the prose lives in `src/data/portfolio/*.json` and is authored by the developer.
+- **Audio design.** No audio assets are locked (see the brief). A future `21-Audio.md` will be written when an audio pack is selected; until then, `13-UI-UX.md` and `07-Combat.md` specify only the _hook points_ where audio will attach.
 - **Multiplayer of any kind.** See `20-Future-Ideas.md`.
 - **Procedural level generation.** Permanently out of scope for the shipping product.
 - **Mobile / touch controls.** Desktop browser first; see `20-Future-Ideas.md` for the touch investigation.
@@ -593,25 +599,25 @@ The following are explicitly **not** covered by this documentation set, and requ
 
 ## 18. Cross References
 
-| Topic | Document |
-|-------|----------|
-| Why the game exists, and for whom | `01-Vision.md` |
-| The five pillars and how to apply them to a decision | `02-Game-Pillars.md` |
-| Systems, scenes, and module boundaries | `03-Technical-Architecture.md` |
-| Palette, pixel density, and the Style Bible | `04-Art-Direction.md` |
-| Asset evaluation, licensing, atlas build | `05-Asset-Pipeline.md` |
-| Hero stats, abilities, and per-character feel | `06-Characters.md` |
-| Damage, hitstop, hurtboxes, and combat resolution | `07-Combat.md` |
-| Enemy AI framework and the seven base types | `08-Enemy-System.md` |
-| Boss framework, phases, and the five encounters | `09-Boss-System.md` |
-| Level structure, Tiled workflow, all 20 levels | `10-Level-Design.md` |
-| Unlocks, collectibles, charms, save data | `11-Progression.md` |
-| The Codex and portfolio reward layer | `12-Portfolio-System.md` |
-| Menus, HUD, input remapping, accessibility | `13-UI-UX.md` |
-| Frame counts, timing, and animation authoring rules | `14-Animation-Standards.md` |
-| Budgets, pooling, and optimisation strategy | `15-Performance.md` |
-| TypeScript style, naming, testing, git workflow | `16-Coding-Standards.md` |
-| The 12-month plan and milestone gates | `17-Roadmap.md` |
-| Term definitions | `18-Glossary.md` |
-| Why we chose X over Y | `19-Decisions.md` |
-| Ideas parked for after ship | `20-Future-Ideas.md` |
+| Topic                                                | Document                       |
+| ---------------------------------------------------- | ------------------------------ |
+| Why the game exists, and for whom                    | `01-Vision.md`                 |
+| The five pillars and how to apply them to a decision | `02-Game-Pillars.md`           |
+| Systems, scenes, and module boundaries               | `03-Technical-Architecture.md` |
+| Palette, pixel density, and the Style Bible          | `04-Art-Direction.md`          |
+| Asset evaluation, licensing, atlas build             | `05-Asset-Pipeline.md`         |
+| Hero stats, abilities, and per-character feel        | `06-Characters.md`             |
+| Damage, hitstop, hurtboxes, and combat resolution    | `07-Combat.md`                 |
+| Enemy AI framework and the seven base types          | `08-Enemy-System.md`           |
+| Boss framework, phases, and the five encounters      | `09-Boss-System.md`            |
+| Level structure, Tiled workflow, all 20 levels       | `10-Level-Design.md`           |
+| Unlocks, collectibles, charms, save data             | `11-Progression.md`            |
+| The Codex and portfolio reward layer                 | `12-Portfolio-System.md`       |
+| Menus, HUD, input remapping, accessibility           | `13-UI-UX.md`                  |
+| Frame counts, timing, and animation authoring rules  | `14-Animation-Standards.md`    |
+| Budgets, pooling, and optimisation strategy          | `15-Performance.md`            |
+| TypeScript style, naming, testing, git workflow      | `16-Coding-Standards.md`       |
+| The 12-month plan and milestone gates                | `17-Roadmap.md`                |
+| Term definitions                                     | `18-Glossary.md`               |
+| Why we chose X over Y                                | `19-Decisions.md`              |
+| Ideas parked for after ship                          | `20-Future-Ideas.md`           |

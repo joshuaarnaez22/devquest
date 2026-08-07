@@ -32,14 +32,14 @@ harmonises roughly a quarter of them. **If the measured cost exceeds the estimat
 
 Complete the M0-T12 stubs. These are the tools that make 79 hours possible rather than 300.
 
-| Script | Detail |
-|---|---|
-| `remap-palette.ts` | Nearest-Lab (CIEDE2000) snap to the 48-colour master. ΔE ≤ 2 snap, ≤ 6 warn, > 6 fail. **Output indexed PNG (`palette: true`) — 60–70% file-size reduction, free** |
-| `deaa.ts` | Alpha cutoff 128. **Emits a before/after contact sheet for human review** — automated de-AA eats sword tips and antennae |
-| `add-outline.ts` | 1 px `#0d0b14`, all sides |
-| `desaturate.ts` | Pull to the background band: saturation 0.15–0.40, value range compressed to 30–70% |
-| `normalise-frames.ts` | Re-canvas to the max bounding box, **aligned bottom-centre, not canvas-centre** — otherwise a raised-sword frame makes the character bob |
-| `check-tiling.ts` | Compare leftmost and rightmost pixel columns; flags non-looping background layers |
+| Script                | Detail                                                                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `remap-palette.ts`    | Nearest-Lab (CIEDE2000) snap to the 48-colour master. ΔE ≤ 2 snap, ≤ 6 warn, > 6 fail. **Output indexed PNG (`palette: true`) — 60–70% file-size reduction, free** |
+| `deaa.ts`             | Alpha cutoff 128. **Emits a before/after contact sheet for human review** — automated de-AA eats sword tips and antennae                                           |
+| `add-outline.ts`      | 1 px `#0d0b14`, all sides                                                                                                                                          |
+| `desaturate.ts`       | Pull to the background band: saturation 0.15–0.40, value range compressed to 30–70%                                                                                |
+| `normalise-frames.ts` | Re-canvas to the max bounding box, **aligned bottom-centre, not canvas-centre** — otherwise a raised-sword frame makes the character bob                           |
+| `check-tiling.ts`     | Compare leftmost and rightmost pixel columns; flags non-looping background layers                                                                                  |
 
 **Verify:** run each on a test asset. The de-AA contact sheet is generated and inspectable.
 
@@ -72,14 +72,14 @@ outside the controlled vocabulary.
 
 ---
 
-### M3-T4 — Harmonise Skeleton · 3 h · *depends: T3*
+### M3-T4 — Harmonise Skeleton · 3 h · _depends: T3_
 
 Same pipeline, second pack. The second measurement matters more than the first — it shows
 whether T3's time was setup cost or per-pack cost.
 
 ---
 
-### M3-T5 — Animation registry and attack-anim generation · 3 h · *depends: T3*
+### M3-T5 — Animation registry and attack-anim generation · 3 h · _depends: T3_
 
 `src/entities/AnimationRegistry.ts` + `AnimationBuilder.ts`
 (`docs/14-Animation-Standards.md` §6.2, §11.1).
@@ -134,7 +134,7 @@ Plus dust, sparkle, and impact particles as custom assets (small, ~4 h).
 
 ---
 
-### M3-T9 — Ambient tint and parallax · 5 h · *depends: T7*
+### M3-T9 — Ambient tint and parallax · 5 h · _depends: T7_
 
 `src/level/ParallaxBackground.ts`. The ambient tint is a `MULTIPLY` quad at
 `Depth.AMBIENT_TINT`, **between background and midground, never touching the HUD**
@@ -172,7 +172,7 @@ Required layers, exact names, throw at load if missing (`docs/10-Level-Design.md
 
 ---
 
-### M3-T12 — `ObjectFactory` registry · 6 h · *depends: T11*
+### M3-T12 — `ObjectFactory` registry · 6 h · _depends: T11_
 
 `registerObjectType(type, builder)` (`docs/10-Level-Design.md` §9.1). **The loader knows nothing
 about specific types** — dispatch is a map lookup. Adding an object type is one registration call.
@@ -181,7 +181,7 @@ M3 registers: `enemy`, `pickup`, `hazard`, `platform`, `checkpoint`, `cameraZone
 
 ---
 
-### M3-T13 — Moving platforms, one-way, bounce caps · 8 h · *depends: T12*
+### M3-T13 — Moving platforms, one-way, bounce caps · 8 h · _depends: T12_
 
 World 1's mechanic set as the first `MechanicPlugin` implementations
 (`docs/10-Level-Design.md` §7.1).
@@ -192,7 +192,7 @@ unreadable at 320×180, slower is waiting rather than timing.
 
 ---
 
-### M3-T14 — `CheckpointSystem` · 6 h · *depends: T12*
+### M3-T14 — `CheckpointSystem` · 6 h · _depends: T12_
 
 `CheckpointState` per `docs/10-Level-Design.md` §12.2 — position, HP, resource, collected
 pickups, killed spawn points, **and `mechanicState`**.
@@ -218,7 +218,7 @@ ledge below, because beat 1 requires that failure costs nothing.
 
 ---
 
-### M3-T16 — Art pass 1-1 · 8 h · *depends: T6, T7, T15*
+### M3-T16 — Art pass 1-1 · 8 h · _depends: T6, T7, T15_
 
 Decor layers, foreground occlusion, ambient tint, parallax, props.
 
@@ -227,7 +227,7 @@ Decor layers, foreground occlusion, ambient tint, parallax, props.
 
 ---
 
-### M3-T17 — Populate 1-1 · 6 h · *depends: T13, T14, T16*
+### M3-T17 — Populate 1-1 · 6 h · _depends: T13, T14, T16_
 
 Skeletons at the documented encounter positions, coins (52 main / 24 optional / 20 secret),
 the optional path, the secret alcove with the Whetstone charm, three checkpoints, the mini
@@ -235,13 +235,13 @@ challenge.
 
 Encounter budget 8; `docs/10-Level-Design.md` §10 uses 7.
 
-**Room 7 is the enemy demonstration** — a Skeleton on a ledge *below* the player's path, visible
+**Room 7 is the enemy demonstration** — a Skeleton on a ledge _below_ the player's path, visible
 for 4 s, unreachable. This is Pillar 4's "demonstration before demand" and it is easy to get wrong
 by making it reachable.
 
 ---
 
-### M3-T18 — Full feedback contract · 8 h · *depends: T8, T16*
+### M3-T18 — Full feedback contract · 8 h · _depends: T8, T16_
 
 Every row of `docs/02-Game-Pillars.md` §5.3.2 implemented. This is the Pillar 3 exit gate and it
 is a checklist, not a judgement:
@@ -295,15 +295,15 @@ No portfolio code exists yet, so the test passes trivially. **Build the harness 
 
 ### M3-T23 — Art-cost report · 4 h · **the milestone's real output**
 
-| Pack | Estimated | Actual | Variance |
-|---|---|---|---|
-| Knight | 2 h | | |
-| Skeleton | 1 h | | |
-| Green Zone | 6 h | | |
-| Nature bg | 4 h | | |
-| Explosion | 3 h | | |
-| Slash | 6 h | | |
-| **Total** | **22 h** | | |
+| Pack       | Estimated | Actual | Variance |
+| ---------- | --------- | ------ | -------- |
+| Knight     | 2 h       |        |          |
+| Skeleton   | 1 h       |        |          |
+| Green Zone | 6 h       |        |          |
+| Nature bg  | 4 h       |        |          |
+| Explosion  | 3 h       |        |          |
+| Slash      | 6 h       |        |          |
+| **Total**  | **22 h**  |        |          |
 
 Extrapolate to the remaining 57 h. **If the projection exceeds +40%, escalate at the M3 review as
 a cut-line signal.**
@@ -334,26 +334,26 @@ Then: tag `v0.3.0`, write `docs/audits/milestone-M3.md`, **expand `plans/M05-wor
 
 ## Risks
 
-| Risk | P | Mitigation |
-|---|---|---|
-| **Art harmonisation exceeds estimate** | 🟠 Med-High | This milestone measures it. > +40% is a cut-line escalation at the review |
-| **Slash pack unusable after de-cartooning** | Med | Fall back to custom slashes, ~2 h. Budgeted inside T8 |
-| Background pack ships flat, not layered | Med | +3–4 h manual separation. Absorbed by T7's 5 h |
-| Tileset lacks needed tiles | Med | Author the gaps. Green Zone is the simplest world; if it is short, later worlds will be worse — record it |
-| Perfecting 1-1 forever | Med | T19 is timeboxed at 14 h. 1-1 gets one more polish pass in M5 |
-| Building level tooling beyond need | Low | `level:test` and `level:validate` are M4. M3 uses manual reload |
+| Risk                                        | P           | Mitigation                                                                                                |
+| ------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------- |
+| **Art harmonisation exceeds estimate**      | 🟠 Med-High | This milestone measures it. > +40% is a cut-line escalation at the review                                 |
+| **Slash pack unusable after de-cartooning** | Med         | Fall back to custom slashes, ~2 h. Budgeted inside T8                                                     |
+| Background pack ships flat, not layered     | Med         | +3–4 h manual separation. Absorbed by T7's 5 h                                                            |
+| Tileset lacks needed tiles                  | Med         | Author the gaps. Green Zone is the simplest world; if it is short, later worlds will be worse — record it |
+| Perfecting 1-1 forever                      | Med         | T19 is timeboxed at 14 h. 1-1 gets one more polish pass in M5                                             |
+| Building level tooling beyond need          | Low         | `level:test` and `level:validate` are M4. M3 uses manual reload                                           |
 
 ---
 
 ## Explicitly not in M3
 
-| Not doing | Milestone |
-|---|---|
-| `EnemyDefinition`, behaviour modules, JSON enemies | M4 |
-| Boss framework | M4 |
-| Levels 1-2, 1-3, 1-4 | M5 |
-| `level:test` hot-load, `level:validate` | M4 |
-| Menus, HUD beyond the M2 debug readout | M6 |
-| Save system, progression, charms | M6 |
-| The Codex | M6 |
-| Any world beyond 1 | M7+ |
+| Not doing                                          | Milestone |
+| -------------------------------------------------- | --------- |
+| `EnemyDefinition`, behaviour modules, JSON enemies | M4        |
+| Boss framework                                     | M4        |
+| Levels 1-2, 1-3, 1-4                               | M5        |
+| `level:test` hot-load, `level:validate`            | M4        |
+| Menus, HUD beyond the M2 debug readout             | M6        |
+| Save system, progression, charms                   | M6        |
+| The Codex                                          | M6        |
+| Any world beyond 1                                 | M7+       |
