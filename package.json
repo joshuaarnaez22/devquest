@@ -15,7 +15,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:pillars": "echo 'not implemented \u2014 lands in M2'",
+    "test:pillars": "vitest run tools/ci/check-pillars.test.ts",
     "level:test": "VITE_LEVEL_TEST=1 vite --open",
     "level:validate": "echo 'not implemented \u2014 lands in M4'",
     "assets:build": "node tools/atlas/build-atlas.mjs",

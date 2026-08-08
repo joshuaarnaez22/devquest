@@ -1,6 +1,6 @@
 # M1 — Feel Prototype
 
-**Status:** 🔄 In progress · next **M1-S19** (`M1-T19`) · S01–S18 done · ▶ Checkpoint C
+**Status:** 🔄 In progress · next **M1-S20** (`M1-T20`) · S01–S19 done · ▶ Checkpoint D
 **Duration:** 5 weeks (~150 h) · **Dates:** 2026-08-31 → 2026-10-02 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M1 · **Risk:** 🔴 **HIGH — tuning paralysis**
 **Next:** [M02-combat-feel/plan.md](../M02-combat-feel/plan.md) (after exit gate)
@@ -64,13 +64,13 @@ queue.
 | [x] **M1-S16** | M1-T16 Squash/stretch  | 6   | Distinct jump / fall / land deformation               |
 | [x] **M1-S17** | M1-T17 Dust VFX        | 8   | 60 s movement, zero heap growth                       |
 | [x] **M1-S18** | M1-T18 Debug overlay   | 6   | Sparkline + pools + frame-step live                   |
-| [ ] **M1-S19** | M1-T19 Pillar tests    | 6   | ▶ **Checkpoint D** — `test:pillars` green in CI       |
+| [x] **M1-S19** | M1-T19 Pillar tests    | 6   | ▶ **Checkpoint D** — `test:pillars` green in CI       |
 | [ ] **M1-S20** | M1-T20 Tuning only     | 20  | Five day-sessions (see T20); **no features**          |
 | [ ] **M1-S21** | M1-T21 Latency capture | 4   | p99 ≤ 50 ms (240 fps phone)                           |
 | [ ] **M1-S22** | M1-T22 Constants lock  | 2   | ADR-023 + `check-constants` green                     |
 | [ ] **M1-S23** | M1-T23 Buffer          | 4   | Overrun only — tests, not features                    |
 
-**Start here:** open this plan → **M1-S19** → read docs cited by T19 → implement → Verify → commit → stop.
+**Start here:** open this plan → **M1-S20** → tuning only (no features) → Verify → commit → stop.
 
 ---
 

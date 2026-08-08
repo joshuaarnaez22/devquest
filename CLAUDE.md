@@ -11,11 +11,11 @@ Where this file and a doc disagree, the doc wins.
 ## Status
 
 ```
-PHASE:      M1 Feel Prototype — in progress · next session M1-S19 (M1-T19 pillar tests · Checkpoint D) · S01–S18 done · ▶ Checkpoint C
-NEXT:       plans/M01-feel-prototype/plan.md (5 wk · 23 sessions · S01–S18 done · Checkpoint C)
+PHASE:      M1 Feel Prototype — in progress · next session M1-S20 (M1-T20 tuning only · no features) · S01–S19 done · ▶ Checkpoint D
+NEXT:       plans/M01-feel-prototype/plan.md (5 wk · 23 sessions · S01–S19 done · Checkpoint D)
 THEN:       plans/M02-combat-feel/plan.md
 OPEN P0/P1: 0
-NOTES:      docs/audits/milestone-M0.md · spike notes in plans/spike-00/results.md · npm run level:test
+NOTES:      docs/audits/milestone-M0.md · spike notes in plans/spike-00/results.md · npm run level:test · npm run test:pillars
 ```
 
 Update this block at every milestone close.

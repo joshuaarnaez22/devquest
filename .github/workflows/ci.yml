@@ -30,6 +30,8 @@ jobs:
         run: npm run ci:boundaries
       - name: unit
         run: npm run test:coverage
+      - name: pillars
+        run: npm run test:pillars
       - name: schema
         run: npm run ci:schema
       - name: migrations
