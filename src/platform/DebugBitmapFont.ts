@@ -14,9 +14,14 @@ const LAST = 126;
 /** 3×5 strokes in a 4×6 cell — enough for ASCII debug strings. */
 const PATTERNS: Readonly<Record<string, readonly string[]>> = {
   ' ': ['....', '....', '....', '....', '....'],
+  '!': ['.#..', '.#..', '.#..', '....', '.#..'],
+  '#': ['#.#.', '###.', '#.#.', '###.', '#.#.'],
+  '%': ['#..#', '..#.', '.#..', '#...', '#..#'],
+  '(': ['.#..', '#...', '#...', '#...', '.#..'],
+  ')': ['.#..', '..#.', '..#.', '..#.', '.#..'],
+  '+': ['....', '.#..', '###.', '.#..', '....'],
   '-': ['....', '....', '###.', '....', '....'],
   '.': ['....', '....', '....', '....', '.#..'],
-  ':': ['....', '.#..', '....', '.#..', '....'],
   '/': ['..#.', '..#.', '.#..', '.#..', '#...'],
   '0': ['###.', '#.#.', '#.#.', '#.#.', '###.'],
   '1': ['##..', '.#..', '.#..', '.#..', '###.'],
@@ -28,6 +33,8 @@ const PATTERNS: Readonly<Record<string, readonly string[]>> = {
   '7': ['###.', '..#.', '..#.', '.#..', '.#..'],
   '8': ['###.', '#.#.', '###.', '#.#.', '###.'],
   '9': ['###.', '#.#.', '###.', '..#.', '###.'],
+  ':': ['....', '.#..', '....', '.#..', '....'],
+  '=': ['....', '###.', '....', '###.', '....'],
   A: ['###.', '#.#.', '###.', '#.#.', '#.#.'],
   B: ['##..', '#.#.', '##..', '#.#.', '##..'],
   C: ['###.', '#...', '#...', '#...', '###.'],
@@ -58,12 +65,21 @@ const PATTERNS: Readonly<Record<string, readonly string[]>> = {
 };
 
 function patternFor(ch: string): readonly string[] {
-  const key = ch === '_' ? '_' : ch.toUpperCase();
-  return PATTERNS[key] ?? PATTERNS['.']!;
+  const direct = PATTERNS[ch];
+  if (direct !== undefined) return direct;
+  const upper = PATTERNS[ch.toUpperCase()];
+  if (upper !== undefined) return upper;
+  return PATTERNS['.']!;
 }
 
 export function installDebugBitmapFont(scene: Phaser.Scene): void {
-  if (scene.cache.bitmapFont.exists(DEBUG_FONT_KEY)) return;
+  // Rebuild so glyph set upgrades (e.g. + = !) take effect after a soft reload.
+  if (scene.cache.bitmapFont.exists(DEBUG_FONT_KEY)) {
+    scene.cache.bitmapFont.remove(DEBUG_FONT_KEY);
+  }
+  if (scene.textures.exists(DEBUG_FONT_KEY)) {
+    scene.textures.remove(DEBUG_FONT_KEY);
+  }
 
   const count = LAST - FIRST + 1;
   const texW = count * GW;

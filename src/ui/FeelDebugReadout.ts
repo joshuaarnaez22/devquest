@@ -40,6 +40,10 @@ export class FeelDebugReadout {
     this.text.setText(lines.join('\n'));
   }
 
+  setVisible(visible: boolean): void {
+    this.text.setVisible(visible);
+  }
+
   destroy(): void {
     this.text.destroy();
   }

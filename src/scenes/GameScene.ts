@@ -248,7 +248,10 @@ export class GameScene extends Phaser.Scene {
       dashCooldownRemainingMs: player.dashCooldownRemainingMs,
       lastJumpHeight: player.lastJumpHeight,
     };
-    readout.sync(snap);
+    readout.setVisible(debug === undefined || !debug.overlayVisible);
+    if (debug === undefined || !debug.overlayVisible) {
+      readout.sync(snap);
+    }
     debug?.setPlayer({
       hero: snap.hero,
       state: snap.state,

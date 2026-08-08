@@ -50,6 +50,7 @@ export class DebugSystem implements System {
   private heapAccMs = 0;
 
   private root: Phaser.GameObjects.Container | null = null;
+  private panelGfx: Phaser.GameObjects.Graphics | null = null;
   private text: Phaser.GameObjects.BitmapText | null = null;
   private sparkGfx: Phaser.GameObjects.Graphics | null = null;
   private cullGfx: Phaser.GameObjects.Graphics | null = null;
@@ -74,17 +75,19 @@ export class DebugSystem implements System {
     this.cam = opts.camera;
     Keyboard.ensureListening();
 
+    // Full-bleed panel on the left — opaque so 4×6 glyphs stay readable.
     this.root = scene.add
-      .container(4, 4)
+      .container(0, 0)
       .setScrollFactor(0)
       .setDepth(Depth.DEBUG)
       .setVisible(false);
-    this.sparkGfx = scene.add.graphics().setScrollFactor(0).setDepth(Depth.DEBUG);
+    this.panelGfx = scene.add.graphics().setScrollFactor(0);
+    this.sparkGfx = scene.add.graphics().setScrollFactor(0);
     this.text = scene.add
-      .bitmapText(0, 28, DEBUG_FONT_KEY, '', 5)
+      .bitmapText(4, 30, DEBUG_FONT_KEY, '', 6)
       .setTint(Palette.N7)
       .setScrollFactor(0);
-    this.root.add([this.sparkGfx, this.text]);
+    this.root.add([this.panelGfx, this.sparkGfx, this.text]);
 
     this.cullGfx = scene.add.graphics().setDepth(Depth.DEBUG).setVisible(false);
   }
@@ -175,6 +178,7 @@ export class DebugSystem implements System {
     this.root?.destroy(true);
     this.cullGfx?.destroy();
     this.root = null;
+    this.panelGfx = null;
     this.text = null;
     this.sparkGfx = null;
     this.cullGfx = null;
@@ -193,21 +197,36 @@ export class DebugSystem implements System {
   }
 
   private redrawOverlay(): void {
+    const panel = this.panelGfx;
     const gfx = this.sparkGfx;
     const label = this.text;
-    if (gfx === null || label === null) return;
+    if (panel === null || gfx === null || label === null) return;
+
+    const body = this.buildText();
+    label.setText(body);
+
+    const panelW = 152;
+    const panelH = Math.min(148, Math.max(90, label.height + 34));
+
+    panel.clear();
+    panel.fillStyle(Palette.N0, 0.92);
+    panel.fillRect(0, 0, panelW, panelH);
+    panel.lineStyle(1, Palette.N3, 1);
+    panel.strokeRect(0, 0, panelW, panelH);
 
     gfx.clear();
     const n = this.frameRing.copyChronological(this.sparkScratch);
-    const w = 120;
-    const h = 24;
+    const sparkX = 4;
+    const sparkY = 4;
+    const w = panelW - 8;
+    const h = 22;
     const maxMs = DEBUG.SPARKLINE_MAX_MS;
-    const budgetY = h * (1 - DEBUG.FRAME_BUDGET_MS / maxMs);
+    const budgetY = sparkY + h * (1 - DEBUG.FRAME_BUDGET_MS / maxMs);
 
-    gfx.fillStyle(Palette.N1, 0.75);
-    gfx.fillRect(0, 0, w, h);
+    gfx.fillStyle(Palette.N1, 1);
+    gfx.fillRect(sparkX, sparkY, w, h);
     gfx.lineStyle(1, Palette.S3, 1);
-    gfx.lineBetween(0, budgetY, w, budgetY);
+    gfx.lineBetween(sparkX, budgetY, sparkX + w, budgetY);
 
     if (n > 0) {
       const barW = w / DEBUG.SPARKLINE_FRAMES;
@@ -215,22 +234,20 @@ export class DebugSystem implements System {
         const ms = this.sparkScratch[i] ?? 0;
         const bh = Math.min(h, (ms / maxMs) * h);
         const color = ms > DEBUG.FRAME_BUDGET_MS ? Palette.S0 : Palette.C5;
-        gfx.fillStyle(color, 0.9);
-        gfx.fillRect(i * barW, h - bh, Math.max(1, barW - 0.5), bh);
+        gfx.fillStyle(color, 1);
+        gfx.fillRect(sparkX + i * barW, sparkY + h - bh, Math.max(1, barW - 0.5), bh);
       }
     }
-
-    label.setText(this.buildText());
   }
 
   private buildText(): string {
     const frame = this.frameRing.latest();
     const fps = frame > 0 ? 1000 / frame : 0;
     const lines: string[] = [
-      `FPS ${fps.toFixed(1)}  FRAME ${frame.toFixed(2)}ms`,
-      this.frameStepOn ? 'FRAME-STEP ON  F8=step  ESC=exit' : 'F8 frame-step  F10 cull',
+      `FPS ${fps.toFixed(0)}  ${frame.toFixed(1)} MS`,
+      this.frameStepOn ? 'STEP ON  F8 STEP  ESC OUT' : 'F8 STEP  F10 CULL',
       '',
-      'SYSTEMS (ms)',
+      'SYSTEMS MS',
     ];
 
     const profiler = this.profiler;
@@ -238,19 +255,19 @@ export class DebugSystem implements System {
       const ids = ['input', 'vfx', 'particles', 'camera', 'debug'] as const;
       for (const id of ids) {
         const ms = profiler.sampleMs(id);
-        lines.push(`${id.padEnd(10)} ${ms.toFixed(2)}`);
+        lines.push(`${id.toUpperCase().padEnd(10)} ${ms.toFixed(2)}`);
       }
       if (!profiler.enabled) {
-        lines.push('(profiler stripped in prod)');
+        lines.push('NO PROFILER');
       }
     }
 
-    lines.push('', 'POOLS live/peak/max');
+    lines.push('', 'POOLS L/P/MAX');
     const pools = this.pools;
     if (pools !== null) {
-      lines.push(fmtPool('dust', pools.dustStats(), VFX.DUST_POOL_MAX));
-      lines.push(fmtPool('ghost', pools.afterimageStats(), VFX.AFTERIMAGE_POOL_MAX));
-      lines.push(fmtPool('particle', pools.particleStats(), VFX.PARTICLE_POOL_MAX));
+      lines.push(fmtPool('DUST', pools.dustStats(), VFX.DUST_POOL_MAX));
+      lines.push(fmtPool('GHOST', pools.afterimageStats(), VFX.AFTERIMAGE_POOL_MAX));
+      lines.push(fmtPool('PART', pools.particleStats(), VFX.PARTICLE_POOL_MAX));
     }
 
     lines.push('', this.heapLine());
@@ -259,23 +276,23 @@ export class DebugSystem implements System {
     if (p !== null) {
       lines.push(
         '',
-        `HERO ${p.hero}  ${p.state}`,
-        `VX ${p.vx.toFixed(1)} VY ${p.vy.toFixed(1)} GND ${p.grounded ? 'Y' : 'N'}`,
+        `${p.hero.toUpperCase()}  ${p.state}`,
+        `VX ${p.vx.toFixed(0)} VY ${p.vy.toFixed(0)} GND ${p.grounded ? 'Y' : 'N'}`,
       );
     }
     return lines.join('\n');
   }
 
   private heapLine(): string {
-    if (this.heapRing.count === 0) return 'HEAP n/a';
+    if (this.heapRing.count === 0) return 'HEAP N/A';
     const cur = this.heapRing.latest();
     const samples: number[] = new Array<number>(this.heapRing.count).fill(0);
     this.heapRing.copyChronological(samples);
     const oldest = samples[0] ?? cur;
     const delta = cur - oldest;
-    const sign = delta >= 0 ? '+' : '';
-    const ok = Math.abs(delta) < 512 * 1024 ? '✓' : '!';
-    return `HEAP ${formatHeapMb(cur)}MB  Δ60s ${sign}${formatHeapMb(delta)}MB ${ok}`;
+    const sign = delta >= 0 ? '+' : '-';
+    const ok = Math.abs(delta) < 512 * 1024 ? 'OK' : 'BAD';
+    return `HEAP ${formatHeapMb(cur)}  D60 ${sign}${formatHeapMb(Math.abs(delta))} ${ok}`;
   }
 
   private redrawCullMargins(): void {
