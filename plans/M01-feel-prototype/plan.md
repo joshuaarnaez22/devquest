@@ -1,6 +1,6 @@
 # M1 — Feel Prototype
 
-**Status:** 🔄 In progress · next **M1-S14** (`M1-T14`) · S01–S13 done · ▶ Checkpoint B
+**Status:** 🔄 In progress · next **M1-S15** (`M1-T15`) · S01–S14 done · ▶ Checkpoint B · next ▶ Checkpoint C
 **Duration:** 5 weeks (~150 h) · **Dates:** 2026-08-31 → 2026-10-02 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M1 · **Risk:** 🔴 **HIGH — tuning paralysis**
 **Next:** [M02-combat-feel/plan.md](../M02-combat-feel/plan.md) (after exit gate)
@@ -70,7 +70,7 @@ queue.
 | [ ] **M1-S22** | M1-T22 Constants lock  | 2   | ADR-023 + `check-constants` green                     |
 | [ ] **M1-S23** | M1-T23 Buffer          | 4   | Overrun only — tests, not features                    |
 
-**Start here:** open this plan → **M1-S14** → read docs cited by T14 → implement → Verify → commit → stop.
+**Start here:** open this plan → **M1-S15** → read docs cited by T15 → implement → Verify → commit → stop.
 
 ---
 

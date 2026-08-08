@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { FEEL } from '@config/GameConstants';
+import { FEEL, PHYSICS } from '@config/GameConstants';
 import { HEIGHT } from '@config/LevelMetrics';
 import { Rng } from '@core/Rng';
-import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
+import { NINJA_MOVEMENT, SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
 import {
   PlayerController,
   TURN_BOOST,
@@ -13,6 +13,7 @@ import {
   WALL_JUMP_PUSH,
 } from '@entities/player/PlayerController';
 import type { InputFrame } from '@core/InputFrame';
+import type { CharacterMovement } from '@entities/player/CharacterMovement';
 
 function moveFrame(moveX: -1 | 0 | 1): InputFrame {
   return Object.freeze({
@@ -34,12 +35,15 @@ function moveFrame(moveX: -1 | 0 | 1): InputFrame {
   });
 }
 
-function makeController(vx = 0): {
+function makeController(
+  vx = 0,
+  def: CharacterMovement = SAMURAI_MOVEMENT,
+): {
   body: { velocity: { x: number; y: number } };
   ctrl: PlayerController;
 } {
   const body = { velocity: { x: vx, y: 0 } };
-  return { body, ctrl: new PlayerController(body, SAMURAI_MOVEMENT) };
+  return { body, ctrl: new PlayerController(body, def) };
 }
 
 describe('PlayerController horizontal', () => {
@@ -519,5 +523,87 @@ describe('PlayerController wall jump + slide', () => {
       if (ctrl.verticalVelocity >= 0 && i > 5) break;
     }
     expect(peak * 2).toBeGreaterThanOrEqual(HEIGHT.SHAFT);
+  });
+});
+
+/** Peak rise (px) of a Ninja air jump launched with the given pre-jump trueVy. */
+function simulateNinjaAirJumpPeak(preJumpVy: number): number {
+  const { body, ctrl } = makeController(0, NINJA_MOVEMENT);
+  const frameMs = 1000 / 60;
+  const dt = frameMs / 1000;
+  let y = 0;
+  let peak = 0;
+
+  ctrl.setVerticalVelocity(preJumpVy);
+  ctrl.beginFrame(frameMs);
+  const result = ctrl.tryJump(jumpPressFrame(), {
+    grounded: false,
+    coyoteExpiresAt: 0,
+    airJumpsRemaining: 1,
+    onWall: false,
+    wallDir: 0,
+    now: 1,
+  });
+  expect(result.kind).toBe('air');
+  expect(ctrl.verticalVelocity).toBe(NINJA_MOVEMENT.jumpVelocity * NINJA_MOVEMENT.airJumpScale);
+
+  for (let i = 0; i < 120; i++) {
+    ctrl.beginFrame(frameMs);
+    ctrl.applyJumpCut(jumpHeldFrame(true));
+    ctrl.applyGravity();
+    y += body.velocity.y * dt;
+    peak = Math.max(peak, -y);
+    if (ctrl.verticalVelocity >= 0 && i > 5) break;
+  }
+  return peak;
+}
+
+describe('PlayerController Ninja air jump (M1-T14)', () => {
+  it('air jump from apex peaks near the derived air-jump arc (~22 px)', () => {
+    // Table "24.0" ≈ 0.88 × 28.1 first-jump height; continuous v²/2g for
+    // jumpVelocity×0.88 (−198) is ~21.8. Midpoint feed lands in the same band.
+    const peak = simulateNinjaAirJumpPeak(0);
+    expect(peak).toBeGreaterThanOrEqual(21.0);
+    expect(peak).toBeLessThanOrEqual(24.5);
+  });
+
+  it('air jump from fast fall matches apex height (vy zeroed first)', () => {
+    const fromApex = simulateNinjaAirJumpPeak(0);
+    const fromFall = simulateNinjaAirJumpPeak(PHYSICS.MAX_FALL_SPEED);
+    expect(fromFall).toBeCloseTo(fromApex, 1);
+    expect(fromFall).toBeGreaterThanOrEqual(21.0);
+    expect(fromFall).toBeLessThanOrEqual(24.5);
+  });
+
+  it('consumes the single air jump and refuses a second', () => {
+    const { ctrl } = makeController(0, NINJA_MOVEMENT);
+    const first = ctrl.tryJump(jumpPressFrame(), {
+      grounded: false,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: 1,
+      onWall: false,
+      wallDir: 0,
+      now: 10,
+    });
+    expect(first).toEqual({ kind: 'air', remaining: 0 });
+
+    const second = ctrl.tryJump(Object.freeze({ ...jumpPressFrame(), jumpPressedAt: 20 }), {
+      grounded: false,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: 20,
+    });
+    expect(second.kind).toBe('none');
+  });
+
+  it('air jump path has no characterId branch', () => {
+    const src = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), 'PlayerController.ts'),
+      'utf8',
+    );
+    expect(src.includes('characterId')).toBe(false);
+    expect(src.includes('Math.min(this.trueVy, 0)')).toBe(true);
   });
 });

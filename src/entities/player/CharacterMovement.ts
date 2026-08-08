@@ -34,3 +34,21 @@ export const SAMURAI_MOVEMENT: CharacterMovement = {
   dashIFrameGraceMs: 0,
   wallSlideSpeed: 70,
 };
+
+/** Ninja from docs/06 §5.2 — mirrors `public/assets/data/characters/ninja.json`. */
+export const NINJA_MOVEMENT: CharacterMovement = {
+  runSpeed: 108,
+  groundAccel: 1150,
+  groundDecel: 1400,
+  airAccel: 780,
+  airDecel: 520,
+  jumpVelocity: -225,
+  airJumps: 1,
+  airJumpScale: 0.88,
+  dashSpeed: 310,
+  dashDurationMs: 170,
+  dashCooldownMs: 380,
+  dashIFrames: true,
+  dashIFrameGraceMs: 80,
+  wallSlideSpeed: 45,
+};

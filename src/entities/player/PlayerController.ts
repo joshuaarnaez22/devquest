@@ -276,7 +276,8 @@ export class PlayerController {
     }
 
     if (ctx.airJumpsRemaining > 0) {
-      // vy = min(vy, 0) then set scaled air-jump velocity (docs/06 §5.3).
+      // Zero downward speed first, then set scaled air-jump vy (docs/06 §5.3).
+      // Without the cancel, a late air jump while falling feels weak — classic bug.
       this.trueVy = Math.min(this.trueVy, 0);
       this.launchJump(this.def.jumpVelocity * this.def.airJumpScale);
       this.consumeJump(pressAt);

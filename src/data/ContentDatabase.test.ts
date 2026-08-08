@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CHARACTER_IDS } from '@data/CharacterTypes';
 import { ContentDatabase } from '@data/ContentDatabase';
-import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
+import { NINJA_MOVEMENT, SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
 
 describe('ContentDatabase', () => {
   it('loads and validates all four heroes', () => {
@@ -19,6 +19,13 @@ describe('ContentDatabase', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.character('samurai').movement).toEqual(SAMURAI_MOVEMENT);
+  });
+
+  it('ninja movement matches NINJA_MOVEMENT constant', () => {
+    const result = ContentDatabase.create();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.character('ninja').movement).toEqual(NINJA_MOVEMENT);
   });
 
   it('ninja has one air jump and i-frame dash', () => {
