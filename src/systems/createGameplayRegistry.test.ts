@@ -4,6 +4,8 @@ import { CameraSystem } from '@systems/CameraSystem';
 import { createGameplayRegistry, createGameplaySystems } from '@systems/createGameplayRegistry';
 import { InputSystem } from '@systems/InputSystem';
 import { NoOpSystem } from '@systems/NoOpSystem';
+import { ParticleSystem } from '@systems/ParticleSystem';
+import { VfxSystem } from '@systems/VfxSystem';
 
 describe('SYSTEM_ORDER + gameplay registry', () => {
   it('declares input first and debug last', () => {
@@ -17,6 +19,8 @@ describe('SYSTEM_ORDER + gameplay registry', () => {
     expect(systems.map(s => s.id)).toEqual([...SYSTEM_ORDER_GAMEPLAY]);
     expect(systems[0]).toBeInstanceOf(InputSystem);
     expect(systems.find(s => s.id === 'camera')).toBeInstanceOf(CameraSystem);
+    expect(systems.find(s => s.id === 'vfx')).toBeInstanceOf(VfxSystem);
+    expect(systems.find(s => s.id === 'particles')).toBeInstanceOf(ParticleSystem);
     expect(systems.find(s => s.id === 'combat')).toBeInstanceOf(NoOpSystem);
   });
 

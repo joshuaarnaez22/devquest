@@ -33,7 +33,7 @@ describe('EventBus', () => {
     const fn = vi.fn();
     bus.on('player:jumped', fn, owner);
     bus.offAllFor(owner);
-    bus.emit('player:jumped', { fromCoyote: false });
+    bus.emit('player:jumped', { fromCoyote: false, x: 0, y: 0 });
     expect(fn).not.toHaveBeenCalled();
   });
 });

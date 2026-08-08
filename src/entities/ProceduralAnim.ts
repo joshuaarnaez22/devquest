@@ -1,20 +1,14 @@
-import { SQUASH, type LandImpact } from '@config/SquashConstants';
+import { SQUASH, landImpactFromSpeed, type LandImpact } from '@config/SquashConstants';
 import type Phaser from 'phaser';
 
 export type { LandImpact };
+export { landImpactFromSpeed };
 
 export interface SquashPreset {
   readonly scaleX: number;
   readonly scaleY: number;
   readonly durationMs: number;
   readonly ease: string;
-}
-
-/** Impact tier from downward landing speed (px/s) — docs/14 §8.1. */
-export function landImpactFromSpeed(downSpeedPxPerSec: number): LandImpact {
-  if (downSpeedPxPerSec < SQUASH.LAND_SOFT.maxImpactSpeed) return 'soft';
-  if (downSpeedPxPerSec > SQUASH.LAND_HARD.minImpactSpeed) return 'hard';
-  return 'medium';
 }
 
 export function landPreset(impact: LandImpact): SquashPreset {

@@ -3,16 +3,20 @@ import { CAMERA } from '@config/CameraConstants';
 import { Depth } from '@config/Depth';
 import { DISPLAY } from '@config/GameConstants';
 import { Palette } from '@config/Palette';
+import { EventBus } from '@core/EventBus';
 import { ContentDatabase } from '@data/ContentDatabase';
 import { FeelPlayer, ensurePlayerBoxTexture } from '@entities/player/FeelPlayer';
 import { buildFeelTestLevel } from '@level/FeelTestLevel';
 import { DEBUG_FONT_KEY, installDebugBitmapFont } from '@platform/DebugBitmapFont';
 import { createGameplayRegistry } from '@systems/createGameplayRegistry';
 import { FeelDebugReadout } from '@ui/FeelDebugReadout';
+import type { GameEventMap } from '@core/GameEvents';
 import type { SystemRegistry } from '@core/SystemRegistry';
 import type { CharacterId } from '@data/CharacterTypes';
 import type { CameraFollowTarget, CameraSystem } from '@systems/CameraSystem';
 import type { InputSystem } from '@systems/InputSystem';
+import type { ParticleSystem } from '@systems/ParticleSystem';
+import type { PlayerVfxSource, VfxSystem } from '@systems/VfxSystem';
 
 const HERO_HOTKEYS: readonly { readonly code: number; readonly id: CharacterId }[] = [
   { code: Phaser.Input.Keyboard.KeyCodes.F1, id: 'knight' },
@@ -22,7 +26,7 @@ const HERO_HOTKEYS: readonly { readonly code: number; readonly id: CharacterId }
 ];
 
 /**
- * Feel-prototype GameScene — Checkpoint C camera (M1-T15).
+ * Feel-prototype GameScene — Checkpoint C camera + M1-T17 dust VFX.
  */
 export class GameScene extends Phaser.Scene {
   private systems: SystemRegistry | undefined;
@@ -30,6 +34,8 @@ export class GameScene extends Phaser.Scene {
   private readout: FeelDebugReadout | undefined;
   private content: ContentDatabase | undefined;
   private cameraSys: CameraSystem | undefined;
+  private vfxSys: VfxSystem | undefined;
+  private bus: EventBus<GameEventMap> | undefined;
   private heroKeys: Phaser.Input.Keyboard.Key[] = [];
 
   constructor() {
@@ -54,17 +60,30 @@ export class GameScene extends Phaser.Scene {
       throw new Error('ContentDatabase.validateAll failed');
     }
 
+    this.bus = new EventBus<GameEventMap>();
     this.systems = createGameplayRegistry();
     this.systems.init();
     const input = this.systems.get<InputSystem>('input');
     this.cameraSys = this.systems.get<CameraSystem>('camera');
+    this.vfxSys = this.systems.get<VfxSystem>('vfx');
+    const particles = this.systems.get<ParticleSystem>('particles');
 
     const level = buildFeelTestLevel(this);
-    this.player = new FeelPlayer(this, level.spawn.x, level.spawn.y, input);
+    this.player = new FeelPlayer({
+      scene: this,
+      x: level.spawn.x,
+      y: level.spawn.y,
+      frames: input,
+      bus: this.bus,
+    });
     this.player.setCharacter(this.content.character('samurai'));
 
     this.physics.add.collider(this.player, level.solids);
     this.physics.add.collider(this.player, level.softs);
+
+    this.vfxSys.bind(this, this.bus);
+    particles.bind(this);
+    this.vfxSys.setSource(this.makeVfxSource(this.player, input));
 
     this.cameraSys.bind(this.cameras.main, level.worldWidth, level.worldHeight);
     this.cameraSys.setTarget(this.makeCameraTarget(this.player));
@@ -73,7 +92,6 @@ export class GameScene extends Phaser.Scene {
     this.readout = new FeelDebugReadout(this);
     this.bindHeroHotkeys();
 
-    // Hint sits in the gameplay viewport (148 px), not the full 180 canvas.
     this.add
       .bitmapText(
         4,
@@ -110,6 +128,41 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
+  private makeVfxSource(player: FeelPlayer, input: InputSystem): PlayerVfxSource {
+    return {
+      get x() {
+        return player.x;
+      },
+      get y() {
+        return player.y;
+      },
+      get vx() {
+        return player.velocityX;
+      },
+      get grounded() {
+        return player.grounded;
+      },
+      get moveX() {
+        return input.frame.moveX;
+      },
+      get facing() {
+        return player.facingDir;
+      },
+      get scaleX() {
+        return player.scaleX;
+      },
+      get scaleY() {
+        return player.scaleY;
+      },
+      get flipX() {
+        return player.flipX;
+      },
+      get textureKey() {
+        return player.texture.key;
+      },
+    };
+  }
+
   private bindHeroHotkeys(): void {
     const keyboard = this.input.keyboard;
     if (keyboard === null) return;
@@ -140,12 +193,10 @@ export class GameScene extends Phaser.Scene {
     const dt = Math.min(delta, DISPLAY.MAX_DELTA_MS);
     systems.update(time, dt);
     player.update(time, dt);
-    // Grounded flags from this frame's Arcade — before camera postPhysics.
     player.syncAfterPhysics(time, dt);
     systems.postPhysics(time, dt);
   }
 
-  /** After Scene.update: camera follow + HUD (grounded already synced). */
   private postUpdate(time: number, delta: number): void {
     const player = this.player;
     const readout = this.readout;
@@ -159,7 +210,6 @@ export class GameScene extends Phaser.Scene {
     readout.sync({
       hero: player.displayName,
       vx: body.velocity.x,
-      // Stick velocity is an Arcade contact hack — HUD shows true vertical state.
       vy: player.grounded ? 0 : player.controller.verticalVelocity,
       state: player.moveState,
       grounded: player.grounded,
@@ -173,12 +223,15 @@ export class GameScene extends Phaser.Scene {
 
   shutdown(): void {
     this.events.off(Phaser.Scenes.Events.POST_UPDATE, this.postUpdate, this);
+    this.bus?.offAllFor(this);
     this.heroKeys = [];
     this.readout?.destroy();
     this.readout = undefined;
     this.systems?.destroy();
     this.systems = undefined;
     this.cameraSys = undefined;
+    this.vfxSys = undefined;
+    this.bus = undefined;
     this.player = undefined;
     this.content = undefined;
   }

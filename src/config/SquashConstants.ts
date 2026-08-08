@@ -43,3 +43,10 @@ export const SQUASH = {
 } as const;
 
 export type LandImpact = 'soft' | 'medium' | 'hard';
+
+/** Impact tier from downward landing speed (px/s) — docs/14 §8.1. */
+export function landImpactFromSpeed(downSpeedPxPerSec: number): LandImpact {
+  if (downSpeedPxPerSec < SQUASH.LAND_SOFT.maxImpactSpeed) return 'soft';
+  if (downSpeedPxPerSec > SQUASH.LAND_HARD.minImpactSpeed) return 'hard';
+  return 'medium';
+}

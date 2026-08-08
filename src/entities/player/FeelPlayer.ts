@@ -11,6 +11,8 @@ import {
 } from '@entities/player/PlayerStates';
 import { SquashStretch } from '@entities/ProceduralAnim';
 import { now } from '@platform/Clock';
+import type { EventBus } from '@core/EventBus';
+import type { GameEventMap } from '@core/GameEvents';
 import type { InputFrame, InputFrameSource } from '@core/InputFrame';
 import type { StateMachine } from '@core/StateMachine';
 import type { CharacterContent, CharacterId } from '@data/CharacterTypes';
@@ -49,6 +51,7 @@ export class FeelPlayer extends Entity {
   displayName = 'Samurai';
 
   private readonly frames: InputFrameSource;
+  private readonly bus: EventBus<GameEventMap>;
   private readonly fsmHost: PlayerFsmHost;
   private readonly fsm: StateMachine<PlayerFsmHost, PlayerStateId>;
   private readonly animator: PlayerAnimator;
@@ -64,12 +67,19 @@ export class FeelPlayer extends Entity {
   private jumpKind: PlayerFsmHost['jumpKind'] = null;
   private wallDir: -1 | 0 | 1 = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, frames: InputFrameSource) {
-    super(scene, x, y, 'player-box');
-    this.frames = frames;
+  constructor(opts: {
+    readonly scene: Phaser.Scene;
+    readonly x: number;
+    readonly y: number;
+    readonly frames: InputFrameSource;
+    readonly bus: EventBus<GameEventMap>;
+  }) {
+    super(opts.scene, opts.x, opts.y, 'player-box');
+    this.frames = opts.frames;
+    this.bus = opts.bus;
     // Bottom-centre — squash must not lift feet (docs/14 §8.1).
     this.setOrigin(0.5, 1);
-    scene.physics.add.existing(this);
+    opts.scene.physics.add.existing(this);
     const body = this.body as Phaser.Physics.Arcade.Body;
     body.setSize(BODY_W, BODY_H, false);
     body.setOffset(0, 0);
@@ -82,7 +92,7 @@ export class FeelPlayer extends Entity {
     this.animator = new PlayerAnimator(this);
     this.squash = new SquashStretch(this);
     this.animator.update({ state: 'IDLE', facing: 1, animPrefix: this.animPrefix });
-    scene.add.existing(this);
+    opts.scene.add.existing(this);
     this.setDepth(Depth.PLAYER);
     this.setActive(true);
     this.setVisible(true);
@@ -203,6 +213,14 @@ export class FeelPlayer extends Entity {
     if (!this.grounded) {
       this.airDashAvailable = false;
     }
+    this.bus.emit('player:dashed', {
+      x: this.x,
+      y: this.y,
+      flipX: this.facing === -1,
+      scaleX: this.scaleX,
+      scaleY: this.scaleY,
+      textureKey: this.texture.key,
+    });
   }
 
   /**
@@ -275,6 +293,11 @@ export class FeelPlayer extends Entity {
     if (jump.kind === 'none') return;
     this.jumpKind = jump.kind;
     this.squash.jump();
+    this.bus.emit('player:jumped', {
+      fromCoyote: jump.kind === 'coyote',
+      x: this.x,
+      y: this.y,
+    });
     if (jump.kind === 'ground' || jump.kind === 'coyote') {
       this.grounded = false;
       this.airJumpsRemaining = this.movement.airJumps;
@@ -297,6 +320,7 @@ export class FeelPlayer extends Entity {
   private onLanded(y: number, t: number): void {
     const impactSpeed = Math.max(0, this.controller.verticalVelocity);
     this.squash.land(impactSpeed);
+    this.bus.emit('player:landed', { impactSpeed, x: this.x, y: this.y });
     if (this.jumpOriginY !== null) {
       this.lastJumpHeight = Math.max(0, this.jumpOriginY - y);
       this.jumpOriginY = null;

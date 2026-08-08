@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SQUASH } from '@config/SquashConstants';
-import { landImpactFromSpeed, landPreset, withinDeformBudget } from '@entities/ProceduralAnim';
+import { SQUASH, landImpactFromSpeed } from '@config/SquashConstants';
+import { landPreset, withinDeformBudget } from '@entities/ProceduralAnim';
 
 describe('landImpactFromSpeed', () => {
   it('tiers soft / medium / hard by downward speed', () => {

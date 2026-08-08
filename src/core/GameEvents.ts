@@ -34,7 +34,24 @@ export interface GameEventMap {
     readonly remainingHp: number;
   };
   'combat:playerDied': { readonly atCheckpoint: CheckpointId | null };
-  'player:jumped': { readonly fromCoyote: boolean };
+  'player:jumped': {
+    readonly fromCoyote: boolean;
+    readonly x: number;
+    readonly y: number;
+  };
+  'player:landed': {
+    readonly impactSpeed: number;
+    readonly x: number;
+    readonly y: number;
+  };
+  'player:dashed': {
+    readonly x: number;
+    readonly y: number;
+    readonly flipX: boolean;
+    readonly scaleX: number;
+    readonly scaleY: number;
+    readonly textureKey: string;
+  };
   'boss:defeated': { readonly bossId: BossDefId; readonly timeMs: number };
   'system:pauseRequested': Record<string, never>;
   'system:resumed': Record<string, never>;
