@@ -14,6 +14,7 @@ export default tseslint.config(
       'test-results/**',
       'public/assets/atlas/**',
       'eslint.config.js',
+      'commitlint.config.cjs',
       '**/*.mjs',
       'e2e/**',
       'test/shims/**',
