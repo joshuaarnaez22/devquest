@@ -66,6 +66,7 @@ export class FeelPlayer extends Entity {
     this.controller.applyHorizontal(frame, this.moveState, this.grounded);
 
     if (!this.grounded) {
+      this.controller.applyJumpCut(frame);
       this.controller.applyGravity();
       if (this.jumpOriginY !== null) {
         const height = this.jumpOriginY - body.y;

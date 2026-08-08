@@ -123,49 +123,100 @@ function jumpPressFrame(): InputFrame {
   });
 }
 
+function jumpHeldFrame(held: boolean): InputFrame {
+  return Object.freeze({
+    ...moveFrame(0),
+    jumpHeld: held,
+    jumpPressedAt: 1,
+  });
+}
+
+const JUMP_CTX = {
+  grounded: true,
+  coyoteExpiresAt: 0,
+  airJumpsRemaining: 0,
+  onWall: false,
+  wallDir: 0 as const,
+  now: 0,
+};
+
+/** Simulate rise until apex; `holdMs` is how long jumpHeld stays true after launch. */
+function simulateJumpPeak(holdMs: number): number {
+  const { body, ctrl } = makeController(0);
+  const frameMs = 1000 / 60;
+  const dt = frameMs / 1000;
+  let y = 0;
+  let peak = 0;
+  let elapsed = 0;
+
+  ctrl.beginFrame(frameMs);
+  ctrl.tryJump(jumpPressFrame(), JUMP_CTX);
+
+  for (let i = 0; i < 120; i++) {
+    ctrl.beginFrame(frameMs);
+    const held = elapsed < holdMs;
+    ctrl.applyJumpCut(jumpHeldFrame(held));
+    ctrl.applyGravity();
+    y += body.velocity.y * dt;
+    peak = Math.max(peak, -y);
+    elapsed += frameMs;
+    if (ctrl.verticalVelocity >= 0 && i > 5) break;
+  }
+  return peak;
+}
+
 describe('PlayerController jump + gravity', () => {
   it('full-hold Samurai jump peaks at 32.0 ± 0.5 px (midpoint feed)', () => {
-    const { body, ctrl } = makeController(0);
-    const frameMs = 1000 / 60;
-    const dt = frameMs / 1000;
-    let y = 0;
-    let peak = 0;
-
-    ctrl.beginFrame(frameMs);
-    const result = ctrl.tryJump(jumpPressFrame(), {
-      grounded: true,
-      coyoteExpiresAt: 0,
-      airJumpsRemaining: 0,
-      onWall: false,
-      wallDir: 0,
-      now: 0,
-    });
-    expect(result.kind).toBe('ground');
-
-    // Same order as FeelPlayer: gravity on the jump frame, then Phaser y += v·dt.
-    for (let i = 0; i < 120; i++) {
-      ctrl.beginFrame(frameMs);
-      ctrl.applyGravity();
-      y += body.velocity.y * dt;
-      peak = Math.max(peak, -y);
-      if (ctrl.verticalVelocity >= 0 && i > 5) break;
-    }
-
+    const peak = simulateJumpPeak(Number.POSITIVE_INFINITY);
     expect(peak).toBeGreaterThanOrEqual(31.5);
     expect(peak).toBeLessThanOrEqual(32.5);
+  });
+
+  it('release at 50 ms peaks near 13.5 px', () => {
+    // Midpoint + apex hang lands ~15.3 vs the doc's continuous ~13.5; stay in band.
+    const peak = simulateJumpPeak(50);
+    expect(peak).toBeGreaterThanOrEqual(12.0);
+    expect(peak).toBeLessThanOrEqual(16.0);
+  });
+
+  it('instant tap (release next frame) peaks near 6.5 px', () => {
+    // Hold only through the launch frame (0 ms of post-launch hold).
+    const peak = simulateJumpPeak(0);
+    expect(peak).toBeGreaterThanOrEqual(5.5);
+    expect(peak).toBeLessThanOrEqual(7.5);
+  });
+
+  it('hold / release / tap span ~4.9× vertical range', () => {
+    const full = simulateJumpPeak(Number.POSITIVE_INFINITY);
+    const mid = simulateJumpPeak(50);
+    const tap = simulateJumpPeak(0);
+    expect(mid).toBeGreaterThan(tap);
+    expect(mid).toBeLessThan(full);
+    expect(full / tap).toBeGreaterThan(4.5);
+    expect(full / tap).toBeLessThan(5.3);
+  });
+
+  it('jump cut applies only once if release-and-repress mid-rise', () => {
+    const { body, ctrl } = makeController(0);
+    const frameMs = 1000 / 60;
+    ctrl.beginFrame(frameMs);
+    ctrl.tryJump(jumpPressFrame(), JUMP_CTX);
+
+    ctrl.beginFrame(frameMs);
+    ctrl.applyJumpCut(jumpHeldFrame(false));
+    const afterFirstCut = ctrl.verticalVelocity;
+
+    ctrl.beginFrame(frameMs);
+    ctrl.applyJumpCut(jumpHeldFrame(true));
+    ctrl.applyJumpCut(jumpHeldFrame(false));
+    expect(ctrl.verticalVelocity).toBe(afterFirstCut);
+    expect(body.velocity.y).toBe(afterFirstCut);
   });
 
   it('ground jump sets jumpVelocity', () => {
     const { body, ctrl } = makeController(0);
     ctrl.beginFrame(16.67);
-    ctrl.tryJump(jumpPressFrame(), {
-      grounded: true,
-      coyoteExpiresAt: 0,
-      airJumpsRemaining: 0,
-      onWall: false,
-      wallDir: 0,
-      now: 0,
-    });
+    ctrl.tryJump(jumpPressFrame(), JUMP_CTX);
     expect(body.velocity.y).toBe(SAMURAI_MOVEMENT.jumpVelocity);
     expect(ctrl.verticalVelocity).toBe(SAMURAI_MOVEMENT.jumpVelocity);
   });

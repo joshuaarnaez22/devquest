@@ -1,4 +1,4 @@
-import { PHYSICS } from '@config/GameConstants';
+import { FEEL, PHYSICS } from '@config/GameConstants';
 import { approach } from '@entities/player/approach';
 import type { InputFrame } from '@core/InputFrame';
 import type { CharacterMovement } from '@entities/player/CharacterMovement';
@@ -31,6 +31,8 @@ export class PlayerController {
    * (spike-00 / plans/spike-00/results.md).
    */
   private trueVy = 0;
+  /** Guards variable jump cut — reset on every launch (docs/06 §5.4). */
+  private jumpCutApplied = false;
 
   constructor(
     private readonly body: ControllerBody,
@@ -80,6 +82,19 @@ export class PlayerController {
     const accel = opposing ? baseAccel * TURN_BOOST : baseAccel;
 
     this.body.velocity.x = approach(v, wants * maxSpeed, accel * this.dt);
+  }
+
+  /**
+   * Variable jump cut — once per jump while rising (docs/06 §5.4).
+   * Call before {@link applyGravity} while airborne.
+   */
+  applyJumpCut(input: InputFrame): void {
+    if (input.jumpHeld || this.jumpCutApplied || this.trueVy >= 0) {
+      return;
+    }
+    this.trueVy *= FEEL.VARIABLE_JUMP_CUT;
+    this.body.velocity.y = this.trueVy;
+    this.jumpCutApplied = true;
   }
 
   /**
@@ -139,6 +154,7 @@ export class PlayerController {
   private launchJump(vy: number): void {
     this.trueVy = vy;
     this.body.velocity.y = vy;
+    this.jumpCutApplied = false;
   }
 
   private skipsHorizontal(state: PlayerStateId): boolean {
