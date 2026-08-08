@@ -4,6 +4,7 @@ import { DEBUG_FONT_KEY } from '@platform/DebugBitmapFont';
 import type Phaser from 'phaser';
 
 export interface FeelDebugSnapshot {
+  readonly hero: string;
   readonly vx: number;
   readonly vy: number;
   readonly state: string;
@@ -30,6 +31,7 @@ export class FeelDebugReadout {
 
   sync(snap: FeelDebugSnapshot): void {
     const lines = [
+      `HERO ${snap.hero}`,
       `VX ${snap.vx.toFixed(1)}  VY ${snap.vy.toFixed(1)}`,
       `STATE ${snap.state}  GND ${snap.grounded ? 'Y' : 'N'}`,
       `COYOTE ${snap.coyoteActive ? 'Y' : 'N'}  BUF ${snap.bufferActive ? 'Y' : 'N'}`,

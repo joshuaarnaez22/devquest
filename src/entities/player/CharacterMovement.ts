@@ -17,7 +17,7 @@ export interface CharacterMovement {
   readonly wallSlideSpeed: number;
 }
 
-/** Samurai baseline from docs/06 §5.2 — used until character JSON lands (M1-T13). */
+/** Samurai baseline from docs/06 §5.2 — mirrors `public/assets/data/characters/samurai.json`. */
 export const SAMURAI_MOVEMENT: CharacterMovement = {
   runSpeed: 90,
   groundAccel: 900,

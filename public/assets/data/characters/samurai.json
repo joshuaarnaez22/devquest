@@ -1,0 +1,21 @@
+{
+  "id": "samurai",
+  "displayName": "Samurai",
+  "animPrefix": "samurai",
+  "movement": {
+    "runSpeed": 90,
+    "groundAccel": 900,
+    "groundDecel": 1200,
+    "airAccel": 600,
+    "airDecel": 400,
+    "jumpVelocity": -240,
+    "airJumps": 0,
+    "airJumpScale": 0.88,
+    "dashSpeed": 260,
+    "dashDurationMs": 150,
+    "dashCooldownMs": 500,
+    "dashIFrames": false,
+    "dashIFrameGraceMs": 0,
+    "wallSlideSpeed": 70
+  }
+}

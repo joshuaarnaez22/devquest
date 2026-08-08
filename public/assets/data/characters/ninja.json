@@ -1,0 +1,21 @@
+{
+  "id": "ninja",
+  "displayName": "Ninja",
+  "animPrefix": "ninja",
+  "movement": {
+    "runSpeed": 108,
+    "groundAccel": 1150,
+    "groundDecel": 1400,
+    "airAccel": 780,
+    "airDecel": 520,
+    "jumpVelocity": -225,
+    "airJumps": 1,
+    "airJumpScale": 0.88,
+    "dashSpeed": 310,
+    "dashDurationMs": 170,
+    "dashCooldownMs": 380,
+    "dashIFrames": true,
+    "dashIFrameGraceMs": 80,
+    "wallSlideSpeed": 45
+  }
+}

@@ -52,8 +52,13 @@ export class PlayerController {
 
   constructor(
     private readonly body: ControllerBody,
-    private readonly def: CharacterMovement,
+    private def: CharacterMovement,
   ) {}
+
+  /** Hot-swap movement block (F1–F4 feel test / character select). */
+  setMovement(def: CharacterMovement): void {
+    this.def = def;
+  }
 
   /** Convert Phaser ms delta to seconds before apply* calls. */
   beginFrame(deltaMs: number): void {

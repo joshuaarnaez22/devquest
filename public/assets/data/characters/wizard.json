@@ -1,0 +1,21 @@
+{
+  "id": "wizard",
+  "displayName": "Wizard",
+  "animPrefix": "wizard",
+  "movement": {
+    "runSpeed": 82,
+    "groundAccel": 820,
+    "groundDecel": 1100,
+    "airAccel": 560,
+    "airDecel": 380,
+    "jumpVelocity": -232,
+    "airJumps": 0,
+    "airJumpScale": 0.88,
+    "dashSpeed": 240,
+    "dashDurationMs": 150,
+    "dashCooldownMs": 600,
+    "dashIFrames": false,
+    "dashIFrameGraceMs": 0,
+    "wallSlideSpeed": 80
+  }
+}

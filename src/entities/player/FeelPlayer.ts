@@ -12,13 +12,14 @@ import {
 import { now } from '@platform/Clock';
 import type { InputFrame, InputFrameSource } from '@core/InputFrame';
 import type { StateMachine } from '@core/StateMachine';
+import type { CharacterContent, CharacterId } from '@data/CharacterTypes';
+import type { CharacterMovement } from '@entities/player/CharacterMovement';
 import type { PlayerStateId } from '@entities/player/PlayerStateId';
 import type { PlayerFsmHost } from '@entities/player/PlayerStates';
 import type Phaser from 'phaser';
 
 const BODY_W = 14;
 const BODY_H = 28;
-const ANIM_PREFIX = 'samurai';
 
 /**
  * Downward speed left on the body while grounded so the next Arcade step still
@@ -43,11 +44,15 @@ export class FeelPlayer extends Entity {
   bufferActive = false;
   dashCooldownRemainingMs = 0;
   lastJumpHeight = 0;
+  characterId: CharacterId = 'samurai';
+  displayName = 'Samurai';
 
   private readonly frames: InputFrameSource;
   private readonly fsmHost: PlayerFsmHost;
   private readonly fsm: StateMachine<PlayerFsmHost, PlayerStateId>;
   private readonly animator: PlayerAnimator;
+  private movement: CharacterMovement = SAMURAI_MOVEMENT;
+  private animPrefix = 'samurai';
   private facing: -1 | 1 = 1;
   private jumpOriginY: number | null = null;
   private airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
@@ -65,21 +70,40 @@ export class FeelPlayer extends Entity {
     body.setSize(BODY_W, BODY_H);
     body.setCollideWorldBounds(true);
     body.setAllowGravity(false);
-    const maxVx = Math.max(
-      SAMURAI_MOVEMENT.dashSpeed,
-      WALL_JUMP_PUSH,
-      SAMURAI_MOVEMENT.runSpeed * 1.5,
-    );
-    body.setMaxVelocity(maxVx, 400);
-    this.controller = new PlayerController(body, SAMURAI_MOVEMENT);
+    this.controller = new PlayerController(body, this.movement);
+    this.applyMaxVelocity(body);
     this.fsmHost = createPlayerFsmHost();
     this.fsm = createPlayerStateMachine(this.fsmHost, 'IDLE');
     this.animator = new PlayerAnimator(this);
-    this.animator.update({ state: 'IDLE', facing: 1, animPrefix: ANIM_PREFIX });
+    this.animator.update({ state: 'IDLE', facing: 1, animPrefix: this.animPrefix });
     scene.add.existing(this);
     this.setDepth(Depth.PLAYER);
     this.setActive(true);
     this.setVisible(true);
+  }
+
+  /** Hot-swap hero from ContentDatabase (F1–F4). */
+  setCharacter(content: CharacterContent): void {
+    this.characterId = content.id;
+    this.displayName = content.displayName;
+    this.animPrefix = content.animPrefix;
+    this.movement = content.movement;
+    this.controller.setMovement(content.movement);
+    this.airJumpsRemaining = content.movement.airJumps;
+    this.airDashAvailable = true;
+    this.controller.refreshDashCooldown();
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    this.applyMaxVelocity(body);
+    this.animator.update({
+      state: this.fsm.id,
+      facing: this.facing,
+      animPrefix: this.animPrefix,
+    });
+  }
+
+  private applyMaxVelocity(body: Phaser.Physics.Arcade.Body): void {
+    const maxVx = Math.max(this.movement.dashSpeed, WALL_JUMP_PUSH, this.movement.runSpeed * 1.5);
+    body.setMaxVelocity(maxVx, 400);
   }
 
   /** Current FSM id — docs/06 §6. */
@@ -179,7 +203,7 @@ export class FeelPlayer extends Entity {
     this.animator.update({
       state: this.fsm.id,
       facing: this.facing,
-      animPrefix: ANIM_PREFIX,
+      animPrefix: this.animPrefix,
     });
     this.jumpKind = null;
   }
@@ -198,7 +222,7 @@ export class FeelPlayer extends Entity {
     }
 
     if (!this.grounded) return;
-    this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
+    this.airJumpsRemaining = this.movement.airJumps;
     this.airDashAvailable = true;
     // Keep stick during ground dash — vy=0 drops Arcade floor flags, then a
     // false re-land was calling refreshDashCooldown and wiping the remaining CD.
@@ -231,7 +255,7 @@ export class FeelPlayer extends Entity {
     this.jumpKind = jump.kind;
     if (jump.kind === 'ground' || jump.kind === 'coyote') {
       this.grounded = false;
-      this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
+      this.airJumpsRemaining = this.movement.airJumps;
       this.coyoteExpiresAt = 0;
       this.jumpOriginY = y;
     } else if (jump.kind === 'air') {
@@ -242,7 +266,7 @@ export class FeelPlayer extends Entity {
       this.coyoteExpiresAt = 0;
       this.jumpOriginY = y;
       // Restores air jump + refreshes dash (docs/06 §5.6).
-      this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
+      this.airJumpsRemaining = this.movement.airJumps;
       this.airDashAvailable = true;
       this.controller.refreshDashCooldown();
     }
