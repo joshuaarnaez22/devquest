@@ -67,7 +67,7 @@ export class VfxSystem implements System {
   private readonly dustLive: DustSprite[] = [];
   private readonly ghostLive: GhostSprite[] = [];
   private readonly pendingGhosts: PendingAfterimage[] = [];
-  private runDustAccumMs = 0;
+  private runDustMs = 0;
   private wasSkidding = false;
   private textureReady = false;
 
@@ -159,12 +159,12 @@ export class VfxSystem implements System {
     }
 
     if (!src.grounded || Math.abs(src.vx) <= VFX.RUN_DUST_MIN_SPEED) {
-      this.runDustAccumMs = 0;
+      this.runDustMs = 0;
       return;
     }
-    this.runDustAccumMs += delta;
-    if (shouldEmitRunDust(src.grounded, Math.abs(src.vx), this.runDustAccumMs)) {
-      this.runDustAccumMs = 0;
+    this.runDustMs += delta;
+    if (shouldEmitRunDust(src.grounded, Math.abs(src.vx), this.runDustMs)) {
+      this.runDustMs = 0;
       this.spawnDust('dust_run', src.x, src.y);
     }
   }
