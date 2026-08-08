@@ -154,10 +154,7 @@ export class FeelPlayer extends Entity {
     this.applyJumpResult(jump, y);
   }
 
-  private applyJumpResult(
-    jump: ReturnType<PlayerController['tryJump']>,
-    y: number,
-  ): void {
+  private applyJumpResult(jump: ReturnType<PlayerController['tryJump']>, y: number): void {
     if (jump.kind === 'none') return;
     this.jumpKind = jump.kind;
     if (jump.kind === 'ground' || jump.kind === 'coyote') {
@@ -204,8 +201,7 @@ export class FeelPlayer extends Entity {
     this.fsmHost.airJumpsRemaining = this.airJumpsRemaining;
     this.fsmHost.withinCoyote = !this.grounded && t < this.coyoteExpiresAt;
     this.fsmHost.jumpKind = this.jumpKind;
-    this.fsmHost.bufferedJump =
-      this.jumpKind === 'ground' || this.isBufferActive(frame, t);
+    this.fsmHost.bufferedJump = this.jumpKind === 'ground' || this.isBufferActive(frame, t);
     this.fsmHost.wantsDash = frame.dashPressed;
     this.fsmHost.wantsAttack = frame.attackPressed;
     this.fsmHost.wantsSpecial = frame.specialPressed;

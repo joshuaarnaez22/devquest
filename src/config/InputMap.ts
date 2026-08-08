@@ -1,15 +1,7 @@
 /** Default bindings and analog thresholds — docs/13-UI-UX.md §5.1 / §5.3 / §5.4. */
 
 export type GameAction =
-  | 'left'
-  | 'right'
-  | 'up'
-  | 'down'
-  | 'jump'
-  | 'attack'
-  | 'dash'
-  | 'special'
-  | 'pause';
+  'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'dash' | 'special' | 'pause';
 
 export type GamepadKind = 'xbox' | 'playstation' | 'generic';
 

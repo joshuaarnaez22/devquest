@@ -7,19 +7,19 @@ prints `ready`. Exactly one runtime dependency (`phaser`).
 
 ## Exit gate
 
-| Check | Result |
-|---|---|
-| `npm run dev` | OK |
-| Lint non-negotiables | OK (`npm run lint`) |
-| `check-constants` / `check-template` | OK |
-| `check-portability` / `check-scenes` | OK |
-| `madge --circular` | OK |
-| Atlas determinism (two runs) | OK |
-| `ObjectPool` / `StateMachine` coverage | Lines 100% |
-| `src/core` coverage | ≥ 70% (overall ~91% stmts) |
-| Loading bar → ready | OK |
-| One runtime dependency | `phaser` only |
-| CI workflow | `.github/workflows/ci.yml` (Pages deploy on `main`) |
+| Check                                  | Result                                              |
+| -------------------------------------- | --------------------------------------------------- |
+| `npm run dev`                          | OK                                                  |
+| Lint non-negotiables                   | OK (`npm run lint`)                                 |
+| `check-constants` / `check-template`   | OK                                                  |
+| `check-portability` / `check-scenes`   | OK                                                  |
+| `madge --circular`                     | OK                                                  |
+| Atlas determinism (two runs)           | OK                                                  |
+| `ObjectPool` / `StateMachine` coverage | Lines 100%                                          |
+| `src/core` coverage                    | ≥ 70% (overall ~91% stmts)                          |
+| Loading bar → ready                    | OK                                                  |
+| One runtime dependency                 | `phaser` only                                       |
+| CI workflow                            | `.github/workflows/ci.yml` (Pages deploy on `main`) |
 
 ## Notes
 

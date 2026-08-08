@@ -1460,7 +1460,7 @@ export const PHASER_CONFIG: Phaser.Types.Core.GameConfig = {
     "test",
     "vitest.config.ts",
     "vite.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
   ],
 }
 ```

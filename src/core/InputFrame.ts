@@ -26,4 +26,3 @@ export interface InputFrame {
 export interface InputFrameSource {
   readonly frame: InputFrame;
 }
-

@@ -1,9 +1,5 @@
 import { BUDGET } from '@config/GameConstants';
-import {
-  ANALOG_DEADZONE,
-  DEFAULT_INPUT_BINDINGS,
-  DEVICE_SWITCH_STICK,
-} from '@config/InputMap';
+import { ANALOG_DEADZONE, DEFAULT_INPUT_BINDINGS, DEVICE_SWITCH_STICK } from '@config/InputMap';
 import { now } from '@platform/Clock';
 import * as GamepadAdapter from '@platform/GamepadAdapter';
 import * as Keyboard from '@platform/Keyboard';

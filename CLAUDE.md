@@ -111,20 +111,20 @@ src/
 
 ## Commands
 
-| Command                      | Does                                                              |
-| ---------------------------- | ----------------------------------------------------------------- |
-| `npm run dev`                | Vite dev server                                                   |
-| `npm run build`              | Production build                                                  |
-| `npm run typecheck`          | tsc, no emit                                                      |
-| `npm run lint`               | ESLint incl. boundaries                                           |
-| `npm test`                   | Vitest unit                                                       |
-| `npm run test:e2e`           | Playwright                                                        |
-| `npm run test:pillars`       | Automated pillar targets                                          |
-| `npm run level:test`         | Boot feel-test GameScene (Checkpoint A); later: `-- w1-1` + `F1`–`F4` |
-| `npm run level:validate`     | Six level checks                                                  |
-| `npm run assets:build`       | Harmonise → slice → pack → budget                                 |
-| `npm run assets:verify`      | Density, palette, animations, AA, uniformity                      |
-| `npm run docs:check`         | Template, constants parity, links                                 |
+| Command                  | Does                                                                  |
+| ------------------------ | --------------------------------------------------------------------- |
+| `npm run dev`            | Vite dev server                                                       |
+| `npm run build`          | Production build                                                      |
+| `npm run typecheck`      | tsc, no emit                                                          |
+| `npm run lint`           | ESLint incl. boundaries                                               |
+| `npm test`               | Vitest unit                                                           |
+| `npm run test:e2e`       | Playwright                                                            |
+| `npm run test:pillars`   | Automated pillar targets                                              |
+| `npm run level:test`     | Boot feel-test GameScene (Checkpoint A); later: `-- w1-1` + `F1`–`F4` |
+| `npm run level:validate` | Six level checks                                                      |
+| `npm run assets:build`   | Harmonise → slice → pack → budget                                     |
+| `npm run assets:verify`  | Density, palette, animations, AA, uniformity                          |
+| `npm run docs:check`     | Template, constants parity, links                                     |
 
 In-game: `Ctrl+Shift+D` debug overlay · `F8` frame-step · `F9` hitboxes · `F10` cull margins.
 

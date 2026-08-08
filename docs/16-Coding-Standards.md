@@ -150,7 +150,7 @@ Six rules that are never waived, in any circumstance:
     "test",
     "vitest.config.ts",
     "vite.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
   ],
 }
 ```

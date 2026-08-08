@@ -44,31 +44,31 @@ queue.
 
 **Rule:** stop at each ▶ checkpoint and play before continuing.
 
-| Session | Task | ~h | Done when |
-| ------- | ---- | -- | --------- |
-| [x] **M1-S01** | M1-T1 Entity | 4 | Unit test: scaled delta / frozen entity |
-| [x] **M1-S02** | M1-T2 InputSystem | 8 | Input-to-physics ≤ 1 frame instrumented |
-| [x] **M1-S03** | M1-T3 SystemRegistry | 3 | Systems update in `SYSTEM_ORDER` |
-| [x] **M1-S04** | M1-T4 Horizontal move | 10 | Max speed + turn boost measured (may span 2 sittings) |
-| [x] **M1-S05** | M1-T5 Test scene | 5 | ▶ **Checkpoint A** — `level:test` grey box runs L/R |
-| [x] **M1-S06** | M1-T6 Gravity + jump | 8 | Full-hold peak 32.0 ± 0.5 px |
-| [x] **M1-S07** | M1-T7 Variable jump | 4 | Hold / early release / tap heights |
-| [x] **M1-S08** | M1-T8 Coyote + buffer | 6 | ≥ 98% ledge success over 1,000 attempts |
-| [x] **M1-S09** | M1-T9 Player FSM | 8 | Transitions + `LAND` duration === 0 |
-| [x] **M1-S10** | M1-T10 Animator seam | 4 | ▶ **Checkpoint B** — jump + tint-per-state |
-| [ ] **M1-S11** | M1-T11 Dash | 8 | Distance + cooldown-from-start |
-| [ ] **M1-S12** | M1-T12 Wall slide/jump | 8 | Clears `SHAFT`; input lock holds |
-| [ ] **M1-S13** | M1-T13 Four heroes | 6 | JSON vs §5.2; `F1`–`F4` swap |
-| [ ] **M1-S14** | M1-T14 Ninja air jump | 4 | Fast-fall air jump = apex height |
-| [ ] **M1-S15** | M1-T15 Camera | 4 | ▶ **Checkpoint C** — camera + all heroes |
-| [ ] **M1-S16** | M1-T16 Squash/stretch | 6 | Distinct jump / fall / land deformation |
-| [ ] **M1-S17** | M1-T17 Dust VFX | 8 | 60 s movement, zero heap growth |
-| [ ] **M1-S18** | M1-T18 Debug overlay | 6 | Sparkline + pools + frame-step live |
-| [ ] **M1-S19** | M1-T19 Pillar tests | 6 | ▶ **Checkpoint D** — `test:pillars` green in CI |
-| [ ] **M1-S20** | M1-T20 Tuning only | 20 | Five day-sessions (see T20); **no features** |
-| [ ] **M1-S21** | M1-T21 Latency capture | 4 | p99 ≤ 50 ms (240 fps phone) |
-| [ ] **M1-S22** | M1-T22 Constants lock | 2 | ADR-023 + `check-constants` green |
-| [ ] **M1-S23** | M1-T23 Buffer | 4 | Overrun only — tests, not features |
+| Session        | Task                   | ~h  | Done when                                             |
+| -------------- | ---------------------- | --- | ----------------------------------------------------- |
+| [x] **M1-S01** | M1-T1 Entity           | 4   | Unit test: scaled delta / frozen entity               |
+| [x] **M1-S02** | M1-T2 InputSystem      | 8   | Input-to-physics ≤ 1 frame instrumented               |
+| [x] **M1-S03** | M1-T3 SystemRegistry   | 3   | Systems update in `SYSTEM_ORDER`                      |
+| [x] **M1-S04** | M1-T4 Horizontal move  | 10  | Max speed + turn boost measured (may span 2 sittings) |
+| [x] **M1-S05** | M1-T5 Test scene       | 5   | ▶ **Checkpoint A** — `level:test` grey box runs L/R   |
+| [x] **M1-S06** | M1-T6 Gravity + jump   | 8   | Full-hold peak 32.0 ± 0.5 px                          |
+| [x] **M1-S07** | M1-T7 Variable jump    | 4   | Hold / early release / tap heights                    |
+| [x] **M1-S08** | M1-T8 Coyote + buffer  | 6   | ≥ 98% ledge success over 1,000 attempts               |
+| [x] **M1-S09** | M1-T9 Player FSM       | 8   | Transitions + `LAND` duration === 0                   |
+| [x] **M1-S10** | M1-T10 Animator seam   | 4   | ▶ **Checkpoint B** — jump + tint-per-state            |
+| [ ] **M1-S11** | M1-T11 Dash            | 8   | Distance + cooldown-from-start                        |
+| [ ] **M1-S12** | M1-T12 Wall slide/jump | 8   | Clears `SHAFT`; input lock holds                      |
+| [ ] **M1-S13** | M1-T13 Four heroes     | 6   | JSON vs §5.2; `F1`–`F4` swap                          |
+| [ ] **M1-S14** | M1-T14 Ninja air jump  | 4   | Fast-fall air jump = apex height                      |
+| [ ] **M1-S15** | M1-T15 Camera          | 4   | ▶ **Checkpoint C** — camera + all heroes              |
+| [ ] **M1-S16** | M1-T16 Squash/stretch  | 6   | Distinct jump / fall / land deformation               |
+| [ ] **M1-S17** | M1-T17 Dust VFX        | 8   | 60 s movement, zero heap growth                       |
+| [ ] **M1-S18** | M1-T18 Debug overlay   | 6   | Sparkline + pools + frame-step live                   |
+| [ ] **M1-S19** | M1-T19 Pillar tests    | 6   | ▶ **Checkpoint D** — `test:pillars` green in CI       |
+| [ ] **M1-S20** | M1-T20 Tuning only     | 20  | Five day-sessions (see T20); **no features**          |
+| [ ] **M1-S21** | M1-T21 Latency capture | 4   | p99 ≤ 50 ms (240 fps phone)                           |
+| [ ] **M1-S22** | M1-T22 Constants lock  | 2   | ADR-023 + `check-constants` green                     |
+| [ ] **M1-S23** | M1-T23 Buffer          | 4   | Overrun only — tests, not features                    |
 
 **Start here:** open this plan → **M1-S11** → read docs cited by T11 → implement → Verify → commit → stop.
 

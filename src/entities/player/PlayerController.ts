@@ -132,9 +132,7 @@ export class PlayerController {
 
     const pressAt = input.jumpPressedAt;
     const buffered =
-      pressAt > 0 &&
-      ctx.now - pressAt <= FEEL.JUMP_BUFFER &&
-      pressAt !== this.consumedJumpAt;
+      pressAt > 0 && ctx.now - pressAt <= FEEL.JUMP_BUFFER && pressAt !== this.consumedJumpAt;
     if (!input.jumpPressed && !buffered) {
       return { kind: 'none' };
     }

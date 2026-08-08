@@ -12,22 +12,22 @@ Each milestone lives in its own folder: `plans/<id>/plan.md` (plus extras like r
 
 ## The plans
 
-| Plan                                                                 | Milestone           | Duration | Detail     | Status                                   |
-| -------------------------------------------------------------------- | ------------------- | -------- | ---------- | ---------------------------------------- |
-| [spike-00/plan.md](spike-00/plan.md)                                 | Feel probe (pre-M0) | 1 day    | 🔵 Full    | ✅ Done — [results](spike-00/results.md) |
-| [M00-foundation/plan.md](M00-foundation/plan.md)                     | M0 Foundation       | 3 wk     | 🔵 Full    | ✅ Done — [audit](../docs/audits/milestone-M0.md) |
+| Plan                                                                 | Milestone           | Duration | Detail     | Status                                                                    |
+| -------------------------------------------------------------------- | ------------------- | -------- | ---------- | ------------------------------------------------------------------------- |
+| [spike-00/plan.md](spike-00/plan.md)                                 | Feel probe (pre-M0) | 1 day    | 🔵 Full    | ✅ Done — [results](spike-00/results.md)                                  |
+| [M00-foundation/plan.md](M00-foundation/plan.md)                     | M0 Foundation       | 3 wk     | 🔵 Full    | ✅ Done — [audit](../docs/audits/milestone-M0.md)                         |
 | [M01-feel-prototype/plan.md](M01-feel-prototype/plan.md)             | M1 Feel Prototype   | 5 wk     | 🔵 Full    | 🔄 In progress · next **M1-S11** (`M1-T11`) · S01–S10 done · Checkpoint B |
-| [M02-combat-feel/plan.md](M02-combat-feel/plan.md)                   | M2 Combat Feel      | 4 wk     | 🔵 Full    | ⬜ Not started                           |
-| [M03-vertical-slice/plan.md](M03-vertical-slice/plan.md)             | M3 Vertical Slice   | 5 wk     | 🔵 Full    | ⬜ Not started                           |
-| [M04-frameworks/plan.md](M04-frameworks/plan.md)                     | M4 Frameworks       | 4 wk     | 🔵 Full    | ⬜ Not started                           |
-| [M05-world-1/plan.md](M05-world-1/plan.md)                           | M5 World 1          | 4 wk     | 🟡 Medium  | ⬜ Not started                           |
-| [M06-meta-layer/plan.md](M06-meta-layer/plan.md)                     | M6 Meta Layer       | 4 wk     | 🟡 Medium  | ⬜ Not started                           |
-| [M07-world-2/plan.md](M07-world-2/plan.md)                           | M7 World 2          | 4 wk     | ⚪ Outline | ⬜ Not started                           |
-| [M08-world-3/plan.md](M08-world-3/plan.md)                           | M8 World 3          | 4 wk     | ⚪ Outline | ⬜ Not started                           |
-| [M09-world-4/plan.md](M09-world-4/plan.md)                           | M9 World 4          | 5 wk     | ⚪ Outline | ⬜ Not started                           |
-| [M10-world-5/plan.md](M10-world-5/plan.md)                           | M10 World 5         | 5 wk     | ⚪ Outline | ⬜ Not started                           |
-| [M11-polish-accessibility/plan.md](M11-polish-accessibility/plan.md) | M11 Polish & A11y   | 3 wk     | 🟡 Medium  | ⬜ Not started                           |
-| [M12-launch/plan.md](M12-launch/plan.md)                             | M12 Launch          | 2 wk     | 🟡 Medium  | ⬜ Not started                           |
+| [M02-combat-feel/plan.md](M02-combat-feel/plan.md)                   | M2 Combat Feel      | 4 wk     | 🔵 Full    | ⬜ Not started                                                            |
+| [M03-vertical-slice/plan.md](M03-vertical-slice/plan.md)             | M3 Vertical Slice   | 5 wk     | 🔵 Full    | ⬜ Not started                                                            |
+| [M04-frameworks/plan.md](M04-frameworks/plan.md)                     | M4 Frameworks       | 4 wk     | 🔵 Full    | ⬜ Not started                                                            |
+| [M05-world-1/plan.md](M05-world-1/plan.md)                           | M5 World 1          | 4 wk     | 🟡 Medium  | ⬜ Not started                                                            |
+| [M06-meta-layer/plan.md](M06-meta-layer/plan.md)                     | M6 Meta Layer       | 4 wk     | 🟡 Medium  | ⬜ Not started                                                            |
+| [M07-world-2/plan.md](M07-world-2/plan.md)                           | M7 World 2          | 4 wk     | ⚪ Outline | ⬜ Not started                                                            |
+| [M08-world-3/plan.md](M08-world-3/plan.md)                           | M8 World 3          | 4 wk     | ⚪ Outline | ⬜ Not started                                                            |
+| [M09-world-4/plan.md](M09-world-4/plan.md)                           | M9 World 4          | 5 wk     | ⚪ Outline | ⬜ Not started                                                            |
+| [M10-world-5/plan.md](M10-world-5/plan.md)                           | M10 World 5         | 5 wk     | ⚪ Outline | ⬜ Not started                                                            |
+| [M11-polish-accessibility/plan.md](M11-polish-accessibility/plan.md) | M11 Polish & A11y   | 3 wk     | 🟡 Medium  | ⬜ Not started                                                            |
+| [M12-launch/plan.md](M12-launch/plan.md)                             | M12 Launch          | 2 wk     | 🟡 Medium  | ⬜ Not started                                                            |
 
 ---
 

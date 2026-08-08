@@ -4,12 +4,7 @@ import type { PlayerStateId } from '@entities/player/PlayerStateId';
 
 /** Tintable surface — sprite only; never a physics body. */
 export interface AnimatableSprite {
-  setTintFill(
-    topLeft?: number,
-    topRight?: number,
-    bottomLeft?: number,
-    bottomRight?: number,
-  ): this;
+  setTintFill(topLeft?: number, topRight?: number, bottomLeft?: number, bottomRight?: number): this;
   setFlipX(value: boolean): this;
 }
 
