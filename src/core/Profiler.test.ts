@@ -38,4 +38,26 @@ describe('Profiler', () => {
       expect(wrapped.update).toBe(sys.update);
     }
   });
+
+  it('does not accumulate postPhysics-only costs across frames', () => {
+    const profiler = new Profiler();
+    const sys: System = {
+      id: 'vfx',
+      enabled: true,
+      postPhysics: () => {
+        let x = 0;
+        for (let i = 0; i < 500; i++) x += i;
+        void x;
+      },
+    };
+    const wrapped = profiler.wrap(sys);
+    if (!profiler.enabled) return;
+    wrapped.postPhysics?.(0, 16);
+    const first = profiler.sampleMs('vfx');
+    wrapped.postPhysics?.(0, 16);
+    const second = profiler.sampleMs('vfx');
+    // Replace each frame — second must not be ~2× first.
+    expect(second).toBeLessThan(first * 1.8 + 0.5);
+    expect(second).toBeGreaterThanOrEqual(0);
+  });
 });

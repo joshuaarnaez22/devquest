@@ -1,13 +1,11 @@
 import Phaser from 'phaser';
-import { CAMERA } from '@config/CameraConstants';
-import { Depth } from '@config/Depth';
 import { DISPLAY } from '@config/GameConstants';
-import { Palette } from '@config/Palette';
 import { EventBus } from '@core/EventBus';
 import { ContentDatabase } from '@data/ContentDatabase';
 import { FeelPlayer, ensurePlayerBoxTexture } from '@entities/player/FeelPlayer';
 import { buildFeelTestLevel } from '@level/FeelTestLevel';
-import { DEBUG_FONT_KEY, DEBUG_FONT_SIZE, installDebugBitmapFont } from '@platform/DebugBitmapFont';
+import { installDebugBitmapFont } from '@platform/DebugBitmapFont';
+import { destroyDomHud, setDomHudText, setDomHudVisible } from '@platform/DebugDomHud';
 import { createGameplayRegistry } from '@systems/createGameplayRegistry';
 import { FeelDebugReadout } from '@ui/FeelDebugReadout';
 import type { GameEventMap } from '@core/GameEvents';
@@ -41,7 +39,6 @@ export class GameScene extends Phaser.Scene {
   private debugSys: DebugSystem | undefined;
   private bus: EventBus<GameEventMap> | undefined;
   private heroKeys: Phaser.Input.Keyboard.Key[] = [];
-  private controlsHint: Phaser.GameObjects.BitmapText | undefined;
 
   constructor() {
     super('Game');
@@ -108,24 +105,15 @@ export class GameScene extends Phaser.Scene {
       },
       onVisibility: visible => {
         this.readout?.setVisible(!visible);
-        this.controlsHint?.setVisible(!visible);
+        setDomHudVisible('hint', !visible);
       },
     });
 
-    this.readout = new FeelDebugReadout(this);
+    this.readout = new FeelDebugReadout();
     this.bindHeroHotkeys();
 
-    this.controlsHint = this.add
-      .bitmapText(
-        4,
-        CAMERA.VIEWPORT_H - 10,
-        DEBUG_FONT_KEY,
-        'A/D MOVE  SPACE JUMP  K DASH  F1-F4 HERO  Ctrl+Shift+D DBG',
-        DEBUG_FONT_SIZE,
-      )
-      .setScrollFactor(0)
-      .setDepth(Depth.DEBUG)
-      .setTint(Palette.N5);
+    setDomHudText('hint', 'A/D move   Space jump   K dash   F1–F4 hero   Ctrl+Shift+D debug');
+    setDomHudVisible('hint', true);
   }
 
   private makeCameraTarget(player: FeelPlayer): CameraFollowTarget {
@@ -274,8 +262,7 @@ export class GameScene extends Phaser.Scene {
     this.heroKeys = [];
     this.readout?.destroy();
     this.readout = undefined;
-    this.controlsHint?.destroy();
-    this.controlsHint = undefined;
+    destroyDomHud();
     this.systems?.destroy();
     this.systems = undefined;
     this.profiler = undefined;

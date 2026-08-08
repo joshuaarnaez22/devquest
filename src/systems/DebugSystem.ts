@@ -3,7 +3,7 @@ import { Depth } from '@config/Depth';
 import { Palette } from '@config/Palette';
 import { VFX } from '@config/VfxConstants';
 import { FrameTimeRing } from '@core/FrameTimeRing';
-import { DEBUG_FONT_KEY, DEBUG_FONT_SIZE } from '@platform/DebugBitmapFont';
+import { setDomHudText, setDomHudVisible } from '@platform/DebugDomHud';
 import { formatHeapMb, heapUsedBytes } from '@platform/Heap';
 import * as Keyboard from '@platform/Keyboard';
 import type { PoolStats } from '@core/ObjectPool';
@@ -25,12 +25,11 @@ export interface DebugPoolSource {
   particleStats(): PoolStats;
 }
 
-const PANEL_W = 128;
-const PANEL_H = 140;
+const SPARK_CHARS = '▁▂▃▄▅▆▇█';
 
 /**
  * Production debug overlay — Ctrl+Shift+D (docs/01 §6.2, docs/15 §9.1).
- * Opaque left panel + 5×7 font so labels stay human-readable at 320×180.
+ * Text is a DOM monospace panel (readable). Cull viz stays in Phaser.
  */
 export class DebugSystem implements System {
   readonly id = 'debug';
@@ -50,11 +49,12 @@ export class DebugSystem implements System {
   private readonly sparkScratch: number[] = new Array<number>(DEBUG.SPARKLINE_FRAMES).fill(0);
   private readonly heapRing = new FrameTimeRing(DEBUG.HEAP_WINDOW_S);
   private heapAccMs = 0;
+  /** Smoothed frame time for stable FPS readout (not raw jitter). */
+  private smoothFrameMs = 16.67;
+  private displayAccMs = 0;
+  private displayFps = 60;
+  private displayFrameMs = 16.67;
 
-  private root: Phaser.GameObjects.Container | null = null;
-  private panelGfx: Phaser.GameObjects.Graphics | null = null;
-  private text: Phaser.GameObjects.BitmapText | null = null;
-  private sparkGfx: Phaser.GameObjects.Graphics | null = null;
   private cullGfx: Phaser.GameObjects.Graphics | null = null;
   private onVisibility: ((visible: boolean) => void) | null = null;
 
@@ -78,22 +78,6 @@ export class DebugSystem implements System {
     this.cam = opts.camera;
     this.onVisibility = opts.onVisibility ?? null;
     Keyboard.ensureListening();
-
-    this.root = scene.add
-      .container(0, 0)
-      .setScrollFactor(0)
-      .setDepth(Depth.DEBUG)
-      .setVisible(false);
-
-    this.panelGfx = scene.add.graphics().setScrollFactor(0);
-    this.sparkGfx = scene.add.graphics().setScrollFactor(0);
-    this.text = scene.add
-      .bitmapText(3, 24, DEBUG_FONT_KEY, '', DEBUG_FONT_SIZE)
-      .setTint(Palette.N7)
-      .setScrollFactor(0);
-    this.root.add([this.panelGfx, this.sparkGfx, this.text]);
-
-    // World-space — below UI so boxes never slice through the panel.
     this.cullGfx = scene.add.graphics().setDepth(Depth.VFX_WORLD).setVisible(false);
   }
 
@@ -132,7 +116,7 @@ export class DebugSystem implements System {
     const toggleHeld = ctrl && shift && Keyboard.isDown('KeyD');
     if (toggleHeld && !this.prevToggle) {
       this.overlayOn = !this.overlayOn;
-      this.root?.setVisible(this.overlayOn);
+      setDomHudVisible('perf', this.overlayOn);
       this.onVisibility?.(this.overlayOn);
     }
     this.prevToggle = toggleHeld;
@@ -169,21 +153,28 @@ export class DebugSystem implements System {
 
   recordFrameMs(deltaMs: number): void {
     this.frameRing.push(deltaMs);
+    // EMA — display stays readable while sparkline keeps raw history.
+    this.smoothFrameMs = this.smoothFrameMs * 0.9 + deltaMs * 0.1;
   }
 
   update(_time: number, delta: number): void {
     this.sampleHeap(delta);
-    if (this.overlayOn) this.redrawOverlay();
+    this.displayAccMs += delta;
+    if (this.displayAccMs >= 250) {
+      this.displayAccMs = 0;
+      this.displayFrameMs = this.smoothFrameMs;
+      this.displayFps = this.displayFrameMs > 0 ? Math.round(1000 / this.displayFrameMs) : 0;
+    }
+    if (this.overlayOn) {
+      setDomHudText('perf', this.buildText());
+    }
     if (this.cullVizOn) this.redrawCullMargins();
   }
 
   destroy(): void {
-    this.root?.destroy(true);
+    setDomHudVisible('perf', false);
+    setDomHudText('perf', '');
     this.cullGfx?.destroy();
-    this.root = null;
-    this.panelGfx = null;
-    this.text = null;
-    this.sparkGfx = null;
     this.cullGfx = null;
     this.profiler = null;
     this.pools = null;
@@ -199,92 +190,76 @@ export class DebugSystem implements System {
     if (bytes !== null) this.heapRing.push(bytes);
   }
 
-  private redrawOverlay(): void {
-    const panel = this.panelGfx;
-    const gfx = this.sparkGfx;
-    const label = this.text;
-    if (panel === null || gfx === null || label === null) return;
-
-    label.setText(this.buildText());
-
-    panel.clear();
-    panel.fillStyle(Palette.N0, 1);
-    panel.fillRect(0, 0, PANEL_W, PANEL_H);
-    panel.lineStyle(1, Palette.S3, 1);
-    panel.strokeRect(0, 0, PANEL_W, PANEL_H);
-
-    gfx.clear();
-    const n = this.frameRing.copyChronological(this.sparkScratch);
-    const sparkX = 3;
-    const sparkY = 3;
-    const w = PANEL_W - 6;
-    const h = 18;
-    const maxMs = DEBUG.SPARKLINE_MAX_MS;
-    const budgetY = sparkY + h * (1 - DEBUG.FRAME_BUDGET_MS / maxMs);
-
-    gfx.fillStyle(Palette.N1, 1);
-    gfx.fillRect(sparkX, sparkY, w, h);
-    gfx.lineStyle(1, Palette.S3, 1);
-    gfx.lineBetween(sparkX, budgetY, sparkX + w, budgetY);
-
-    if (n > 0) {
-      const barW = w / DEBUG.SPARKLINE_FRAMES;
-      for (let i = 0; i < n; i++) {
-        const ms = this.sparkScratch[i] ?? 0;
-        const bh = Math.min(h, (ms / maxMs) * h);
-        const color = ms > DEBUG.FRAME_BUDGET_MS ? Palette.S0 : Palette.C5;
-        gfx.fillStyle(color, 1);
-        gfx.fillRect(sparkX + i * barW, sparkY + h - bh, Math.max(1, barW - 0.5), bh);
-      }
-    }
-  }
-
   private buildText(): string {
-    const frame = this.frameRing.latest();
-    const fps = frame > 0 ? Math.round(1000 / frame) : 0;
     const lines: string[] = [
-      `${fps}FPS ${frame.toFixed(1)}MS`,
-      this.frameStepOn ? 'STEP F8/ESC' : 'F8 STEP F10 CULL',
+      'PERF',
+      `${this.displayFps} fps   ${this.displayFrameMs.toFixed(1)} ms/frame  (smoothed)`,
+      `budget ${DEBUG.FRAME_BUDGET_MS} ms`,
+      this.sparkLine(),
+      this.frameStepOn ? 'FRAME-STEP ON  —  F8 step, Esc exit' : 'F8 frame-step   F10 cull margins',
+      '',
+      'SYSTEMS (ms this frame)',
     ];
 
     const profiler = this.profiler;
     if (profiler !== null) {
-      lines.push(
-        `IN ${ms(profiler.sampleMs('input'))} VFX ${ms(profiler.sampleMs('vfx'))}`,
-        `PT ${ms(profiler.sampleMs('particles'))} CAM ${ms(profiler.sampleMs('camera'))}`,
-        `DBG ${ms(profiler.sampleMs('debug'))}`,
-      );
+      for (const id of ['input', 'vfx', 'particles', 'camera', 'debug'] as const) {
+        lines.push(`  ${id.padEnd(10)} ${profiler.sampleMs(id).toFixed(2)}`);
+      }
+      if (!profiler.enabled) {
+        lines.push('  (timing stripped in production build)');
+      }
     }
 
+    lines.push('', 'POOLS  live / peak / max');
     const pools = this.pools;
     if (pools !== null) {
-      lines.push(
-        fmtPool('DUST', pools.dustStats(), VFX.DUST_POOL_MAX),
-        fmtPool('GHOST', pools.afterimageStats(), VFX.AFTERIMAGE_POOL_MAX),
-        fmtPool('PART', pools.particleStats(), VFX.PARTICLE_POOL_MAX),
-      );
+      lines.push(fmtPool('dust', pools.dustStats(), VFX.DUST_POOL_MAX));
+      lines.push(fmtPool('ghost', pools.afterimageStats(), VFX.AFTERIMAGE_POOL_MAX));
+      lines.push(fmtPool('particle', pools.particleStats(), VFX.PARTICLE_POOL_MAX));
     }
 
-    lines.push(this.heapLine());
+    lines.push('', this.heapLine());
 
     const p = this.player;
     if (p !== null) {
-      lines.push(`${p.hero} ${p.state}`);
-      lines.push(`VX${fmt(p.vx)} VY${fmt(p.vy)} ${p.grounded ? 'GND' : 'AIR'}`);
+      lines.push(
+        '',
+        `PLAYER  ${p.hero}  ${p.state}`,
+        `  vx ${p.vx.toFixed(1)}   vy ${p.vy.toFixed(1)}   ${p.grounded ? 'grounded' : 'airborne'}`,
+      );
     }
     return lines.join('\n');
   }
 
+  private sparkLine(): string {
+    const n = this.frameRing.copyChronological(this.sparkScratch);
+    if (n === 0) return '';
+    // Show last 40 samples so the line fits a normal panel width.
+    const start = Math.max(0, n - 40);
+    let out = '';
+    for (let i = start; i < n; i++) {
+      const msVal = this.sparkScratch[i] ?? 0;
+      const t = Math.min(1, msVal / DEBUG.SPARKLINE_MAX_MS);
+      const idx = Math.min(SPARK_CHARS.length - 1, Math.floor(t * (SPARK_CHARS.length - 1)));
+      out += SPARK_CHARS[idx] ?? '▁';
+    }
+    return out;
+  }
+
   private heapLine(): string {
-    if (this.heapRing.count === 0) return 'HEAP N/A';
+    if (this.heapRing.count === 0) return 'HEAP  (unavailable in this browser)';
     const cur = this.heapRing.latest();
     const samples: number[] = new Array<number>(this.heapRing.count).fill(0);
     this.heapRing.copyChronological(samples);
     const oldest = samples[0] ?? cur;
     const delta = cur - oldest;
     const sign = delta >= 0 ? '+' : '-';
-    const ok = Math.abs(delta) < 512 * 1024 ? 'OK' : 'BAD';
-    return `HEAP ${formatHeapMb(cur)}${sign}${formatHeapMb(Math.abs(delta))} ${ok}`;
+    // Only rising heap is a leak signal. GC drops are normal (Chrome / Phaser).
+    // Live overlay allows ~2 MB noise; CI heap test is stricter after forced GC.
+    const growing = delta > 2 * 1024 * 1024;
+    const tag = growing ? 'GROWING' : 'stable';
+    return `HEAP  ${formatHeapMb(cur)} MB   Δ60s ${sign}${formatHeapMb(Math.abs(delta))} MB  ${tag}`;
   }
 
   private redrawCullMargins(): void {
@@ -313,14 +288,6 @@ export class DebugSystem implements System {
   }
 }
 
-function ms(n: number): string {
-  return n.toFixed(1).padStart(4, ' ');
-}
-
-function fmt(n: number): string {
-  return n.toFixed(0).padStart(4, ' ');
-}
-
 function fmtPool(name: string, s: PoolStats, max: number): string {
-  return `${name} ${s.live}/${s.peak}/${max}`;
+  return `  ${name.padEnd(10)} ${s.live} / ${s.peak} / ${max}`;
 }

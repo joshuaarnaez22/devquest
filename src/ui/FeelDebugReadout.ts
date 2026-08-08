@@ -1,7 +1,4 @@
-import { Depth } from '@config/Depth';
-import { Palette } from '@config/Palette';
-import { DEBUG_FONT_KEY, DEBUG_FONT_SIZE } from '@platform/DebugBitmapFont';
-import type Phaser from 'phaser';
+import { destroyDomHud, setDomHudText, setDomHudVisible } from '@platform/DebugDomHud';
 
 export interface FeelDebugSnapshot {
   readonly hero: string;
@@ -16,49 +13,39 @@ export interface FeelDebugSnapshot {
 }
 
 /**
- * Live feel instrument — solid panel + native-size glyphs (no fractional scale).
+ * Live feel instrument — DOM monospace panel (readable on any display).
  */
 export class FeelDebugReadout {
-  private readonly panel: Phaser.GameObjects.Graphics;
-  private readonly text: Phaser.GameObjects.BitmapText;
-  private readonly root: Phaser.GameObjects.Container;
-
-  constructor(scene: Phaser.Scene) {
-    this.panel = scene.add.graphics().setScrollFactor(0);
-    this.text = scene.add
-      .bitmapText(4, 3, DEBUG_FONT_KEY, '', DEBUG_FONT_SIZE)
-      .setTint(Palette.N7)
-      .setScrollFactor(0);
-    this.root = scene.add
-      .container(2, 2, [this.panel, this.text])
-      .setScrollFactor(0)
-      .setDepth(Depth.DEBUG);
+  constructor() {
+    setDomHudVisible('feel', true);
   }
 
   sync(snap: FeelDebugSnapshot): void {
-    const lines = [
-      `HERO ${snap.hero.toUpperCase()}`,
-      `VX ${snap.vx.toFixed(0)}  VY ${snap.vy.toFixed(0)}`,
-      `STATE ${snap.state}  GND ${snap.grounded ? 'Y' : 'N'}`,
-      `COYOTE ${snap.coyoteActive ? 'Y' : 'N'}  BUF ${snap.bufferActive ? 'Y' : 'N'}`,
-      `DASH CD ${snap.dashCooldownRemainingMs.toFixed(0)}  JUMP ${snap.lastJumpHeight.toFixed(0)}`,
-    ];
-    this.text.setText(lines.join('\n'));
-
-    const w = Math.max(120, this.text.width + 8);
-    const h = this.text.height + 6;
-    this.panel.clear();
-    this.panel.fillStyle(Palette.N0, 1);
-    this.panel.fillRect(0, 0, w, h);
-    this.panel.lineStyle(1, Palette.N3, 1);
-    this.panel.strokeRect(0, 0, w, h);
+    setDomHudText(
+      'feel',
+      [
+        `HERO  ${snap.hero}`,
+        `VX ${snap.vx.toFixed(1).padStart(6)}   VY ${snap.vy.toFixed(1).padStart(6)}`,
+        `STATE ${snap.state.padEnd(10)} GND ${snap.grounded ? 'Y' : 'N'}`,
+        `COYOTE ${snap.coyoteActive ? 'Y' : 'N'}        BUF ${snap.bufferActive ? 'Y' : 'N'}`,
+        `DASH CD ${snap.dashCooldownRemainingMs.toFixed(0).padStart(4)} ms`,
+        `JUMP H  ${snap.lastJumpHeight.toFixed(1).padStart(5)} px`,
+      ].join('\n'),
+    );
   }
 
   setVisible(visible: boolean): void {
-    this.root.setVisible(visible);
+    setDomHudVisible('feel', visible);
   }
 
   destroy(): void {
-    this.root.destroy(true);
+    setDomHudVisible('feel', false);
+    // Hint / perf may still be live — only clear feel text.
+    setDomHudText('feel', '');
   }
+}
+
+/** Call from scene shutdown after all HUD consumers are gone. */
+export function teardownFeelDebugDom(): void {
+  destroyDomHud();
 }
