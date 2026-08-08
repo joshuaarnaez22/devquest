@@ -2,6 +2,7 @@ import { Depth } from '@config/Depth';
 import { FEEL } from '@config/GameConstants';
 import { Entity } from '@entities/Entity';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
+import { PlayerAnimator } from '@entities/player/PlayerAnimator';
 import { PlayerController } from '@entities/player/PlayerController';
 import {
   createPlayerFsmHost,
@@ -17,6 +18,7 @@ import type Phaser from 'phaser';
 
 const BODY_W = 14;
 const BODY_H = 28;
+const ANIM_PREFIX = 'samurai';
 
 /**
  * Downward speed left on the body while grounded so the next Arcade step still
@@ -39,6 +41,8 @@ export class FeelPlayer extends Entity {
   private readonly frames: InputFrameSource;
   private readonly fsmHost: PlayerFsmHost;
   private readonly fsm: StateMachine<PlayerFsmHost, PlayerStateId>;
+  private readonly animator: PlayerAnimator;
+  private facing: -1 | 1 = 1;
   private jumpOriginY: number | null = null;
   private airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
   private coyoteExpiresAt = 0;
@@ -56,6 +60,8 @@ export class FeelPlayer extends Entity {
     this.controller = new PlayerController(body, SAMURAI_MOVEMENT);
     this.fsmHost = createPlayerFsmHost();
     this.fsm = createPlayerStateMachine(this.fsmHost, 'IDLE');
+    this.animator = new PlayerAnimator(this);
+    this.animator.update({ state: 'IDLE', facing: 1, animPrefix: ANIM_PREFIX });
     this.setDepth(Depth.PLAYER);
     this.setActive(true);
     this.setVisible(true);
@@ -95,7 +101,7 @@ export class FeelPlayer extends Entity {
     this.bufferActive = this.isBufferActive(frame, t);
 
     if (frame.moveX !== 0) {
-      this.setFlipX(frame.moveX < 0);
+      this.facing = frame.moveX;
     }
   }
 
@@ -127,6 +133,11 @@ export class FeelPlayer extends Entity {
 
     this.syncFsmHost(frame, t);
     tickPlayerFsm(this.fsm, { time, delta });
+    this.animator.update({
+      state: this.fsm.id,
+      facing: this.facing,
+      animPrefix: ANIM_PREFIX,
+    });
     this.jumpKind = null;
   }
 

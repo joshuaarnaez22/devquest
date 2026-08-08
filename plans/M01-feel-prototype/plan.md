@@ -1,6 +1,6 @@
 # M1 — Feel Prototype
 
-**Status:** 🔄 In progress · next **M1-S10** (`M1-T10`) · S01–S09 done · ▶ Checkpoint A → B next
+**Status:** 🔄 In progress · next **M1-S11** (`M1-T11`) · S01–S10 done · ▶ Checkpoint B
 **Duration:** 5 weeks (~150 h) · **Dates:** 2026-08-31 → 2026-10-02 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M1 · **Risk:** 🔴 **HIGH — tuning paralysis**
 **Next:** [M02-combat-feel/plan.md](../M02-combat-feel/plan.md) (after exit gate)
@@ -55,7 +55,7 @@ queue.
 | [x] **M1-S07** | M1-T7 Variable jump | 4 | Hold / early release / tap heights |
 | [x] **M1-S08** | M1-T8 Coyote + buffer | 6 | ≥ 98% ledge success over 1,000 attempts |
 | [x] **M1-S09** | M1-T9 Player FSM | 8 | Transitions + `LAND` duration === 0 |
-| [ ] **M1-S10** | M1-T10 Animator seam | 4 | ▶ **Checkpoint B** — jump + tint-per-state |
+| [x] **M1-S10** | M1-T10 Animator seam | 4 | ▶ **Checkpoint B** — jump + tint-per-state |
 | [ ] **M1-S11** | M1-T11 Dash | 8 | Distance + cooldown-from-start |
 | [ ] **M1-S12** | M1-T12 Wall slide/jump | 8 | Clears `SHAFT`; input lock holds |
 | [ ] **M1-S13** | M1-T13 Four heroes | 6 | JSON vs §5.2; `F1`–`F4` swap |
@@ -70,7 +70,7 @@ queue.
 | [ ] **M1-S22** | M1-T22 Constants lock | 2 | ADR-023 + `check-constants` green |
 | [ ] **M1-S23** | M1-T23 Buffer | 4 | Overrun only — tests, not features |
 
-**Start here:** open this plan → **M1-S10** → read docs cited by T10 → implement → Verify → commit → stop. Play Checkpoint B before S11.
+**Start here:** open this plan → **M1-S11** → read docs cited by T11 → implement → Verify → commit → stop.
 
 ---
 

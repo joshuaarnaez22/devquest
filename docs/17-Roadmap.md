@@ -753,7 +753,7 @@ Maintained at the top of this document, updated at every milestone close:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- CURRENT: M1 Feel Prototype · in progress · next M1-S10 / M1-T10 · S01–S09 done · Checkpoint A
+ CURRENT: M1 Feel Prototype · in progress · next M1-S11 / M1-T11 · S01–S10 done · Checkpoint B
  SHIPPED: Spike 00 · M0 Foundation (2026-08-07) · tag v0.0.1
  NEXT GATE: M1 · 2026-10-02
  SLACK: +0 weeks (baseline)
