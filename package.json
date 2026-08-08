@@ -70,9 +70,10 @@
   "dependencies": {
     "phaser": "^3.90.0"
   },
+  "engines": {
+    "node": ">=22.22.1"
+  },
   "overrides": {
-    "madge": {
-      "typescript": "$typescript"
-    }
+    "typescript": "~6.0.2"
   }
 }
