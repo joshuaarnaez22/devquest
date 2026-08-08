@@ -69,5 +69,10 @@
   },
   "dependencies": {
     "phaser": "^3.90.0"
+  },
+  "overrides": {
+    "madge": {
+      "typescript": "$typescript"
+    }
   }
 }
