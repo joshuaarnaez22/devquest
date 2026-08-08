@@ -4,14 +4,18 @@ import type { PlayerStateId } from '@entities/player/PlayerStateId';
 
 /** Tintable surface — sprite only; never a physics body. */
 export interface AnimatableSprite {
-  setTint(topLeft?: number, topRight?: number, bottomLeft?: number, bottomRight?: number): this;
-  clearTint(): this;
+  setTintFill(
+    topLeft?: number,
+    topRight?: number,
+    bottomLeft?: number,
+    bottomRight?: number,
+  ): this;
   setFlipX(value: boolean): this;
 }
 
 /**
- * State → tint for Checkpoint B grey-box readout (docs/06 §10.1).
- * Distinct signal colours so FSM changes are obvious without sprites.
+ * State → solid fill for Checkpoint B grey-box readout (docs/06 §10.1).
+ * Uses signal / ramp colours so FSM changes are obvious without sprites.
  */
 export const STATE_TINT: Readonly<Record<PlayerStateId, number>> = {
   IDLE: Palette.N5,
@@ -44,7 +48,8 @@ export class PlayerAnimator {
 
   update(snap: Readonly<PlayerSnapshot>): void {
     if (snap.state !== this.lastState) {
-      this.sprite.setTint(STATE_TINT[snap.state]);
+      // Fill (not multiply) — multiply on a grey texture barely reads.
+      this.sprite.setTintFill(STATE_TINT[snap.state]);
       this.lastState = snap.state;
     }
     this.sprite.setFlipX(snap.facing === -1);

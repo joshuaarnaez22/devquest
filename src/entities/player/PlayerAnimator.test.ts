@@ -11,12 +11,8 @@ function makeSprite() {
   return {
     tint: 0,
     flipX: false,
-    setTint(color?: number) {
+    setTintFill(color?: number) {
       if (color !== undefined) this.tint = color;
-      return this;
-    },
-    clearTint() {
-      this.tint = 0xffffff;
       return this;
     },
     setFlipX(value: boolean) {

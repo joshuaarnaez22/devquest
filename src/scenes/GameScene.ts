@@ -12,7 +12,7 @@ import type { InputSystem } from '@systems/InputSystem';
 
 /**
  * Minimal feel-prototype GameScene — grey box + vocabulary course + debug readout.
- * Checkpoint A (M1-T5).
+ * Checkpoint B (M1-T10) — grey box tints per FSM state.
  */
 export class GameScene extends Phaser.Scene {
   private systems: SystemRegistry | undefined;
@@ -47,7 +47,7 @@ export class GameScene extends Phaser.Scene {
     this.readout = new FeelDebugReadout(this);
 
     this.add
-      .bitmapText(4, DISPLAY.HEIGHT - 10, DEBUG_FONT_KEY, 'A/D MOVE  SPACE JUMP', 6)
+      .bitmapText(4, DISPLAY.HEIGHT - 10, DEBUG_FONT_KEY, 'A/D MOVE  SPACE JUMP  TINT=STATE', 6)
       .setScrollFactor(0)
       .setDepth(Depth.DEBUG)
       .setTint(Palette.N5);

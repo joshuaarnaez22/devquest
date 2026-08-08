@@ -62,6 +62,7 @@ export class FeelPlayer extends Entity {
     this.fsm = createPlayerStateMachine(this.fsmHost, 'IDLE');
     this.animator = new PlayerAnimator(this);
     this.animator.update({ state: 'IDLE', facing: 1, animPrefix: ANIM_PREFIX });
+    scene.add.existing(this);
     this.setDepth(Depth.PLAYER);
     this.setActive(true);
     this.setVisible(true);
@@ -222,9 +223,12 @@ export class FeelPlayer extends Entity {
 }
 
 export function ensurePlayerBoxTexture(scene: Phaser.Scene): void {
-  if (scene.textures.exists('player-box')) return;
+  if (scene.textures.exists('player-box')) {
+    scene.textures.remove('player-box');
+  }
   const g = scene.make.graphics({ x: 0, y: 0 });
-  g.fillStyle(0x9a97a6, 1);
+  // White base so setTintFill reads as a solid state colour.
+  g.fillStyle(0xffffff, 1);
   g.fillRect(0, 0, BODY_W, BODY_H);
   g.generateTexture('player-box', BODY_W, BODY_H);
   g.destroy();
