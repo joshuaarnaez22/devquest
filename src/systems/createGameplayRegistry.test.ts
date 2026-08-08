@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { SYSTEM_ORDER_GAMEPLAY, SYSTEM_ORDER_UI } from '@config/SystemOrder';
+import { Profiler } from '@core/Profiler';
 import { CameraSystem } from '@systems/CameraSystem';
 import { createGameplayRegistry, createGameplaySystems } from '@systems/createGameplayRegistry';
+import { DebugSystem } from '@systems/DebugSystem';
 import { InputSystem } from '@systems/InputSystem';
 import { NoOpSystem } from '@systems/NoOpSystem';
 import { ParticleSystem } from '@systems/ParticleSystem';
@@ -15,18 +17,20 @@ describe('SYSTEM_ORDER + gameplay registry', () => {
   });
 
   it('creates one system per gameplay order id', () => {
-    const systems = createGameplaySystems();
+    const profiler = new Profiler();
+    const systems = createGameplaySystems(profiler);
     expect(systems.map(s => s.id)).toEqual([...SYSTEM_ORDER_GAMEPLAY]);
     expect(systems[0]).toBeInstanceOf(InputSystem);
     expect(systems.find(s => s.id === 'camera')).toBeInstanceOf(CameraSystem);
     expect(systems.find(s => s.id === 'vfx')).toBeInstanceOf(VfxSystem);
     expect(systems.find(s => s.id === 'particles')).toBeInstanceOf(ParticleSystem);
+    expect(systems.find(s => s.id === 'debug')).toBeInstanceOf(DebugSystem);
     expect(systems.find(s => s.id === 'combat')).toBeInstanceOf(NoOpSystem);
   });
 
   it('updates systems in declared SYSTEM_ORDER_GAMEPLAY order', () => {
     const order: string[] = [];
-    const registry = createGameplayRegistry();
+    const { registry } = createGameplayRegistry();
     for (const id of SYSTEM_ORDER_GAMEPLAY) {
       const sys = registry.get(id);
       sys.update = () => {
@@ -39,7 +43,7 @@ describe('SYSTEM_ORDER + gameplay registry', () => {
 
   it('destroys systems in reverse SYSTEM_ORDER_GAMEPLAY order', () => {
     const order: string[] = [];
-    const registry = createGameplayRegistry();
+    const { registry } = createGameplayRegistry();
     for (const id of SYSTEM_ORDER_GAMEPLAY) {
       const sys = registry.get(id);
       sys.destroy = () => {
@@ -51,7 +55,7 @@ describe('SYSTEM_ORDER + gameplay registry', () => {
   });
 
   it('exposes InputSystem via get(input)', () => {
-    const registry = createGameplayRegistry();
+    const { registry } = createGameplayRegistry();
     const input = registry.get<InputSystem>('input');
     expect(input).toBeInstanceOf(InputSystem);
     expect(input.frame.moveX).toBe(0);

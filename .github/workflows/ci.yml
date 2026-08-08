@@ -44,6 +44,8 @@ jobs:
         run: npm run build
       - name: size
         run: npm run ci:size
+      - name: profiler strip
+        run: npm run ci:profiler
       - name: spelling
         run: npm run spell
       - name: atlas determinism

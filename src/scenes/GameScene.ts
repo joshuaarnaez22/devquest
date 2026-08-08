@@ -11,9 +11,11 @@ import { DEBUG_FONT_KEY, installDebugBitmapFont } from '@platform/DebugBitmapFon
 import { createGameplayRegistry } from '@systems/createGameplayRegistry';
 import { FeelDebugReadout } from '@ui/FeelDebugReadout';
 import type { GameEventMap } from '@core/GameEvents';
+import type { Profiler } from '@core/Profiler';
 import type { SystemRegistry } from '@core/SystemRegistry';
 import type { CharacterId } from '@data/CharacterTypes';
 import type { CameraFollowTarget, CameraSystem } from '@systems/CameraSystem';
+import type { DebugSystem } from '@systems/DebugSystem';
 import type { InputSystem } from '@systems/InputSystem';
 import type { ParticleSystem } from '@systems/ParticleSystem';
 import type { PlayerVfxSource, VfxSystem } from '@systems/VfxSystem';
@@ -26,15 +28,17 @@ const HERO_HOTKEYS: readonly { readonly code: number; readonly id: CharacterId }
 ];
 
 /**
- * Feel-prototype GameScene — Checkpoint C camera + M1-T17 dust VFX.
+ * Feel-prototype GameScene — Checkpoint C + VFX + M1-T18 debug overlay.
  */
 export class GameScene extends Phaser.Scene {
   private systems: SystemRegistry | undefined;
+  private profiler: Profiler | undefined;
   private player: FeelPlayer | undefined;
   private readout: FeelDebugReadout | undefined;
   private content: ContentDatabase | undefined;
   private cameraSys: CameraSystem | undefined;
   private vfxSys: VfxSystem | undefined;
+  private debugSys: DebugSystem | undefined;
   private bus: EventBus<GameEventMap> | undefined;
   private heroKeys: Phaser.Input.Keyboard.Key[] = [];
 
@@ -61,11 +65,14 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.bus = new EventBus<GameEventMap>();
-    this.systems = createGameplayRegistry();
+    const gameplay = createGameplayRegistry();
+    this.systems = gameplay.registry;
+    this.profiler = gameplay.profiler;
     this.systems.init();
     const input = this.systems.get<InputSystem>('input');
     this.cameraSys = this.systems.get<CameraSystem>('camera');
     this.vfxSys = this.systems.get<VfxSystem>('vfx');
+    this.debugSys = this.systems.get<DebugSystem>('debug');
     const particles = this.systems.get<ParticleSystem>('particles');
 
     const level = buildFeelTestLevel(this);
@@ -89,6 +96,17 @@ export class GameScene extends Phaser.Scene {
     this.cameraSys.setTarget(this.makeCameraTarget(this.player));
     this.cameraSys.snapToTarget();
 
+    const vfx = this.vfxSys;
+    this.debugSys.bind(this, {
+      profiler: this.profiler,
+      camera: this.cameras.main,
+      pools: {
+        dustStats: () => vfx.dustStats,
+        afterimageStats: () => vfx.afterimageStats,
+        particleStats: () => particles.stats,
+      },
+    });
+
     this.readout = new FeelDebugReadout(this);
     this.bindHeroHotkeys();
 
@@ -97,7 +115,7 @@ export class GameScene extends Phaser.Scene {
         4,
         CAMERA.VIEWPORT_H - 10,
         DEBUG_FONT_KEY,
-        'A/D MOVE  SPACE JUMP  K DASH  F1-F4 HERO',
+        'A/D MOVE  SPACE JUMP  K DASH  F1-F4 HERO  Ctrl+Shift+D DBG',
         6,
       )
       .setScrollFactor(0)
@@ -186,11 +204,22 @@ export class GameScene extends Phaser.Scene {
   override update(time: number, delta: number): void {
     const systems = this.systems;
     const player = this.player;
-    if (systems === undefined || player === undefined) return;
+    const debug = this.debugSys;
+    if (systems === undefined || player === undefined || debug === undefined) return;
 
     this.pollHeroHotkeys();
 
     const dt = Math.min(delta, DISPLAY.MAX_DELTA_MS);
+    debug.pollHotkeys();
+    debug.recordFrameMs(dt);
+
+    if (!debug.allowsSimulation()) {
+      this.physics.world.pause();
+      debug.update(time, dt);
+      return;
+    }
+
+    this.physics.world.resume();
     systems.update(time, dt);
     player.update(time, dt);
     player.syncAfterPhysics(time, dt);
@@ -201,13 +230,14 @@ export class GameScene extends Phaser.Scene {
     const player = this.player;
     const readout = this.readout;
     const cameraSys = this.cameraSys;
+    const debug = this.debugSys;
     if (player === undefined || readout === undefined || cameraSys === undefined) return;
 
     const dt = Math.min(delta, DISPLAY.MAX_DELTA_MS);
     cameraSys.syncFollow(dt);
 
     const body = player.body as Phaser.Physics.Arcade.Body;
-    readout.sync({
+    const snap = {
       hero: player.displayName,
       vx: body.velocity.x,
       vy: player.grounded ? 0 : player.controller.verticalVelocity,
@@ -217,6 +247,14 @@ export class GameScene extends Phaser.Scene {
       bufferActive: player.bufferActive,
       dashCooldownRemainingMs: player.dashCooldownRemainingMs,
       lastJumpHeight: player.lastJumpHeight,
+    };
+    readout.sync(snap);
+    debug?.setPlayer({
+      hero: snap.hero,
+      state: snap.state,
+      vx: snap.vx,
+      vy: snap.vy,
+      grounded: snap.grounded,
     });
     void time;
   }
@@ -229,8 +267,10 @@ export class GameScene extends Phaser.Scene {
     this.readout = undefined;
     this.systems?.destroy();
     this.systems = undefined;
+    this.profiler = undefined;
     this.cameraSys = undefined;
     this.vfxSys = undefined;
+    this.debugSys = undefined;
     this.bus = undefined;
     this.player = undefined;
     this.content = undefined;

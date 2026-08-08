@@ -25,6 +25,7 @@
     "ci:portability": "node tools/ci/check-portability.mjs",
     "ci:scenes": "node tools/ci/check-scenes.mjs",
     "ci:size": "node tools/ci/check-size.mjs",
+    "ci:profiler": "node tools/ci/check-profiler-stripped.mjs",
     "ci:schema": "node tools/ci/check-character-values.mjs",
     "ci:migrations": "echo 'migrations stub \u2014 no content yet'",
     "spell": "cspell \"src/**/*.{ts,md}\" \"tools/**/*.{mjs,md}\" \"README.md\" \"CLAUDE.md\" --no-progress",
