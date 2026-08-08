@@ -3,7 +3,7 @@ import { FEEL } from '@config/GameConstants';
 import { Entity } from '@entities/Entity';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
 import { PlayerAnimator } from '@entities/player/PlayerAnimator';
-import { PlayerController } from '@entities/player/PlayerController';
+import { PlayerController, WALL_JUMP_PUSH } from '@entities/player/PlayerController';
 import {
   createPlayerFsmHost,
   createPlayerStateMachine,
@@ -30,6 +30,12 @@ const ANIM_PREFIX = 'samurai';
  */
 const GROUND_STICK = 24;
 
+function senseWallDir(body: Phaser.Physics.Arcade.Body): -1 | 0 | 1 {
+  if (body.blocked.left || body.touching.left) return -1;
+  if (body.blocked.right || body.touching.right) return 1;
+  return 0;
+}
+
 export class FeelPlayer extends Entity {
   readonly controller: PlayerController;
   grounded = false;
@@ -49,6 +55,7 @@ export class FeelPlayer extends Entity {
   private airDashAvailable = true;
   private coyoteExpiresAt = 0;
   private jumpKind: PlayerFsmHost['jumpKind'] = null;
+  private wallDir: -1 | 0 | 1 = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, frames: InputFrameSource) {
     super(scene, x, y, 'player-box');
@@ -58,7 +65,12 @@ export class FeelPlayer extends Entity {
     body.setSize(BODY_W, BODY_H);
     body.setCollideWorldBounds(true);
     body.setAllowGravity(false);
-    body.setMaxVelocity(SAMURAI_MOVEMENT.runSpeed * 1.5, 400);
+    const maxVx = Math.max(
+      SAMURAI_MOVEMENT.dashSpeed,
+      WALL_JUMP_PUSH,
+      SAMURAI_MOVEMENT.runSpeed * 1.5,
+    );
+    body.setMaxVelocity(maxVx, 400);
     this.controller = new PlayerController(body, SAMURAI_MOVEMENT);
     this.fsmHost = createPlayerFsmHost();
     this.fsm = createPlayerStateMachine(this.fsmHost, 'IDLE');
@@ -84,10 +96,11 @@ export class FeelPlayer extends Entity {
     const frame = this.frames.frame;
     const t = now();
     this.jumpKind = null;
+    this.wallDir = senseWallDir(body);
 
     this.controller.beginFrame(delta);
 
-    if (frame.moveX !== 0) {
+    if (frame.moveX !== 0 && !this.controller.isWallJumpLocked(t)) {
       this.facing = frame.moveX;
     }
 
@@ -100,24 +113,36 @@ export class FeelPlayer extends Entity {
     if (this.controller.isDashing) {
       // Velocity locked inside tickDash; no gravity / horizontal / jump.
     } else {
-      // Includes jump buffer firing on the dash-end frame (docs/06 §5.5).
       this.resolveJump(frame, t, body.y);
-      this.controller.applyHorizontal(frame, this.moveState, this.grounded);
-      if (!this.grounded) {
-        this.controller.applyJumpCut(frame);
-        this.controller.applyGravity();
-        if (this.jumpOriginY !== null) {
-          const height = this.jumpOriginY - body.y;
-          if (height > this.lastJumpHeight) {
-            this.lastJumpHeight = height;
-          }
-        }
+      if (!this.controller.isWallJumpLocked(t)) {
+        this.controller.applyHorizontal(frame, this.moveState, this.grounded);
       }
+      this.applyVerticalMotion(frame);
     }
 
     this.coyoteActive = !this.grounded && t < this.coyoteExpiresAt;
     this.bufferActive = this.isBufferActive(frame, t);
     this.dashCooldownRemainingMs = this.controller.dashCooldownRemainingMs(t);
+  }
+
+  private applyVerticalMotion(frame: InputFrame): void {
+    if (this.grounded) return;
+    if (this.moveState === 'WALL_SLIDE') {
+      this.controller.applyWallSlide();
+      if (this.wallDir !== 0) {
+        this.facing = this.wallDir === -1 ? 1 : -1;
+      }
+      return;
+    }
+    this.controller.applyJumpCut(frame);
+    this.controller.applyGravity();
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    if (this.jumpOriginY !== null) {
+      const height = this.jumpOriginY - body.y;
+      if (height > this.lastJumpHeight) {
+        this.lastJumpHeight = height;
+      }
+    }
   }
 
   private resolveDash(frame: InputFrame, t: number): void {
@@ -143,6 +168,7 @@ export class FeelPlayer extends Entity {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const t = now();
     const frame = this.frames.frame;
+    this.wallDir = senseWallDir(body);
 
     this.refreshGrounded(body, t);
     this.syncFsmHost(frame, t);
@@ -184,11 +210,20 @@ export class FeelPlayer extends Entity {
       grounded: this.grounded,
       coyoteExpiresAt: this.coyoteExpiresAt,
       airJumpsRemaining: this.airJumpsRemaining,
-      onWall: false,
-      wallDir: 0,
+      onWall: this.canWallJump(frame, t),
+      wallDir: this.wallDir,
       now: t,
     });
     this.applyJumpResult(jump, y);
+  }
+
+  /** Wall jump only while sliding / able to slide — docs/06 §5.6. */
+  private canWallJump(frame: InputFrame, t: number): boolean {
+    if (this.grounded || this.controller.isDashing) return false;
+    if (this.controller.isWallJumpLocked(t)) return false;
+    if (this.wallDir === 0) return false;
+    if (this.moveState === 'WALL_SLIDE') return true;
+    return frame.moveX === this.wallDir && this.controller.verticalVelocity > 0;
   }
 
   private applyJumpResult(jump: ReturnType<PlayerController['tryJump']>, y: number): void {
@@ -206,6 +241,10 @@ export class FeelPlayer extends Entity {
       this.grounded = false;
       this.coyoteExpiresAt = 0;
       this.jumpOriginY = y;
+      // Restores air jump + refreshes dash (docs/06 §5.6).
+      this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
+      this.airDashAvailable = true;
+      this.controller.refreshDashCooldown();
     }
   }
 
@@ -236,12 +275,18 @@ export class FeelPlayer extends Entity {
 
   private syncFsmHost(frame: InputFrame, t: number): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
+    const locked = this.controller.isWallJumpLocked(t);
+    const onWall = !this.grounded && this.wallDir !== 0 && !this.controller.isDashing;
+    const inputToWall = onWall && !locked && frame.moveX === this.wallDir && this.wallDir !== 0;
+
     this.fsmHost.grounded = this.grounded;
     this.fsmHost.moveX = frame.moveX;
     this.fsmHost.absVx = Math.abs(body.velocity.x);
     this.fsmHost.vy = this.controller.verticalVelocity;
     this.fsmHost.airJumpsRemaining = this.airJumpsRemaining;
     this.fsmHost.withinCoyote = !this.grounded && t < this.coyoteExpiresAt;
+    this.fsmHost.onWall = onWall;
+    this.fsmHost.inputToWall = inputToWall;
     this.fsmHost.jumpKind = this.jumpKind;
     this.fsmHost.bufferedJump = this.jumpKind === 'ground' || this.isBufferActive(frame, t);
     this.fsmHost.wantsDash = frame.dashPressed;
@@ -252,6 +297,7 @@ export class FeelPlayer extends Entity {
     this.fsmHost.dashReady =
       this.controller.isDashCooldownReady(t) && (this.grounded || this.airDashAvailable);
     this.fsmHost.dashFinished = this.controller.dashFinished;
+    this.fsmHost.wallJumpLockExpired = this.controller.isWallJumpLockExpired(t);
   }
 
   private isBufferActive(frame: InputFrame, t: number): boolean {

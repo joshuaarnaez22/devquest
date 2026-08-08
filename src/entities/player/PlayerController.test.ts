@@ -3,9 +3,15 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { FEEL } from '@config/GameConstants';
+import { HEIGHT } from '@config/LevelMetrics';
 import { Rng } from '@core/Rng';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
-import { PlayerController, TURN_BOOST } from '@entities/player/PlayerController';
+import {
+  PlayerController,
+  TURN_BOOST,
+  WALL_JUMP_LOCK_MS,
+  WALL_JUMP_PUSH,
+} from '@entities/player/PlayerController';
 import type { InputFrame } from '@core/InputFrame';
 
 function moveFrame(moveX: -1 | 0 | 1): InputFrame {
@@ -456,5 +462,62 @@ describe('PlayerController dash', () => {
     ctrl.tryDash(dashPressFrame(1), DASH_CTX);
     ctrl.refreshDashCooldown();
     expect(ctrl.dashCooldownRemainingMs(DASH_CTX.now + 50)).toBe(0);
+  });
+});
+
+describe('PlayerController wall jump + slide', () => {
+  it('wall jump pushes away from wall at 150 px/s and locks 120 ms', () => {
+    const { body, ctrl } = makeController(0);
+    const start = 8_000;
+    const result = ctrl.tryJump(jumpPressFrame(), {
+      grounded: false,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: 0,
+      onWall: true,
+      wallDir: 1,
+      now: start,
+    });
+    expect(result).toEqual({ kind: 'wall', pushX: -WALL_JUMP_PUSH });
+    expect(body.velocity.x).toBe(-WALL_JUMP_PUSH);
+    expect(ctrl.verticalVelocity).toBe(SAMURAI_MOVEMENT.jumpVelocity * 0.95);
+    expect(ctrl.isWallJumpLocked(start + WALL_JUMP_LOCK_MS - 1)).toBe(true);
+    expect(ctrl.isWallJumpLockExpired(start + WALL_JUMP_LOCK_MS - 1)).toBe(false);
+    expect(ctrl.isWallJumpLocked(start + WALL_JUMP_LOCK_MS)).toBe(false);
+    expect(ctrl.isWallJumpLockExpired(start + WALL_JUMP_LOCK_MS)).toBe(true);
+  });
+
+  it('wall slide clamps fall speed to wallSlideSpeed', () => {
+    const { body, ctrl } = makeController(0);
+    ctrl.setVerticalVelocity(200);
+    ctrl.beginFrame(16.67);
+    ctrl.applyWallSlide();
+    expect(ctrl.verticalVelocity).toBe(SAMURAI_MOVEMENT.wallSlideSpeed);
+    expect(body.velocity.y).toBe(SAMURAI_MOVEMENT.wallSlideSpeed);
+  });
+
+  it('wall-jump peak × 2 clears SHAFT height (48 px)', () => {
+    const { body, ctrl } = makeController(0);
+    const frameMs = 1000 / 60;
+    const dt = frameMs / 1000;
+    let y = 0;
+    let peak = 0;
+    ctrl.beginFrame(frameMs);
+    ctrl.tryJump(jumpPressFrame(), {
+      grounded: false,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: 0,
+      onWall: true,
+      wallDir: -1,
+      now: 1,
+    });
+    for (let i = 0; i < 120; i++) {
+      ctrl.beginFrame(frameMs);
+      ctrl.applyJumpCut(jumpHeldFrame(true));
+      ctrl.applyGravity();
+      y += body.velocity.y * dt;
+      peak = Math.max(peak, -y);
+      if (ctrl.verticalVelocity >= 0 && i > 5) break;
+    }
+    expect(peak * 2).toBeGreaterThanOrEqual(HEIGHT.SHAFT);
   });
 });

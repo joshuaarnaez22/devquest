@@ -228,6 +228,24 @@ describe('PlayerStates', () => {
       expect(fsm.id).toBe('IDLE');
     });
 
+    it('WALL_JUMP → FALL when input lock expires', () => {
+      const { fsm } = drive('WALL_JUMP', h => {
+        h.vy = -100;
+        h.wallJumpLockExpired = true;
+      });
+      expect(fsm.id).toBe('FALL');
+    });
+
+    it('FALL → WALL_SLIDE when on wall toward input and falling', () => {
+      const { fsm } = drive('FALL', h => {
+        h.grounded = false;
+        h.onWall = true;
+        h.inputToWall = true;
+        h.vy = 40;
+      });
+      expect(fsm.id).toBe('WALL_SLIDE');
+    });
+
     it('WALL_SLIDE → FALL when off wall', () => {
       const { fsm } = drive('WALL_SLIDE', h => {
         h.onWall = false;

@@ -1,6 +1,6 @@
 import { Depth } from '@config/Depth';
 import { DISPLAY } from '@config/GameConstants';
-import { GAP, HEIGHT } from '@config/LevelMetrics';
+import { GAP, HEIGHT, CLEARANCE } from '@config/LevelMetrics';
 import { Palette } from '@config/Palette';
 import { DEBUG_FONT_KEY } from '@platform/DebugBitmapFont';
 import type Phaser from 'phaser';
@@ -72,6 +72,37 @@ function addLedge(ctx: BuildCtx, rise: number, name: string): void {
   ctx.floorY = topY;
 }
 
+function addShaft(ctx: BuildCtx, rise: number, name: string): void {
+  const left = ctx.x;
+  const gap = CLEARANCE.CORRIDOR_MIN;
+  const wallW = 12;
+  const topY = ctx.floorY - rise;
+  // Approach ledge
+  solid(ctx, { x: left, y: ctx.floorY, w: SEGMENT, h: PLATFORM_H }, Palette.N3);
+  // Vertical walls forming a climbable shaft (wall-jump chain).
+  solid(ctx, { x: left + SEGMENT, y: topY, w: wallW, h: rise + PLATFORM_H }, Palette.N4);
+  solid(
+    ctx,
+    { x: left + SEGMENT + wallW + gap, y: topY, w: wallW, h: rise + PLATFORM_H },
+    Palette.N4,
+  );
+  // Exit ledge at top
+  solid(
+    ctx,
+    {
+      x: left + SEGMENT + wallW + gap + wallW,
+      y: topY,
+      w: SEGMENT,
+      h: PLATFORM_H,
+    },
+    Palette.N4,
+  );
+  label(ctx.scene, left + SEGMENT + wallW + gap / 2, topY - 4, name);
+  soft(ctx, left + SEGMENT, ctx.floorY + SOFT_DROP, wallW + gap + wallW);
+  ctx.x = left + SEGMENT + wallW + gap + wallW + SEGMENT;
+  ctx.floorY = topY;
+}
+
 /**
  * Grey-box vocabulary course — every GAP_* / LEDGE_* / SHAFT from LevelMetrics.
  * Soft floors sit 32 px below gaps so failure is free (spike-00 / docs/10 §6.1).
@@ -102,7 +133,7 @@ export function buildFeelTestLevel(scene: Phaser.Scene): FeelTestLevel {
   addLedge(ctx, HEIGHT.LEDGE_M, 'LEDGE_M');
   addLedge(ctx, HEIGHT.LEDGE_L, 'LEDGE_L');
   addLedge(ctx, HEIGHT.LEDGE_XL, 'LEDGE_XL');
-  addLedge(ctx, HEIGHT.SHAFT, 'SHAFT');
+  addShaft(ctx, HEIGHT.SHAFT, 'SHAFT');
   addLedge(ctx, HEIGHT.LEDGE_NINJA, 'LEDGE_NINJA');
 
   solid(ctx, { x: ctx.x, y: ctx.floorY, w: SEGMENT * 2, h: PLATFORM_H }, Palette.N5);

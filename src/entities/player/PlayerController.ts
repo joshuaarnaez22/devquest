@@ -15,6 +15,9 @@ export const ATTACK_MOVE_SCALE = 0.4;
 /** Wall jump horizontal impulse — docs/06 §5.3 / §5.6. */
 export const WALL_JUMP_PUSH = 150;
 
+/** Horizontal input lock after wall jump — docs/06 §5.6. */
+export const WALL_JUMP_LOCK_MS = 120;
+
 /** Minimal body surface — Phaser Arcade Body satisfies this. */
 export interface ControllerBody {
   velocity: { x: number; y: number };
@@ -44,6 +47,8 @@ export class PlayerController {
   private dashCooldownUntil = 0;
   /** Latched until FSM leaves DASH. */
   private dashFinishedLatched = false;
+  /** Absolute expiry — horizontal lock after wall jump (docs/06 §5.6). */
+  private wallJumpLockUntil = 0;
 
   constructor(
     private readonly body: ControllerBody,
@@ -81,6 +86,14 @@ export class PlayerController {
 
   clearDashFinished(): void {
     this.dashFinishedLatched = false;
+  }
+
+  isWallJumpLocked(nowMs: number): boolean {
+    return nowMs < this.wallJumpLockUntil;
+  }
+
+  isWallJumpLockExpired(nowMs: number): boolean {
+    return nowMs >= this.wallJumpLockUntil;
   }
 
   /** Sync after landing / external velocity writes. */
@@ -126,6 +139,16 @@ export class PlayerController {
     const accel = opposing ? baseAccel * TURN_BOOST : baseAccel;
 
     this.body.velocity.x = approach(v, wants * maxSpeed, accel * this.dt);
+  }
+
+  /**
+   * Clamp fall speed while sliding — docs/06 §6.2 / §5.6.
+   * Call instead of {@link applyGravity} in WALL_SLIDE.
+   */
+  applyWallSlide(): void {
+    const speed = this.def.wallSlideSpeed;
+    this.trueVy = speed;
+    this.body.velocity.y = speed;
   }
 
   /**
@@ -242,6 +265,7 @@ export class PlayerController {
       const pushX = -ctx.wallDir * WALL_JUMP_PUSH;
       this.launchJump(this.def.jumpVelocity * 0.95);
       this.body.velocity.x = pushX;
+      this.wallJumpLockUntil = ctx.now + WALL_JUMP_LOCK_MS;
       this.consumeJump(pressAt);
       return { kind: 'wall', pushX };
     }

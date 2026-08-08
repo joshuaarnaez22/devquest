@@ -274,7 +274,7 @@ export function createPlayerStates(): readonly State<PlayerFsmHost, PlayerStateI
       if (host.jumpKind === 'coyote' || (host.jumpKind === 'ground' && host.withinCoyote)) {
         return 'JUMP';
       }
-      if (host.onWall && host.inputToWall) return 'WALL_SLIDE';
+      if (wallSlide(host)) return 'WALL_SLIDE';
       return undefined;
     }),
 
