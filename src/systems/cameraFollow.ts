@@ -69,7 +69,7 @@ export function tickLookAhead(
 
 /**
  * Deadzone follow: desired scroll keeps the focus point inside the deadzone
- * relative to the camera centre, then lerps at CAMERA.LERP.
+ * relative to the camera centre, then lerp-smooths at CAMERA.LERP.
  */
 export function stepAxis(opts: {
   readonly scroll: number;

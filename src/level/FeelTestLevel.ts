@@ -114,7 +114,8 @@ export function buildFeelTestLevel(scene: Phaser.Scene): FeelTestLevel {
   const ctx: BuildCtx = { scene, solids, softs, x: 0, floorY };
 
   solid(ctx, { x: 0, y: floorY, w: SEGMENT * 2, h: PLATFORM_H }, Palette.N5);
-  const spawn = { x: SEGMENT, y: floorY - 14 };
+  // Feet on platform top — FeelPlayer origin is bottom-centre (docs/14 §8.1).
+  const spawn = { x: SEGMENT, y: floorY };
   ctx.x = SEGMENT * 2;
 
   addGap(ctx, GAP.STEP, 'STEP');
