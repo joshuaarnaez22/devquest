@@ -54,17 +54,12 @@ jobs:
           H2=$(node -e "console.log(require('./tools/atlas/atlas-hashes.json').sha256)")
           test "$H1" = "$H2"
 
-  deploy:
+  # Upload and deploy are separate so "Re-run failed jobs" on deploy alone
+  # cannot create a second github-pages artifact in the same run.
+  build-pages:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: gates
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -76,5 +71,18 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build-pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
