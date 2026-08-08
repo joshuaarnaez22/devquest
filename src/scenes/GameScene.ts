@@ -47,7 +47,7 @@ export class GameScene extends Phaser.Scene {
     this.readout = new FeelDebugReadout(this);
 
     this.add
-      .bitmapText(4, DISPLAY.HEIGHT - 10, DEBUG_FONT_KEY, 'A/D MOVE  SPACE JUMP  TINT=STATE', 6)
+      .bitmapText(4, DISPLAY.HEIGHT - 10, DEBUG_FONT_KEY, 'A/D MOVE  SPACE JUMP  K/SHIFT DASH', 6)
       .setScrollFactor(0)
       .setDepth(Depth.DEBUG)
       .setTint(Palette.N5);

@@ -2,6 +2,7 @@ import { FEEL, PHYSICS } from '@config/GameConstants';
 import { approach } from '@entities/player/approach';
 import type { InputFrame } from '@core/InputFrame';
 import type { CharacterMovement } from '@entities/player/CharacterMovement';
+import type { DashContext, DashResult } from '@entities/player/Dash';
 import type { JumpContext, JumpResult } from '@entities/player/Jump';
 import type { PlayerStateId } from '@entities/player/PlayerStateId';
 
@@ -35,6 +36,14 @@ export class PlayerController {
   private jumpCutApplied = false;
   /** Last `jumpPressedAt` consumed by jump resolution (docs/06 §5.3). */
   private consumedJumpAt = 0;
+  /** Active dash — gravity off, input ignored (docs/06 §5.5). */
+  private dashing = false;
+  private dashDir: -1 | 1 = 1;
+  private dashEndsAt = 0;
+  /** Absolute expiry — cooldown measured from dash *start*. */
+  private dashCooldownUntil = 0;
+  /** Latched until FSM leaves DASH. */
+  private dashFinishedLatched = false;
 
   constructor(
     private readonly body: ControllerBody,
@@ -44,6 +53,34 @@ export class PlayerController {
   /** Convert Phaser ms delta to seconds before apply* calls. */
   beginFrame(deltaMs: number): void {
     this.dt = deltaMs / 1000;
+  }
+
+  get isDashing(): boolean {
+    return this.dashing;
+  }
+
+  /** Remaining cooldown ms (0 when ready). */
+  dashCooldownRemainingMs(nowMs: number): number {
+    return Math.max(0, this.dashCooldownUntil - nowMs);
+  }
+
+  /** True when cooldown elapsed and not mid-dash. */
+  isDashCooldownReady(nowMs: number): boolean {
+    return !this.dashing && nowMs >= this.dashCooldownUntil;
+  }
+
+  /** Landing refreshes cooldown for all heroes (docs/06 §5.5). */
+  refreshDashCooldown(): void {
+    this.dashCooldownUntil = 0;
+  }
+
+  /** True after dash duration ends until {@link clearDashFinished}. */
+  get dashFinished(): boolean {
+    return this.dashFinishedLatched;
+  }
+
+  clearDashFinished(): void {
+    this.dashFinishedLatched = false;
   }
 
   /** Sync after landing / external velocity writes. */
@@ -72,7 +109,7 @@ export class PlayerController {
 
   /** Called every frame after the FSM has set intent. */
   applyHorizontal(input: InputFrame, state: PlayerStateId, grounded: boolean): void {
-    if (this.skipsHorizontal(state)) return;
+    if (this.dashing || this.skipsHorizontal(state)) return;
 
     const wants = input.moveX;
     const v = this.body.velocity.x;
@@ -89,6 +126,58 @@ export class PlayerController {
     const accel = opposing ? baseAccel * TURN_BOOST : baseAccel;
 
     this.body.velocity.x = approach(v, wants * maxSpeed, accel * this.dt);
+  }
+
+  /**
+   * Dash start — docs/06 §5.5.
+   * Cooldown is stamped from start; velocity locked for dashDurationMs.
+   */
+  tryDash(input: InputFrame, ctx: DashContext): DashResult {
+    if (!input.dashPressed) {
+      return { kind: 'blocked' };
+    }
+    if (this.dashing) {
+      return { kind: 'blocked' };
+    }
+    const remaining = this.dashCooldownUntil - ctx.now;
+    if (remaining > 0) {
+      return { kind: 'onCooldown', remainingMs: remaining };
+    }
+    if (!ctx.grounded && !ctx.airDashAvailable) {
+      return { kind: 'blocked' };
+    }
+
+    const dirX: -1 | 1 = input.moveX !== 0 ? input.moveX : ctx.facing;
+    this.dashing = true;
+    this.dashDir = dirX;
+    this.dashEndsAt = ctx.now + this.def.dashDurationMs;
+    this.dashCooldownUntil = ctx.now + this.def.dashCooldownMs;
+    this.dashFinishedLatched = false;
+    this.lockDashVelocity();
+    return { kind: 'started', dirX };
+  }
+
+  /**
+   * Hold dash velocity; end when duration elapses.
+   * @returns true on the frame the dash ends (jump buffer should fire).
+   */
+  tickDash(nowMs: number): boolean {
+    if (!this.dashing) return false;
+    if (nowMs < this.dashEndsAt) {
+      this.lockDashVelocity();
+      return false;
+    }
+    this.dashing = false;
+    this.dashFinishedLatched = true;
+    this.trueVy = 0;
+    this.body.velocity.y = 0;
+    return true;
+  }
+
+  private lockDashVelocity(): void {
+    this.body.velocity.x = this.dashDir * this.def.dashSpeed;
+    this.trueVy = 0;
+    this.body.velocity.y = 0;
   }
 
   /**

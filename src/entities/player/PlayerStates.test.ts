@@ -186,6 +186,24 @@ describe('PlayerStates', () => {
       expect(fsm.id).toBe('DASH');
     });
 
+    it('active dash stays in DASH even when cooldown flips dashReady off', () => {
+      const { fsm } = drive('RUN', h => {
+        h.dashing = true;
+        h.dashReady = false;
+        h.wantsSpecial = true;
+        h.specialReady = true;
+      });
+      expect(fsm.id).toBe('DASH');
+    });
+
+    it('DASH → FALL when finished airborne', () => {
+      const { fsm } = drive('DASH', h => {
+        h.dashFinished = true;
+        h.grounded = false;
+      });
+      expect(fsm.id).toBe('FALL');
+    });
+
     it('SPECIAL outranks DASH', () => {
       const { fsm } = drive('IDLE', h => {
         h.wantsSpecial = true;

@@ -361,3 +361,100 @@ describe('PlayerController coyote + jump buffer', () => {
     expect(outsideOk).toBe(0);
   });
 });
+
+function dashPressFrame(moveX: -1 | 0 | 1 = 0): InputFrame {
+  return Object.freeze({
+    ...moveFrame(moveX),
+    dashPressed: true,
+  });
+}
+
+const DASH_CTX = {
+  now: 1_000,
+  facing: 1 as const,
+  grounded: true,
+  airDashAvailable: true,
+};
+
+describe('PlayerController dash', () => {
+  it('travels Samurai derived distance (260 × 0.15 = 39 px)', () => {
+    const { body, ctrl } = makeController(0);
+    const start = DASH_CTX.now;
+    const result = ctrl.tryDash(dashPressFrame(1), DASH_CTX);
+    expect(result).toEqual({ kind: 'started', dirX: 1 });
+
+    const frameMs = 1000 / 60;
+    let x = 0;
+    let t = start;
+    const end = start + SAMURAI_MOVEMENT.dashDurationMs;
+    while (t < end) {
+      ctrl.beginFrame(frameMs);
+      const step = Math.min(frameMs, end - t);
+      t += step;
+      ctrl.tickDash(t);
+      x += body.velocity.x * (step / 1000);
+    }
+    expect(x).toBeCloseTo(SAMURAI_MOVEMENT.dashSpeed * (SAMURAI_MOVEMENT.dashDurationMs / 1000), 1);
+    expect(x).toBeCloseTo(39, 1);
+  });
+
+  it('cooldown is measured from dash start, not end', () => {
+    const { ctrl } = makeController(0);
+    const start = 5_000;
+    ctrl.tryDash(dashPressFrame(1), { ...DASH_CTX, now: start });
+
+    // Mid-dash: still cooling.
+    expect(ctrl.dashCooldownRemainingMs(start + 100)).toBe(SAMURAI_MOVEMENT.dashCooldownMs - 100);
+
+    // Dash has ended (150 ms) but cooldown (500 ms) still has 350 ms left.
+    ctrl.tickDash(start + SAMURAI_MOVEMENT.dashDurationMs);
+    expect(ctrl.isDashing).toBe(false);
+    const afterEnd = start + SAMURAI_MOVEMENT.dashDurationMs;
+    expect(ctrl.dashCooldownRemainingMs(afterEnd)).toBe(
+      SAMURAI_MOVEMENT.dashCooldownMs - SAMURAI_MOVEMENT.dashDurationMs,
+    );
+    expect(ctrl.tryDash(dashPressFrame(1), { ...DASH_CTX, now: afterEnd }).kind).toBe('onCooldown');
+
+    // Ready exactly at start + cooldown.
+    const readyAt = start + SAMURAI_MOVEMENT.dashCooldownMs;
+    expect(ctrl.dashCooldownRemainingMs(readyAt)).toBe(0);
+    expect(ctrl.tryDash(dashPressFrame(1), { ...DASH_CTX, now: readyAt }).kind).toBe('started');
+  });
+
+  it('uses facing when moveX is 0', () => {
+    const { body, ctrl } = makeController(0);
+    const result = ctrl.tryDash(dashPressFrame(0), { ...DASH_CTX, facing: -1 });
+    expect(result).toEqual({ kind: 'started', dirX: -1 });
+    expect(body.velocity.x).toBe(-SAMURAI_MOVEMENT.dashSpeed);
+  });
+
+  it('blocks a second air dash until refreshed', () => {
+    const { ctrl } = makeController(0);
+    const air = { ...DASH_CTX, grounded: false, airDashAvailable: true, now: 2_000 };
+    expect(ctrl.tryDash(dashPressFrame(1), air).kind).toBe('started');
+    ctrl.tickDash(2_000 + SAMURAI_MOVEMENT.dashDurationMs);
+    ctrl.refreshDashCooldown();
+    const blocked = ctrl.tryDash(dashPressFrame(1), {
+      ...air,
+      now: 3_000,
+      airDashAvailable: false,
+    });
+    expect(blocked.kind).toBe('blocked');
+  });
+
+  it('ignores horizontal input while dashing', () => {
+    const { body, ctrl } = makeController(0);
+    ctrl.tryDash(dashPressFrame(1), DASH_CTX);
+    ctrl.beginFrame(16.67);
+    ctrl.tickDash(DASH_CTX.now + 16.67);
+    ctrl.applyHorizontal(moveFrame(-1), 'DASH', true);
+    expect(body.velocity.x).toBe(SAMURAI_MOVEMENT.dashSpeed);
+  });
+
+  it('landing refresh clears cooldown early', () => {
+    const { ctrl } = makeController(0);
+    ctrl.tryDash(dashPressFrame(1), DASH_CTX);
+    ctrl.refreshDashCooldown();
+    expect(ctrl.dashCooldownRemainingMs(DASH_CTX.now + 50)).toBe(0);
+  });
+});

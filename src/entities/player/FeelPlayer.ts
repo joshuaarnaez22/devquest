@@ -45,6 +45,8 @@ export class FeelPlayer extends Entity {
   private facing: -1 | 1 = 1;
   private jumpOriginY: number | null = null;
   private airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
+  /** One air dash per airborne period — docs/06 §5.5. */
+  private airDashAvailable = true;
   private coyoteExpiresAt = 0;
   private jumpKind: PlayerFsmHost['jumpKind'] = null;
 
@@ -74,7 +76,7 @@ export class FeelPlayer extends Entity {
   }
 
   /**
-   * Pre-display tick (after Arcade this frame): jump, move, gravity when airborne.
+   * Pre-display tick (after Arcade this frame): dash, jump, move, gravity.
    * Call {@link syncAfterPhysics} on Scene POST_UPDATE afterward.
    */
   protected override onUpdate(_time: number, delta: number): void {
@@ -84,25 +86,52 @@ export class FeelPlayer extends Entity {
     this.jumpKind = null;
 
     this.controller.beginFrame(delta);
-    this.resolveJump(frame, t, body.y);
-    this.controller.applyHorizontal(frame, this.moveState, this.grounded);
 
-    if (!this.grounded) {
-      this.controller.applyJumpCut(frame);
-      this.controller.applyGravity();
-      if (this.jumpOriginY !== null) {
-        const height = this.jumpOriginY - body.y;
-        if (height > this.lastJumpHeight) {
-          this.lastJumpHeight = height;
+    if (frame.moveX !== 0) {
+      this.facing = frame.moveX;
+    }
+
+    // Dash outranks jump (docs/06 §6.3); jump during dash stays buffered.
+    if (!this.controller.isDashing) {
+      this.resolveDash(frame, t);
+    }
+
+    this.controller.tickDash(t);
+    if (this.controller.isDashing) {
+      // Velocity locked inside tickDash; no gravity / horizontal / jump.
+    } else {
+      // Includes jump buffer firing on the dash-end frame (docs/06 §5.5).
+      this.resolveJump(frame, t, body.y);
+      this.controller.applyHorizontal(frame, this.moveState, this.grounded);
+      if (!this.grounded) {
+        this.controller.applyJumpCut(frame);
+        this.controller.applyGravity();
+        if (this.jumpOriginY !== null) {
+          const height = this.jumpOriginY - body.y;
+          if (height > this.lastJumpHeight) {
+            this.lastJumpHeight = height;
+          }
         }
       }
     }
 
     this.coyoteActive = !this.grounded && t < this.coyoteExpiresAt;
     this.bufferActive = this.isBufferActive(frame, t);
+    this.dashCooldownRemainingMs = this.controller.dashCooldownRemainingMs(t);
+  }
 
-    if (frame.moveX !== 0) {
-      this.facing = frame.moveX;
+  private resolveDash(frame: InputFrame, t: number): void {
+    const result = this.controller.tryDash(frame, {
+      now: t,
+      facing: this.facing,
+      grounded: this.grounded,
+      airDashAvailable: this.airDashAvailable,
+    });
+    if (result.kind !== 'started') return;
+
+    this.coyoteExpiresAt = 0;
+    if (!this.grounded) {
+      this.airDashAvailable = false;
     }
   }
 
@@ -112,12 +141,27 @@ export class FeelPlayer extends Entity {
    */
   syncAfterPhysics(time = 0, delta = 0): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const wasGrounded = this.grounded;
-    const rising = this.controller.verticalVelocity < 0;
-    const onFloor = body.blocked.down || body.touching.down;
     const t = now();
     const frame = this.frames.frame;
 
+    this.refreshGrounded(body, t);
+    this.syncFsmHost(frame, t);
+    tickPlayerFsm(this.fsm, { time, delta });
+    if (this.fsm.id !== 'DASH') {
+      this.controller.clearDashFinished();
+    }
+    this.animator.update({
+      state: this.fsm.id,
+      facing: this.facing,
+      animPrefix: ANIM_PREFIX,
+    });
+    this.jumpKind = null;
+  }
+
+  private refreshGrounded(body: Phaser.Physics.Arcade.Body, t: number): void {
+    const wasGrounded = this.grounded;
+    const rising = this.controller.verticalVelocity < 0;
+    const onFloor = body.blocked.down || body.touching.down;
     this.grounded = !rising && onFloor;
 
     if (this.grounded && !wasGrounded) {
@@ -127,19 +171,12 @@ export class FeelPlayer extends Entity {
       this.coyoteExpiresAt = t + FEEL.COYOTE_TIME;
     }
 
-    if (this.grounded) {
-      this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
+    if (!this.grounded) return;
+    this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
+    this.airDashAvailable = true;
+    if (!this.controller.isDashing) {
       this.controller.armGroundStick(GROUND_STICK);
     }
-
-    this.syncFsmHost(frame, t);
-    tickPlayerFsm(this.fsm, { time, delta });
-    this.animator.update({
-      state: this.fsm.id,
-      facing: this.facing,
-      animPrefix: ANIM_PREFIX,
-    });
-    this.jumpKind = null;
   }
 
   private resolveJump(frame: InputFrame, t: number, y: number): void {
@@ -179,6 +216,8 @@ export class FeelPlayer extends Entity {
     }
     this.controller.setVerticalVelocity(0);
     this.coyoteExpiresAt = 0;
+    this.airDashAvailable = true;
+    this.controller.refreshDashCooldown();
 
     const frame = this.frames.frame;
     const jump = this.controller.tryJump(frame, {
@@ -206,6 +245,10 @@ export class FeelPlayer extends Entity {
     this.fsmHost.wantsAttack = frame.attackPressed;
     this.fsmHost.wantsSpecial = frame.specialPressed;
     this.fsmHost.downHeld = frame.moveY > 0;
+    this.fsmHost.dashing = this.controller.isDashing;
+    this.fsmHost.dashReady =
+      this.controller.isDashCooldownReady(t) && (this.grounded || this.airDashAvailable);
+    this.fsmHost.dashFinished = this.controller.dashFinished;
   }
 
   private isBufferActive(frame: InputFrame, t: number): boolean {

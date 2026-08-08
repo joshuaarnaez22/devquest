@@ -124,6 +124,8 @@ export interface PlayerFsmHost {
   downHeld: boolean;
   damaged: boolean;
   hp: number;
+  /** Physics already in a dash — keep FSM in DASH even if dashReady flipped. */
+  dashing: boolean;
   dashReady: boolean;
   specialReady: boolean;
   dashFinished: boolean;
@@ -156,6 +158,7 @@ export function createPlayerFsmHost(): PlayerFsmHost {
     downHeld: false,
     damaged: false,
     hp: 1,
+    dashing: false,
     dashReady: false,
     specialReady: false,
     dashFinished: false,
@@ -170,6 +173,7 @@ export function createPlayerFsmHost(): PlayerFsmHost {
 /**
  * Interrupt priority — docs/06 §6.3.
  * DEATH > HURT > SPECIAL > DASH > JUMP > ATTACK > (caller movement).
+ * Active dash is not player-cancellable (docs/06 §5.5).
  */
 function interruptPriority(
   host: PlayerFsmHost,
@@ -177,8 +181,16 @@ function interruptPriority(
 ): PlayerStateId | undefined {
   const lethal = lethalInterrupt(host);
   if (lethal !== undefined) return lethal;
+  if (host.dashing) return 'DASH';
   if (host.wantsSpecial && host.specialReady) return 'SPECIAL';
   if (host.wantsDash && host.dashReady) return 'DASH';
+  return softInterrupts(host, opts);
+}
+
+function softInterrupts(
+  host: PlayerFsmHost,
+  opts: { readonly allowJump?: boolean; readonly allowAttack?: boolean },
+): PlayerStateId | undefined {
   if (opts.allowJump !== false) {
     const jump = jumpFamily(host);
     if (jump !== undefined) return jump;
@@ -247,7 +259,7 @@ export function createPlayerStates(): readonly State<PlayerFsmHost, PlayerStateI
 
     state('AIR_JUMP', host => {
       // Diagram has no AIR_JUMP → HURT; only dash / attack / wall / fall.
-      if (host.wantsDash && host.dashReady) return 'DASH';
+      if (host.dashing || (host.wantsDash && host.dashReady)) return 'DASH';
       if (host.wantsAttack) return 'AIR_ATTACK';
       if (wallSlide(host)) return 'WALL_SLIDE';
       if (host.vy >= 0) return 'FALL';
@@ -290,7 +302,7 @@ export function createPlayerStates(): readonly State<PlayerFsmHost, PlayerStateI
 
     state('ATTACK_1', host => {
       if (host.damaged) return 'HURT';
-      if (host.wantsDash && host.dashReady) return 'DASH';
+      if (host.dashing || (host.wantsDash && host.dashReady)) return 'DASH';
       if (host.jumpKind === 'ground' || host.jumpKind === 'coyote') return 'JUMP';
       if (host.wantsAttack && host.comboWindowOpen) return 'ATTACK_2';
       if (host.animComplete) return 'IDLE';
@@ -299,7 +311,7 @@ export function createPlayerStates(): readonly State<PlayerFsmHost, PlayerStateI
 
     state('ATTACK_2', host => {
       if (host.damaged) return 'HURT';
-      if (host.wantsDash && host.dashReady) return 'DASH';
+      if (host.dashing || (host.wantsDash && host.dashReady)) return 'DASH';
       if (host.wantsAttack && host.comboWindowOpen && host.comboLength === 3) return 'ATTACK_3';
       if (host.animComplete) return 'IDLE';
       return undefined;
