@@ -174,9 +174,9 @@ export class FeelPlayer extends Entity {
     if (!this.grounded) return;
     this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
     this.airDashAvailable = true;
-    if (!this.controller.isDashing) {
-      this.controller.armGroundStick(GROUND_STICK);
-    }
+    // Keep stick during ground dash — vy=0 drops Arcade floor flags, then a
+    // false re-land was calling refreshDashCooldown and wiping the remaining CD.
+    this.controller.armGroundStick(GROUND_STICK);
   }
 
   private resolveJump(frame: InputFrame, t: number, y: number): void {
@@ -217,6 +217,9 @@ export class FeelPlayer extends Entity {
     this.controller.setVerticalVelocity(0);
     this.coyoteExpiresAt = 0;
     this.airDashAvailable = true;
+    // Landing refresh is for returning from the air (docs/06 §5.5). A ground
+    // dash must keep its start-based cooldown — do not clear mid-timer here
+    // unless we actually left the ground (this method only runs on that edge).
     this.controller.refreshDashCooldown();
 
     const frame = this.frames.frame;
