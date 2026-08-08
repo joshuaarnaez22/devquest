@@ -41,6 +41,7 @@ export class GameScene extends Phaser.Scene {
   private debugSys: DebugSystem | undefined;
   private bus: EventBus<GameEventMap> | undefined;
   private heroKeys: Phaser.Input.Keyboard.Key[] = [];
+  private controlsHint: Phaser.GameObjects.BitmapText | undefined;
 
   constructor() {
     super('Game');
@@ -105,12 +106,16 @@ export class GameScene extends Phaser.Scene {
         afterimageStats: () => vfx.afterimageStats,
         particleStats: () => particles.stats,
       },
+      onVisibility: visible => {
+        this.readout?.setVisible(!visible);
+        this.controlsHint?.setVisible(!visible);
+      },
     });
 
     this.readout = new FeelDebugReadout(this);
     this.bindHeroHotkeys();
 
-    this.add
+    this.controlsHint = this.add
       .bitmapText(
         4,
         CAMERA.VIEWPORT_H - 10,
@@ -248,8 +253,9 @@ export class GameScene extends Phaser.Scene {
       dashCooldownRemainingMs: player.dashCooldownRemainingMs,
       lastJumpHeight: player.lastJumpHeight,
     };
-    readout.setVisible(debug === undefined || !debug.overlayVisible);
-    if (debug === undefined || !debug.overlayVisible) {
+    const showFeel = debug === undefined || !debug.overlayVisible;
+    readout.setVisible(showFeel);
+    if (showFeel) {
       readout.sync(snap);
     }
     debug?.setPlayer({
@@ -268,6 +274,8 @@ export class GameScene extends Phaser.Scene {
     this.heroKeys = [];
     this.readout?.destroy();
     this.readout = undefined;
+    this.controlsHint?.destroy();
+    this.controlsHint = undefined;
     this.systems?.destroy();
     this.systems = undefined;
     this.profiler = undefined;

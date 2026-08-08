@@ -25,16 +25,19 @@ export interface DebugPoolSource {
   particleStats(): PoolStats;
 }
 
+const PANEL_W = 128;
+const PANEL_H = 140;
+const FONT_SIZE = 8;
+
 /**
  * Production debug overlay — Ctrl+Shift+D (docs/01 §6.2, docs/15 §9.1).
- * M1: sparkline, system bars, pools, heap Δ60s, player readout, F8/F10.
+ * Opaque left panel + 5×7 font so labels stay human-readable at 320×180.
  */
 export class DebugSystem implements System {
   readonly id = 'debug';
   enabled = true;
   readonly runsWhilePaused = true;
 
-  private scene: Phaser.Scene | null = null;
   private profiler: Profiler | null = null;
   private pools: DebugPoolSource | null = null;
   private cam: Phaser.Cameras.Scene2D.Camera | null = null;
@@ -54,6 +57,7 @@ export class DebugSystem implements System {
   private text: Phaser.GameObjects.BitmapText | null = null;
   private sparkGfx: Phaser.GameObjects.Graphics | null = null;
   private cullGfx: Phaser.GameObjects.Graphics | null = null;
+  private onVisibility: ((visible: boolean) => void) | null = null;
 
   private player: DebugPlayerSnapshot | null = null;
   private prevToggle = false;
@@ -67,36 +71,37 @@ export class DebugSystem implements System {
       readonly profiler: Profiler;
       readonly pools: DebugPoolSource;
       readonly camera: Phaser.Cameras.Scene2D.Camera;
+      readonly onVisibility?: (visible: boolean) => void;
     },
   ): void {
-    this.scene = scene;
     this.profiler = opts.profiler;
     this.pools = opts.pools;
     this.cam = opts.camera;
+    this.onVisibility = opts.onVisibility ?? null;
     Keyboard.ensureListening();
 
-    // Full-bleed panel on the left — opaque so 4×6 glyphs stay readable.
     this.root = scene.add
       .container(0, 0)
       .setScrollFactor(0)
       .setDepth(Depth.DEBUG)
       .setVisible(false);
+
     this.panelGfx = scene.add.graphics().setScrollFactor(0);
     this.sparkGfx = scene.add.graphics().setScrollFactor(0);
     this.text = scene.add
-      .bitmapText(4, 30, DEBUG_FONT_KEY, '', 6)
+      .bitmapText(3, 24, DEBUG_FONT_KEY, '', FONT_SIZE)
       .setTint(Palette.N7)
       .setScrollFactor(0);
     this.root.add([this.panelGfx, this.sparkGfx, this.text]);
 
-    this.cullGfx = scene.add.graphics().setDepth(Depth.DEBUG).setVisible(false);
+    // World-space — below UI so boxes never slice through the panel.
+    this.cullGfx = scene.add.graphics().setDepth(Depth.VFX_WORLD).setVisible(false);
   }
 
   setPlayer(snap: DebugPlayerSnapshot | null): void {
     this.player = snap;
   }
 
-  /** When frame-step is on, simulation runs only after F8 arms a step. */
   allowsSimulation(): boolean {
     if (!this.frameStepOn) return true;
     if (!this.stepArmed) return false;
@@ -116,7 +121,6 @@ export class DebugSystem implements System {
     return this.frameStepOn;
   }
 
-  /** Call every Scene.update before deciding whether to simulate. */
   pollHotkeys(): void {
     this.pollOverlayToggle();
     this.pollFrameStep();
@@ -130,6 +134,7 @@ export class DebugSystem implements System {
     if (toggleHeld && !this.prevToggle) {
       this.overlayOn = !this.overlayOn;
       this.root?.setVisible(this.overlayOn);
+      this.onVisibility?.(this.overlayOn);
     }
     this.prevToggle = toggleHeld;
   }
@@ -163,7 +168,6 @@ export class DebugSystem implements System {
     this.prevF10 = f10;
   }
 
-  /** Record wall-clock frame length (call once per Scene.update). */
   recordFrameMs(deltaMs: number): void {
     this.frameRing.push(deltaMs);
   }
@@ -182,10 +186,10 @@ export class DebugSystem implements System {
     this.text = null;
     this.sparkGfx = null;
     this.cullGfx = null;
-    this.scene = null;
     this.profiler = null;
     this.pools = null;
     this.cam = null;
+    this.onVisibility = null;
   }
 
   private sampleHeap(delta: number): void {
@@ -202,24 +206,20 @@ export class DebugSystem implements System {
     const label = this.text;
     if (panel === null || gfx === null || label === null) return;
 
-    const body = this.buildText();
-    label.setText(body);
-
-    const panelW = 152;
-    const panelH = Math.min(148, Math.max(90, label.height + 34));
+    label.setText(this.buildText());
 
     panel.clear();
-    panel.fillStyle(Palette.N0, 0.92);
-    panel.fillRect(0, 0, panelW, panelH);
-    panel.lineStyle(1, Palette.N3, 1);
-    panel.strokeRect(0, 0, panelW, panelH);
+    panel.fillStyle(Palette.N0, 1);
+    panel.fillRect(0, 0, PANEL_W, PANEL_H);
+    panel.lineStyle(1, Palette.S3, 1);
+    panel.strokeRect(0, 0, PANEL_W, PANEL_H);
 
     gfx.clear();
     const n = this.frameRing.copyChronological(this.sparkScratch);
-    const sparkX = 4;
-    const sparkY = 4;
-    const w = panelW - 8;
-    const h = 22;
+    const sparkX = 3;
+    const sparkY = 3;
+    const w = PANEL_W - 6;
+    const h = 18;
     const maxMs = DEBUG.SPARKLINE_MAX_MS;
     const budgetY = sparkY + h * (1 - DEBUG.FRAME_BUDGET_MS / maxMs);
 
@@ -242,43 +242,36 @@ export class DebugSystem implements System {
 
   private buildText(): string {
     const frame = this.frameRing.latest();
-    const fps = frame > 0 ? 1000 / frame : 0;
+    const fps = frame > 0 ? Math.round(1000 / frame) : 0;
     const lines: string[] = [
-      `FPS ${fps.toFixed(0)}  ${frame.toFixed(1)} MS`,
-      this.frameStepOn ? 'STEP ON  F8 STEP  ESC OUT' : 'F8 STEP  F10 CULL',
-      '',
-      'SYSTEMS MS',
+      `${fps}FPS ${frame.toFixed(1)}MS`,
+      this.frameStepOn ? 'STEP F8/ESC' : 'F8 STEP F10 CULL',
     ];
 
     const profiler = this.profiler;
     if (profiler !== null) {
-      const ids = ['input', 'vfx', 'particles', 'camera', 'debug'] as const;
-      for (const id of ids) {
-        const ms = profiler.sampleMs(id);
-        lines.push(`${id.toUpperCase().padEnd(10)} ${ms.toFixed(2)}`);
-      }
-      if (!profiler.enabled) {
-        lines.push('NO PROFILER');
-      }
+      lines.push(
+        `IN ${ms(profiler.sampleMs('input'))} VFX ${ms(profiler.sampleMs('vfx'))}`,
+        `PT ${ms(profiler.sampleMs('particles'))} CAM ${ms(profiler.sampleMs('camera'))}`,
+        `DBG ${ms(profiler.sampleMs('debug'))}`,
+      );
     }
 
-    lines.push('', 'POOLS L/P/MAX');
     const pools = this.pools;
     if (pools !== null) {
-      lines.push(fmtPool('DUST', pools.dustStats(), VFX.DUST_POOL_MAX));
-      lines.push(fmtPool('GHOST', pools.afterimageStats(), VFX.AFTERIMAGE_POOL_MAX));
-      lines.push(fmtPool('PART', pools.particleStats(), VFX.PARTICLE_POOL_MAX));
+      lines.push(
+        fmtPool('DUST', pools.dustStats(), VFX.DUST_POOL_MAX),
+        fmtPool('GHOST', pools.afterimageStats(), VFX.AFTERIMAGE_POOL_MAX),
+        fmtPool('PART', pools.particleStats(), VFX.PARTICLE_POOL_MAX),
+      );
     }
 
-    lines.push('', this.heapLine());
+    lines.push(this.heapLine());
 
     const p = this.player;
     if (p !== null) {
-      lines.push(
-        '',
-        `${p.hero.toUpperCase()}  ${p.state}`,
-        `VX ${p.vx.toFixed(0)} VY ${p.vy.toFixed(0)} GND ${p.grounded ? 'Y' : 'N'}`,
-      );
+      lines.push(`${p.hero} ${p.state}`);
+      lines.push(`VX${fmt(p.vx)} VY${fmt(p.vy)} ${p.grounded ? 'GND' : 'AIR'}`);
     }
     return lines.join('\n');
   }
@@ -292,7 +285,7 @@ export class DebugSystem implements System {
     const delta = cur - oldest;
     const sign = delta >= 0 ? '+' : '-';
     const ok = Math.abs(delta) < 512 * 1024 ? 'OK' : 'BAD';
-    return `HEAP ${formatHeapMb(cur)}  D60 ${sign}${formatHeapMb(Math.abs(delta))} ${ok}`;
+    return `HEAP ${formatHeapMb(cur)}${sign}${formatHeapMb(Math.abs(delta))} ${ok}`;
   }
 
   private redrawCullMargins(): void {
@@ -304,14 +297,14 @@ export class DebugSystem implements System {
     const activate = DEBUG.CULL_ACTIVATION_PX;
     const deactivate = DEBUG.CULL_DEACTIVATION_PX;
 
-    gfx.lineStyle(1, Palette.G4, 0.7);
+    gfx.lineStyle(1, Palette.G4, 0.55);
     gfx.strokeRect(
       view.x - activate,
       view.y - activate,
       view.width + activate * 2,
       view.height + activate * 2,
     );
-    gfx.lineStyle(1, Palette.S0, 0.5);
+    gfx.lineStyle(1, Palette.S0, 0.4);
     gfx.strokeRect(
       view.x - deactivate,
       view.y - deactivate,
@@ -321,6 +314,14 @@ export class DebugSystem implements System {
   }
 }
 
+function ms(n: number): string {
+  return n.toFixed(1).padStart(4, ' ');
+}
+
+function fmt(n: number): string {
+  return n.toFixed(0).padStart(4, ' ');
+}
+
 function fmtPool(name: string, s: PoolStats, max: number): string {
-  return `${name.padEnd(10)} ${s.live} / ${s.peak} / ${max}`;
+  return `${name} ${s.live}/${s.peak}/${max}`;
 }
