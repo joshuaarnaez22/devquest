@@ -33,6 +33,8 @@ export class PlayerController {
   private trueVy = 0;
   /** Guards variable jump cut — reset on every launch (docs/06 §5.4). */
   private jumpCutApplied = false;
+  /** Last `jumpPressedAt` consumed by jump resolution (docs/06 §5.3). */
+  private consumedJumpAt = 0;
 
   constructor(
     private readonly body: ControllerBody,
@@ -61,6 +63,11 @@ export class PlayerController {
 
   get verticalVelocity(): number {
     return this.trueVy;
+  }
+
+  /** Whether `jumpPressedAt` is still an unconsumed buffer stamp. */
+  hasUnconsumedJumpBuffer(jumpPressedAt: number): boolean {
+    return jumpPressedAt > 0 && jumpPressedAt !== this.consumedJumpAt;
   }
 
   /** Called every frame after the FSM has set intent. */
@@ -116,21 +123,31 @@ export class PlayerController {
 
   /**
    * Jump resolution — first match wins (docs/06 §5.3).
-   * Full coyote/buffer feel lands in M1-T8; ground jump is the S06 verify path.
+   * Buffer: `jumpPressed` or unconsumed `jumpPressedAt` within JUMP_BUFFER.
+   * Successful jumps and grounded misses consume the press; airborne misses keep
+   * the buffer for coyote / land (consume-on-contact).
    */
   tryJump(input: InputFrame, ctx: JumpContext): JumpResult {
-    // Edge for now; buffer consume-on-land is M1-T8.
-    if (!input.jumpPressed) {
+    this.expireJumpBuffer(input, ctx.now);
+
+    const pressAt = input.jumpPressedAt;
+    const buffered =
+      pressAt > 0 &&
+      ctx.now - pressAt <= FEEL.JUMP_BUFFER &&
+      pressAt !== this.consumedJumpAt;
+    if (!input.jumpPressed && !buffered) {
       return { kind: 'none' };
     }
 
     if (ctx.grounded) {
       this.launchJump(this.def.jumpVelocity);
+      this.consumeJump(pressAt);
       return { kind: 'ground' };
     }
 
     if (ctx.now < ctx.coyoteExpiresAt) {
       this.launchJump(this.def.jumpVelocity);
+      this.consumeJump(pressAt);
       return { kind: 'coyote' };
     }
 
@@ -138,6 +155,7 @@ export class PlayerController {
       const pushX = -ctx.wallDir * WALL_JUMP_PUSH;
       this.launchJump(this.def.jumpVelocity * 0.95);
       this.body.velocity.x = pushX;
+      this.consumeJump(pressAt);
       return { kind: 'wall', pushX };
     }
 
@@ -145,10 +163,25 @@ export class PlayerController {
       // vy = min(vy, 0) then set scaled air-jump velocity (docs/06 §5.3).
       this.trueVy = Math.min(this.trueVy, 0);
       this.launchJump(this.def.jumpVelocity * this.def.airJumpScale);
+      this.consumeJump(pressAt);
       return { kind: 'air', remaining: ctx.airJumpsRemaining - 1 };
     }
 
+    // Airborne miss — keep buffer for coyote / land; expiry consumes separately.
     return { kind: 'none' };
+  }
+
+  private expireJumpBuffer(input: InputFrame, nowMs: number): void {
+    const pressAt = input.jumpPressedAt;
+    if (pressAt > 0 && nowMs - pressAt > FEEL.JUMP_BUFFER) {
+      this.consumeJump(pressAt);
+    }
+  }
+
+  private consumeJump(pressAt: number): void {
+    if (pressAt > 0) {
+      this.consumedJumpAt = pressAt;
+    }
   }
 
   private launchJump(vy: number): void {

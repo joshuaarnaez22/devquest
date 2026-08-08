@@ -77,10 +77,7 @@ export class FeelPlayer extends Entity {
     }
 
     this.coyoteActive = !this.grounded && t < this.coyoteExpiresAt;
-    this.bufferActive =
-      frame.jumpPressedAt > 0 &&
-      t - frame.jumpPressedAt <= FEEL.JUMP_BUFFER &&
-      !frame.jumpPressed;
+    this.bufferActive = this.isBufferActive(frame, t);
 
     if (frame.moveX !== 0) {
       this.setFlipX(frame.moveX < 0);
@@ -96,18 +93,20 @@ export class FeelPlayer extends Entity {
     const wasGrounded = this.grounded;
     const rising = this.controller.verticalVelocity < 0;
     const onFloor = body.blocked.down || body.touching.down;
+    const t = now();
 
     this.grounded = !rising && onFloor;
 
     if (this.grounded && !wasGrounded) {
-      this.onLanded(body.y);
+      this.onLanded(body.y, t);
     } else if (!this.grounded && wasGrounded && !rising) {
+      // Walk-off — start coyote (jump path clears grounded before this runs).
       this.jumpOriginY = body.y;
+      this.coyoteExpiresAt = t + FEEL.COYOTE_TIME;
     }
 
     if (this.grounded) {
       this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
-      // trueVy stays 0; body keeps stick for next world.update
       this.controller.armGroundStick(GROUND_STICK);
     }
 
@@ -123,6 +122,13 @@ export class FeelPlayer extends Entity {
       wallDir: 0,
       now: t,
     });
+    this.applyJumpResult(jump, y);
+  }
+
+  private applyJumpResult(
+    jump: ReturnType<PlayerController['tryJump']>,
+    y: number,
+  ): void {
     if (jump.kind === 'ground' || jump.kind === 'coyote') {
       this.grounded = false;
       this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
@@ -131,7 +137,13 @@ export class FeelPlayer extends Entity {
       this.moveState = 'JUMP';
     } else if (jump.kind === 'air') {
       this.airJumpsRemaining = jump.remaining;
+      this.coyoteExpiresAt = 0;
       this.moveState = 'AIR_JUMP';
+    } else if (jump.kind === 'wall') {
+      this.grounded = false;
+      this.coyoteExpiresAt = 0;
+      this.jumpOriginY = y;
+      this.moveState = 'WALL_JUMP';
     }
   }
 
@@ -147,12 +159,36 @@ export class FeelPlayer extends Entity {
     this.moveState = frame.moveX !== 0 ? 'RUN' : 'IDLE';
   }
 
-  private onLanded(y: number): void {
+  private onLanded(y: number, t: number): void {
     if (this.jumpOriginY !== null) {
       this.lastJumpHeight = Math.max(0, this.jumpOriginY - y);
       this.jumpOriginY = null;
     }
     this.controller.setVerticalVelocity(0);
+    this.coyoteExpiresAt = 0;
+
+    // Consume jump buffer on ground contact (docs/06 §5.3).
+    const frame = this.frames.frame;
+    const jump = this.controller.tryJump(frame, {
+      grounded: true,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: this.airJumpsRemaining,
+      onWall: false,
+      wallDir: 0,
+      now: t,
+    });
+    if (jump.kind !== 'none') {
+      this.applyJumpResult(jump, y);
+    }
+  }
+
+  private isBufferActive(frame: InputFrame, t: number): boolean {
+    return (
+      frame.jumpPressedAt > 0 &&
+      t - frame.jumpPressedAt <= FEEL.JUMP_BUFFER &&
+      !frame.jumpPressed &&
+      this.controller.hasUnconsumedJumpBuffer(frame.jumpPressedAt)
+    );
   }
 }
 

@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { FEEL } from '@config/GameConstants';
+import { Rng } from '@core/Rng';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
 import { PlayerController, TURN_BOOST } from '@entities/player/PlayerController';
 import type { InputFrame } from '@core/InputFrame';
@@ -219,5 +221,143 @@ describe('PlayerController jump + gravity', () => {
     ctrl.tryJump(jumpPressFrame(), JUMP_CTX);
     expect(body.velocity.y).toBe(SAMURAI_MOVEMENT.jumpVelocity);
     expect(ctrl.verticalVelocity).toBe(SAMURAI_MOVEMENT.jumpVelocity);
+  });
+});
+
+function jumpAt(pressAt: number, opts: { pressed?: boolean; held?: boolean } = {}): InputFrame {
+  return Object.freeze({
+    ...moveFrame(0),
+    jumpPressed: opts.pressed ?? false,
+    jumpHeld: opts.held ?? opts.pressed ?? false,
+    jumpPressedAt: pressAt,
+  });
+}
+
+/** Ledge leave at `leaveAt`; press at leaveAt+offset; evaluate buffer/coyote (M1-T8). */
+function ledgeJumpSucceeds(ctrl: PlayerController, leaveAt: number, offsetMs: number): boolean {
+  const pressAt = leaveAt + offsetMs;
+  const coyoteExpiresAt = leaveAt + FEEL.COYOTE_TIME;
+  const nowMs = Math.max(leaveAt, pressAt);
+  const result = ctrl.tryJump(jumpAt(pressAt, { pressed: offsetMs >= 0, held: true }), {
+    grounded: false,
+    coyoteExpiresAt,
+    airJumpsRemaining: 0,
+    onWall: false,
+    wallDir: 0,
+    now: nowMs,
+  });
+  return result.kind === 'coyote' || result.kind === 'ground';
+}
+
+describe('PlayerController coyote + jump buffer', () => {
+  it('coyote jump within COYOTE_TIME after leave', () => {
+    const { ctrl } = makeController(0);
+    const leaveAt = 10_000;
+    const result = ctrl.tryJump(jumpAt(leaveAt + 40, { pressed: true, held: true }), {
+      grounded: false,
+      coyoteExpiresAt: leaveAt + FEEL.COYOTE_TIME,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: leaveAt + 40,
+    });
+    expect(result.kind).toBe('coyote');
+  });
+
+  it('rejects jump after coyote expires', () => {
+    const { ctrl } = makeController(0);
+    const leaveAt = 10_000;
+    const result = ctrl.tryJump(jumpAt(leaveAt + 150, { pressed: true, held: true }), {
+      grounded: false,
+      coyoteExpiresAt: leaveAt + FEEL.COYOTE_TIME,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: leaveAt + 150,
+    });
+    expect(result.kind).toBe('none');
+  });
+
+  it('early buffer within JUMP_BUFFER fires as coyote at leave', () => {
+    const { ctrl } = makeController(0);
+    const leaveAt = 10_000;
+    const pressAt = leaveAt - 80;
+    const result = ctrl.tryJump(jumpAt(pressAt), {
+      grounded: false,
+      coyoteExpiresAt: leaveAt + FEEL.COYOTE_TIME,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: leaveAt,
+    });
+    expect(result.kind).toBe('coyote');
+  });
+
+  it('expired buffer does not fire at leave', () => {
+    const { ctrl } = makeController(0);
+    const leaveAt = 10_000;
+    const pressAt = leaveAt - 150;
+    const result = ctrl.tryJump(jumpAt(pressAt), {
+      grounded: false,
+      coyoteExpiresAt: leaveAt + FEEL.COYOTE_TIME,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: leaveAt,
+    });
+    expect(result.kind).toBe('none');
+  });
+
+  it('buffer survives airborne miss then fires on ground contact', () => {
+    const { ctrl } = makeController(0);
+    const pressAt = 5000;
+    const miss = ctrl.tryJump(jumpAt(pressAt, { pressed: true, held: true }), {
+      grounded: false,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: pressAt,
+    });
+    expect(miss.kind).toBe('none');
+    expect(ctrl.hasUnconsumedJumpBuffer(pressAt)).toBe(true);
+
+    const land = ctrl.tryJump(jumpAt(pressAt), {
+      grounded: true,
+      coyoteExpiresAt: 0,
+      airJumpsRemaining: 0,
+      onWall: false,
+      wallDir: 0,
+      now: pressAt + 50,
+    });
+    expect(land.kind).toBe('ground');
+    expect(ctrl.hasUnconsumedJumpBuffer(pressAt)).toBe(false);
+  });
+
+  it('ledge-jump harness ≥ 98% inside ±100 ms, 0% beyond buffer/coyote', () => {
+    const rng = new Rng(0xc0fe7e);
+    const leaveAt = 50_000;
+    let insideOk = 0;
+    const insideN = 1000;
+    for (let i = 0; i < insideN; i++) {
+      const { ctrl } = makeController(0);
+      // Uniform in [-100, 100] — covered by coyote (100) + buffer (120).
+      const offset = rng.next() * 200 - 100;
+      if (ledgeJumpSucceeds(ctrl, leaveAt, offset)) insideOk += 1;
+    }
+    expect(insideOk / insideN).toBeGreaterThanOrEqual(0.98);
+
+    let outsideOk = 0;
+    const outsideN = 1000;
+    for (let i = 0; i < outsideN; i++) {
+      const { ctrl } = makeController(0);
+      // Beyond both windows: < -JUMP_BUFFER or > COYOTE_TIME.
+      const offset =
+        rng.next() < 0.5
+          ? -(FEEL.JUMP_BUFFER + 1 + rng.next() * 80)
+          : FEEL.COYOTE_TIME + 1 + rng.next() * 80;
+      if (ledgeJumpSucceeds(ctrl, leaveAt, offset)) outsideOk += 1;
+    }
+    expect(outsideOk).toBe(0);
   });
 });
