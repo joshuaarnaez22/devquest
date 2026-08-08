@@ -59,7 +59,7 @@ queue.
 | [x] **M1-S11** | M1-T11 Dash            | 8   | Distance + cooldown-from-start                        |
 | [x] **M1-S12** | M1-T12 Wall slide/jump | 8   | Clears `SHAFT`; input lock holds                      |
 | [x] **M1-S13** | M1-T13 Four heroes     | 6   | JSON vs §5.2; `F1`–`F4` swap                          |
-| [ ] **M1-S14** | M1-T14 Ninja air jump  | 4   | Fast-fall air jump = apex height                      |
+| [x] **M1-S14** | M1-T14 Ninja air jump  | 4   | Fast-fall air jump = apex height                      |
 | [ ] **M1-S15** | M1-T15 Camera          | 4   | ▶ **Checkpoint C** — camera + all heroes              |
 | [ ] **M1-S16** | M1-T16 Squash/stretch  | 6   | Distinct jump / fall / land deformation               |
 | [ ] **M1-S17** | M1-T17 Dust VFX        | 8   | 60 s movement, zero heap growth                       |
