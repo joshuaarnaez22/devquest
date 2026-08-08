@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CAMERA } from '@config/CameraConstants';
 import { Depth } from '@config/Depth';
 import { DISPLAY } from '@config/GameConstants';
 import { Palette } from '@config/Palette';
@@ -10,6 +11,7 @@ import { createGameplayRegistry } from '@systems/createGameplayRegistry';
 import { FeelDebugReadout } from '@ui/FeelDebugReadout';
 import type { SystemRegistry } from '@core/SystemRegistry';
 import type { CharacterId } from '@data/CharacterTypes';
+import type { CameraFollowTarget, CameraSystem } from '@systems/CameraSystem';
 import type { InputSystem } from '@systems/InputSystem';
 
 const HERO_HOTKEYS: readonly { readonly code: number; readonly id: CharacterId }[] = [
@@ -20,15 +22,14 @@ const HERO_HOTKEYS: readonly { readonly code: number; readonly id: CharacterId }
 ];
 
 /**
- * Minimal feel-prototype GameScene — grey box + vocabulary course + debug readout.
- * Checkpoint B (M1-T10) — grey box tints per FSM state.
- * M1-T13 — F1–F4 hot-swaps heroes from ContentDatabase.
+ * Feel-prototype GameScene — Checkpoint C camera (M1-T15).
  */
 export class GameScene extends Phaser.Scene {
   private systems: SystemRegistry | undefined;
   private player: FeelPlayer | undefined;
   private readout: FeelDebugReadout | undefined;
   private content: ContentDatabase | undefined;
+  private cameraSys: CameraSystem | undefined;
   private heroKeys: Phaser.Input.Keyboard.Key[] = [];
 
   constructor() {
@@ -56,6 +57,7 @@ export class GameScene extends Phaser.Scene {
     this.systems = createGameplayRegistry();
     this.systems.init();
     const input = this.systems.get<InputSystem>('input');
+    this.cameraSys = this.systems.get<CameraSystem>('camera');
 
     const level = buildFeelTestLevel(this);
     this.player = new FeelPlayer(this, level.spawn.x, level.spawn.y, input);
@@ -64,17 +66,18 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, level.solids);
     this.physics.add.collider(this.player, level.softs);
 
-    this.cameras.main.setBounds(0, 0, level.worldWidth, level.worldHeight);
-    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
-    this.cameras.main.setRoundPixels(true);
+    this.cameraSys.bind(this.cameras.main, level.worldWidth, level.worldHeight);
+    this.cameraSys.setTarget(this.makeCameraTarget(this.player));
+    this.cameraSys.snapToTarget();
 
     this.readout = new FeelDebugReadout(this);
     this.bindHeroHotkeys();
 
+    // Hint sits in the gameplay viewport (148 px), not the full 180 canvas.
     this.add
       .bitmapText(
         4,
-        DISPLAY.HEIGHT - 10,
+        CAMERA.VIEWPORT_H - 10,
         DEBUG_FONT_KEY,
         'A/D MOVE  SPACE JUMP  K DASH  F1-F4 HERO',
         6,
@@ -82,6 +85,29 @@ export class GameScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(Depth.DEBUG)
       .setTint(Palette.N5);
+  }
+
+  private makeCameraTarget(player: FeelPlayer): CameraFollowTarget {
+    return {
+      get x() {
+        return player.x;
+      },
+      get y() {
+        return player.y;
+      },
+      get velocityX() {
+        return player.velocityX;
+      },
+      get grounded() {
+        return player.grounded;
+      },
+      get facing() {
+        return player.facingDir;
+      },
+      get maxRunSpeed() {
+        return player.runSpeed;
+      },
+    };
   }
 
   private bindHeroHotkeys(): void {
@@ -114,17 +140,20 @@ export class GameScene extends Phaser.Scene {
     const dt = Math.min(delta, DISPLAY.MAX_DELTA_MS);
     systems.update(time, dt);
     player.update(time, dt);
+    // Grounded flags from this frame's Arcade — before camera postPhysics.
+    player.syncAfterPhysics(time, dt);
     systems.postPhysics(time, dt);
   }
 
-  /** After Arcade: grounded flags are valid; sync HUD. */
+  /** After Scene.update: camera follow + HUD (grounded already synced). */
   private postUpdate(time: number, delta: number): void {
     const player = this.player;
     const readout = this.readout;
-    if (player === undefined || readout === undefined) return;
+    const cameraSys = this.cameraSys;
+    if (player === undefined || readout === undefined || cameraSys === undefined) return;
 
     const dt = Math.min(delta, DISPLAY.MAX_DELTA_MS);
-    player.syncAfterPhysics(time, dt);
+    cameraSys.syncFollow(dt);
 
     const body = player.body as Phaser.Physics.Arcade.Body;
     readout.sync({
@@ -139,6 +168,7 @@ export class GameScene extends Phaser.Scene {
       dashCooldownRemainingMs: player.dashCooldownRemainingMs,
       lastJumpHeight: player.lastJumpHeight,
     });
+    void time;
   }
 
   shutdown(): void {
@@ -148,6 +178,7 @@ export class GameScene extends Phaser.Scene {
     this.readout = undefined;
     this.systems?.destroy();
     this.systems = undefined;
+    this.cameraSys = undefined;
     this.player = undefined;
     this.content = undefined;
   }

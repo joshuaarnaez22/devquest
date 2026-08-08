@@ -111,6 +111,20 @@ export class FeelPlayer extends Entity {
     return this.fsm.id;
   }
 
+  get facingDir(): -1 | 1 {
+    return this.facing;
+  }
+
+  get runSpeed(): number {
+    return this.movement.runSpeed;
+  }
+
+  /** Horizontal body velocity for camera look-ahead. */
+  get velocityX(): number {
+    const body = this.body as Phaser.Physics.Arcade.Body | null;
+    return body?.velocity.x ?? 0;
+  }
+
   /**
    * Pre-display tick (after Arcade this frame): dash, jump, move, gravity.
    * Call {@link syncAfterPhysics} on Scene POST_UPDATE afterward.

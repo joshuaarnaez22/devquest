@@ -1,6 +1,6 @@
 # M1 — Feel Prototype
 
-**Status:** 🔄 In progress · next **M1-S15** (`M1-T15`) · S01–S14 done · ▶ Checkpoint B · next ▶ Checkpoint C
+**Status:** 🔄 In progress · next **M1-S16** (`M1-T16`) · S01–S15 done · ▶ Checkpoint C
 **Duration:** 5 weeks (~150 h) · **Dates:** 2026-08-31 → 2026-10-02 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M1 · **Risk:** 🔴 **HIGH — tuning paralysis**
 **Next:** [M02-combat-feel/plan.md](../M02-combat-feel/plan.md) (after exit gate)
@@ -60,7 +60,7 @@ queue.
 | [x] **M1-S12** | M1-T12 Wall slide/jump | 8   | Clears `SHAFT`; input lock holds                      |
 | [x] **M1-S13** | M1-T13 Four heroes     | 6   | JSON vs §5.2; `F1`–`F4` swap                          |
 | [x] **M1-S14** | M1-T14 Ninja air jump  | 4   | Fast-fall air jump = apex height                      |
-| [ ] **M1-S15** | M1-T15 Camera          | 4   | ▶ **Checkpoint C** — camera + all heroes              |
+| [x] **M1-S15** | M1-T15 Camera          | 4   | ▶ **Checkpoint C** — camera + all heroes              |
 | [ ] **M1-S16** | M1-T16 Squash/stretch  | 6   | Distinct jump / fall / land deformation               |
 | [ ] **M1-S17** | M1-T17 Dust VFX        | 8   | 60 s movement, zero heap growth                       |
 | [ ] **M1-S18** | M1-T18 Debug overlay   | 6   | Sparkline + pools + frame-step live                   |
@@ -70,7 +70,7 @@ queue.
 | [ ] **M1-S22** | M1-T22 Constants lock  | 2   | ADR-023 + `check-constants` green                     |
 | [ ] **M1-S23** | M1-T23 Buffer          | 4   | Overrun only — tests, not features                    |
 
-**Start here:** open this plan → **M1-S15** → read docs cited by T15 → implement → Verify → commit → stop.
+**Start here:** open this plan → **M1-S16** → read docs cited by T16 → implement → Verify → commit → stop.
 
 ---
 
