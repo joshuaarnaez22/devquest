@@ -3,7 +3,7 @@ import { Depth } from '@config/Depth';
 import { Palette } from '@config/Palette';
 import { VFX } from '@config/VfxConstants';
 import { FrameTimeRing } from '@core/FrameTimeRing';
-import { DEBUG_FONT_KEY } from '@platform/DebugBitmapFont';
+import { DEBUG_FONT_KEY, DEBUG_FONT_SIZE } from '@platform/DebugBitmapFont';
 import { formatHeapMb, heapUsedBytes } from '@platform/Heap';
 import * as Keyboard from '@platform/Keyboard';
 import type { PoolStats } from '@core/ObjectPool';
@@ -27,7 +27,6 @@ export interface DebugPoolSource {
 
 const PANEL_W = 128;
 const PANEL_H = 140;
-const FONT_SIZE = 8;
 
 /**
  * Production debug overlay — Ctrl+Shift+D (docs/01 §6.2, docs/15 §9.1).
@@ -89,7 +88,7 @@ export class DebugSystem implements System {
     this.panelGfx = scene.add.graphics().setScrollFactor(0);
     this.sparkGfx = scene.add.graphics().setScrollFactor(0);
     this.text = scene.add
-      .bitmapText(3, 24, DEBUG_FONT_KEY, '', FONT_SIZE)
+      .bitmapText(3, 24, DEBUG_FONT_KEY, '', DEBUG_FONT_SIZE)
       .setTint(Palette.N7)
       .setScrollFactor(0);
     this.root.add([this.panelGfx, this.sparkGfx, this.text]);

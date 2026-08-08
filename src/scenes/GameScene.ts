@@ -7,7 +7,7 @@ import { EventBus } from '@core/EventBus';
 import { ContentDatabase } from '@data/ContentDatabase';
 import { FeelPlayer, ensurePlayerBoxTexture } from '@entities/player/FeelPlayer';
 import { buildFeelTestLevel } from '@level/FeelTestLevel';
-import { DEBUG_FONT_KEY, installDebugBitmapFont } from '@platform/DebugBitmapFont';
+import { DEBUG_FONT_KEY, DEBUG_FONT_SIZE, installDebugBitmapFont } from '@platform/DebugBitmapFont';
 import { createGameplayRegistry } from '@systems/createGameplayRegistry';
 import { FeelDebugReadout } from '@ui/FeelDebugReadout';
 import type { GameEventMap } from '@core/GameEvents';
@@ -121,7 +121,7 @@ export class GameScene extends Phaser.Scene {
         CAMERA.VIEWPORT_H - 10,
         DEBUG_FONT_KEY,
         'A/D MOVE  SPACE JUMP  K DASH  F1-F4 HERO  Ctrl+Shift+D DBG',
-        6,
+        DEBUG_FONT_SIZE,
       )
       .setScrollFactor(0)
       .setDepth(Depth.DEBUG)

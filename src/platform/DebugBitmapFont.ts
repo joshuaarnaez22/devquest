@@ -5,9 +5,11 @@
 import type Phaser from 'phaser';
 
 export const DEBUG_FONT_KEY = 'debug';
+/** Native glyph height — BitmapText `size` must be this (or an integer multiple). */
+export const DEBUG_FONT_SIZE = 8;
 
 const GW = 6;
-const GH = 8;
+const GH = DEBUG_FONT_SIZE;
 const FIRST = 32;
 const LAST = 126;
 

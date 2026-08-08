@@ -2,7 +2,7 @@ import { Depth } from '@config/Depth';
 import { DISPLAY } from '@config/GameConstants';
 import { GAP, HEIGHT, CLEARANCE } from '@config/LevelMetrics';
 import { Palette } from '@config/Palette';
-import { DEBUG_FONT_KEY } from '@platform/DebugBitmapFont';
+import { DEBUG_FONT_KEY, DEBUG_FONT_SIZE } from '@platform/DebugBitmapFont';
 import type Phaser from 'phaser';
 
 const TILE = DISPLAY.TILE;
@@ -47,7 +47,7 @@ function soft(ctx: BuildCtx, x: number, y: number, w: number): void {
 
 function label(scene: Phaser.Scene, x: number, y: number, text: string): void {
   scene.add
-    .bitmapText(x, y, DEBUG_FONT_KEY, text, 6)
+    .bitmapText(x, y, DEBUG_FONT_KEY, text, DEBUG_FONT_SIZE)
     .setOrigin(0.5, 1)
     .setDepth(Depth.DEBUG)
     .setTint(Palette.S3);
