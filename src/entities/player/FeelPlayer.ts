@@ -3,9 +3,16 @@ import { FEEL } from '@config/GameConstants';
 import { Entity } from '@entities/Entity';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
 import { PlayerController } from '@entities/player/PlayerController';
+import {
+  createPlayerFsmHost,
+  createPlayerStateMachine,
+  tickPlayerFsm,
+} from '@entities/player/PlayerStates';
 import { now } from '@platform/Clock';
 import type { InputFrame, InputFrameSource } from '@core/InputFrame';
+import type { StateMachine } from '@core/StateMachine';
 import type { PlayerStateId } from '@entities/player/PlayerStateId';
+import type { PlayerFsmHost } from '@entities/player/PlayerStates';
 import type Phaser from 'phaser';
 
 const BODY_W = 14;
@@ -24,17 +31,18 @@ const GROUND_STICK = 24;
 export class FeelPlayer extends Entity {
   readonly controller: PlayerController;
   grounded = false;
-  /** Player FSM id — not Phaser GameObject.state. */
-  moveState: PlayerStateId = 'IDLE';
   coyoteActive = false;
   bufferActive = false;
   dashCooldownRemainingMs = 0;
   lastJumpHeight = 0;
 
   private readonly frames: InputFrameSource;
+  private readonly fsmHost: PlayerFsmHost;
+  private readonly fsm: StateMachine<PlayerFsmHost, PlayerStateId>;
   private jumpOriginY: number | null = null;
   private airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
   private coyoteExpiresAt = 0;
+  private jumpKind: PlayerFsmHost['jumpKind'] = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number, frames: InputFrameSource) {
     super(scene, x, y, 'player-box');
@@ -46,9 +54,16 @@ export class FeelPlayer extends Entity {
     body.setAllowGravity(false);
     body.setMaxVelocity(SAMURAI_MOVEMENT.runSpeed * 1.5, 400);
     this.controller = new PlayerController(body, SAMURAI_MOVEMENT);
+    this.fsmHost = createPlayerFsmHost();
+    this.fsm = createPlayerStateMachine(this.fsmHost, 'IDLE');
     this.setDepth(Depth.PLAYER);
     this.setActive(true);
     this.setVisible(true);
+  }
+
+  /** Current FSM id — docs/06 §6. */
+  get moveState(): PlayerStateId {
+    return this.fsm.id;
   }
 
   /**
@@ -59,10 +74,10 @@ export class FeelPlayer extends Entity {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const frame = this.frames.frame;
     const t = now();
+    this.jumpKind = null;
 
     this.controller.beginFrame(delta);
     this.resolveJump(frame, t, body.y);
-    this.updateMoveState(frame);
     this.controller.applyHorizontal(frame, this.moveState, this.grounded);
 
     if (!this.grounded) {
@@ -88,19 +103,19 @@ export class FeelPlayer extends Entity {
    * After Scene.update: refresh grounded from this frame's collision, then leave
    * ground-stick velocity for the next Arcade UPDATE.
    */
-  syncAfterPhysics(): void {
+  syncAfterPhysics(time = 0, delta = 0): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const wasGrounded = this.grounded;
     const rising = this.controller.verticalVelocity < 0;
     const onFloor = body.blocked.down || body.touching.down;
     const t = now();
+    const frame = this.frames.frame;
 
     this.grounded = !rising && onFloor;
 
     if (this.grounded && !wasGrounded) {
       this.onLanded(body.y, t);
     } else if (!this.grounded && wasGrounded && !rising) {
-      // Walk-off — start coyote (jump path clears grounded before this runs).
       this.jumpOriginY = body.y;
       this.coyoteExpiresAt = t + FEEL.COYOTE_TIME;
     }
@@ -110,7 +125,9 @@ export class FeelPlayer extends Entity {
       this.controller.armGroundStick(GROUND_STICK);
     }
 
-    this.updateMoveState(this.frames.frame);
+    this.syncFsmHost(frame, t);
+    tickPlayerFsm(this.fsm, { time, delta });
+    this.jumpKind = null;
   }
 
   private resolveJump(frame: InputFrame, t: number, y: number): void {
@@ -129,34 +146,21 @@ export class FeelPlayer extends Entity {
     jump: ReturnType<PlayerController['tryJump']>,
     y: number,
   ): void {
+    if (jump.kind === 'none') return;
+    this.jumpKind = jump.kind;
     if (jump.kind === 'ground' || jump.kind === 'coyote') {
       this.grounded = false;
       this.airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
       this.coyoteExpiresAt = 0;
       this.jumpOriginY = y;
-      this.moveState = 'JUMP';
     } else if (jump.kind === 'air') {
       this.airJumpsRemaining = jump.remaining;
       this.coyoteExpiresAt = 0;
-      this.moveState = 'AIR_JUMP';
     } else if (jump.kind === 'wall') {
       this.grounded = false;
       this.coyoteExpiresAt = 0;
       this.jumpOriginY = y;
-      this.moveState = 'WALL_JUMP';
     }
-  }
-
-  private updateMoveState(frame: InputFrame): void {
-    if (!this.grounded) {
-      if (this.controller.verticalVelocity < 0) {
-        this.moveState = this.moveState === 'AIR_JUMP' ? 'AIR_JUMP' : 'JUMP';
-      } else {
-        this.moveState = 'FALL';
-      }
-      return;
-    }
-    this.moveState = frame.moveX !== 0 ? 'RUN' : 'IDLE';
   }
 
   private onLanded(y: number, t: number): void {
@@ -167,7 +171,6 @@ export class FeelPlayer extends Entity {
     this.controller.setVerticalVelocity(0);
     this.coyoteExpiresAt = 0;
 
-    // Consume jump buffer on ground contact (docs/06 §5.3).
     const frame = this.frames.frame;
     const jump = this.controller.tryJump(frame, {
       grounded: true,
@@ -177,9 +180,24 @@ export class FeelPlayer extends Entity {
       wallDir: 0,
       now: t,
     });
-    if (jump.kind !== 'none') {
-      this.applyJumpResult(jump, y);
-    }
+    this.applyJumpResult(jump, y);
+  }
+
+  private syncFsmHost(frame: InputFrame, t: number): void {
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    this.fsmHost.grounded = this.grounded;
+    this.fsmHost.moveX = frame.moveX;
+    this.fsmHost.absVx = Math.abs(body.velocity.x);
+    this.fsmHost.vy = this.controller.verticalVelocity;
+    this.fsmHost.airJumpsRemaining = this.airJumpsRemaining;
+    this.fsmHost.withinCoyote = !this.grounded && t < this.coyoteExpiresAt;
+    this.fsmHost.jumpKind = this.jumpKind;
+    this.fsmHost.bufferedJump =
+      this.jumpKind === 'ground' || this.isBufferActive(frame, t);
+    this.fsmHost.wantsDash = frame.dashPressed;
+    this.fsmHost.wantsAttack = frame.attackPressed;
+    this.fsmHost.wantsSpecial = frame.specialPressed;
+    this.fsmHost.downHeld = frame.moveY > 0;
   }
 
   private isBufferActive(frame: InputFrame, t: number): boolean {

@@ -1,4 +1,4 @@
-/** Player FSM state ids — docs/06-Characters.md §6. Full transitions land in M1-T9. */
+/** Player FSM state ids — docs/06-Characters.md §6. */
 export type PlayerStateId =
   | 'IDLE'
   | 'RUN'

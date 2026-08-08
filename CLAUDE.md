@@ -11,8 +11,8 @@ Where this file and a doc disagree, the doc wins.
 ## Status
 
 ```
-PHASE:      M1 Feel Prototype — in progress · next session M1-S09 (M1-T9 Player FSM)
-NEXT:       plans/M01-feel-prototype/plan.md (5 wk · 23 sessions · S01–S08 done · Checkpoint A)
+PHASE:      M1 Feel Prototype — in progress · next session M1-S10 (M1-T10 Animator · Checkpoint B)
+NEXT:       plans/M01-feel-prototype/plan.md (5 wk · 23 sessions · S01–S09 done · Checkpoint A)
 THEN:       plans/M02-combat-feel/plan.md
 OPEN P0/P1: 0
 NOTES:      docs/audits/milestone-M0.md · spike notes in plans/spike-00/results.md · npm run level:test

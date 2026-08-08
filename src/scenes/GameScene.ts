@@ -65,12 +65,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** After Arcade: grounded flags are valid; sync HUD. */
-  private postUpdate(): void {
+  private postUpdate(time: number, delta: number): void {
     const player = this.player;
     const readout = this.readout;
     if (player === undefined || readout === undefined) return;
 
-    player.syncAfterPhysics();
+    const dt = Math.min(delta, DISPLAY.MAX_DELTA_MS);
+    player.syncAfterPhysics(time, dt);
 
     const body = player.body as Phaser.Physics.Arcade.Body;
     readout.sync({
