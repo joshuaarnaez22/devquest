@@ -1093,6 +1093,53 @@ An indicator design requires a texture, or the heap-growth test ever flags `Grap
 
 ---
 
+## ADR-023 — M1 constants lock
+
+**Status:** ✅ Accepted · **Date:** 2026-08-11 · **Deciders:** Technical Director
+**Affects:** `00-README.md` §5.2/§5.3, `06-Characters.md` §5.2, `src/config/GameConstants.ts`, `public/assets/data/characters/*.json`, `CLAUDE.md`
+
+### Context
+
+`M1-T20` (Week 5, session S20) ran the full tuning protocol against the spec values shipped since M0: a solo sweep of `GRAVITY_Y`, Samurai `runSpeed`, and Samurai `jumpVelocity` at ±15% against the spike-00 baseline notes (`plans/spike-00/results.md`), followed by three independent playtests with people who had not played the build.
+
+Sweep findings (measured live via the feel-test level's debug HUD, not simulation):
+
+| Constant               | −15%         | Spec (locked)       | +15%         |
+| ---------------------- | ------------ | ------------------- | ------------ |
+| `GRAVITY_Y`            | 38.0 px peak | 900 → 31.5 px peak  | 28.9 px peak |
+| Samurai `runSpeed`     | 76.5 px/s    | 90 px/s             | 103.5 px/s   |
+| Samurai `jumpVelocity` | 24.8 px peak | −240 → 31.5 px peak | 43.5 px peak |
+
+The measured baseline peak (31.5 px) sits inside the 32 ± 0.5 px band from spike-00's simulated 32.2 px. All three sweep directions matched spike-00's S0-T6 qualitative predictions (e.g. lower gravity trending floaty, higher gravity trending harsh with a peak further below target), giving no positive signal to move off spec in either direction.
+
+All three playtests (`M1-S20` Days 2 and 4) came back clean: zero "it didn't register" reports, i.e. zero occurrences against the Pillar 1 falsification threshold of >1 per 10 minutes (`02-Game-Pillars.md` §5.1.4). `npm run test:pillars` stayed green (5/5) throughout every sweep.
+
+`M1-T21` (latency) could not use the plan's specified method — a 240 fps phone camera was not available. Latency was instead measured with an in-browser console harness timing native `keydown` events against the first `requestAnimationFrame` in which the debug HUD showed `STATE JUMP`. This does not capture GPU compositing or monitor scan-out, which the phone-camera method exists specifically to catch (worth up to roughly one frame, ~16.7 ms at 60 Hz, unaccounted for).
+
+### Decision
+
+**Lock all M1 Feel constants (`00-README.md` §5.2/§5.3, mirrored in `GameConstants.ts` and the four character JSON files) at their existing spec values — no changes.** Further changes to any locked value require a new ADR per `00-README.md` §9.5.
+
+**Accept the `M1-T21` latency result as measured** (20/20 trials, p99/worst 8.2 ms, range 1.0–8.2 ms) rather than blocking on camera hardware. Even with a conservative +16.7 ms correction for the unmeasured monitor/compositor stage, the corrected estimate (~24.9 ms) clears the 50 ms target with more than 2× headroom.
+
+### Rationale
+
+1. Nothing in the sweep or the three playtests produced a reason to move off spec — the falsification test (the one instrument that would justify a change) triggered zero times.
+2. `docs/00-README.md` §5 explicitly frames the pre-prototype values as "a starting point... expected to change during the Feel Prototype milestone... do not treat pre-prototype tuning values as sacred — treat the process of tuning them as sacred." The process ran in full; it converged on the starting values themselves.
+3. The latency margin is large enough (>2×) that the software-proxy method's blind spot does not change the pass/fail outcome, even under a pessimistic correction.
+
+### Consequences
+
+**Positive:** Constants lock with a documented sweep + playtest trail, satisfying the M1 exit gate's tuning requirements without inventing values that weren't actually validated. `check-constants` and `check-character-values` both stay green with zero diff.
+
+**Negative:** `M1-T21`'s number is a lower bound, not a true glass-to-glass measurement — the exit gate's literal "240 fps capture" language is not satisfied. If a phone or camera becomes available later, a real capture would close this gap; given the >2× margin, a regression to failing is considered unlikely but not proven.
+
+### Revisit If
+
+A future playtest (any milestone) reports "it didn't register" above the Pillar 1 threshold, or 240 fps camera hardware becomes available and a real capture is run — either result should append a note here rather than silently re-tuning.
+
+---
+
 ## 6. Implementation Notes
 
 ### 5.1 When to Write an ADR
@@ -1374,6 +1421,7 @@ format would blur that line until every variable name got a record.
 | Topic                                                         | Document                       |
 | ------------------------------------------------------------- | ------------------------------ |
 | Change control requiring an ADR for MAJOR doc versions        | `00-README.md` §9.5            |
+| M1 constants lock: ADR-023                                    | `00-README.md` §5.2/§5.3       |
 | Vision decisions: ADR-001, ADR-002                            | `01-Vision.md` §7              |
 | Pillar precedence used in ADR-012                             | `02-Game-Pillars.md` §11       |
 | Architecture decisions: ADR-003, 005, 006, 007, 010, 015, 019 | `03-Technical-Architecture.md` |

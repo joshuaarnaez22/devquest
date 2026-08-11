@@ -60,6 +60,9 @@ docs, audit, `CLAUDE.md`, **and** `plans/<id>/plan.md` in the same pass.
 | "Why is it like this?"                      | `docs/19-Decisions.md`                                                            |
 | A new idea                                  | `docs/20-Future-Ideas.md` — **park it there, do not build it**                    |
 
+**M1 Feel constants are locked as of `ADR-023`** (`docs/19-Decisions.md`). `GameConstants.ts`
+`PHYSICS`/`FEEL` and the four character JSON movement blocks do not change without a new ADR.
+
 ---
 
 ## Non-negotiables
