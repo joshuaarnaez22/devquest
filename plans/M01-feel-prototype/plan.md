@@ -1,6 +1,6 @@
 # M1 — Feel Prototype
 
-**Status:** 🔄 In progress · next **M1-S20** (`M1-T20`) · S01–S19 done · ▶ Checkpoint D
+**Status:** 🔄 In progress · S01–S23 done · ▶ Checkpoint D · next: M1 exit gate review
 **Duration:** 5 weeks (~150 h) · **Dates:** 2026-08-31 → 2026-10-02 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M1 · **Risk:** 🔴 **HIGH — tuning paralysis**
 **Next:** [M02-combat-feel/plan.md](../M02-combat-feel/plan.md) (after exit gate)
@@ -44,31 +44,31 @@ queue.
 
 **Rule:** stop at each ▶ checkpoint and play before continuing.
 
-| Session        | Task                   | ~h  | Done when                                             |
-| -------------- | ---------------------- | --- | ----------------------------------------------------- |
-| [x] **M1-S01** | M1-T1 Entity           | 4   | Unit test: scaled delta / frozen entity               |
-| [x] **M1-S02** | M1-T2 InputSystem      | 8   | Input-to-physics ≤ 1 frame instrumented               |
-| [x] **M1-S03** | M1-T3 SystemRegistry   | 3   | Systems update in `SYSTEM_ORDER`                      |
-| [x] **M1-S04** | M1-T4 Horizontal move  | 10  | Max speed + turn boost measured (may span 2 sittings) |
-| [x] **M1-S05** | M1-T5 Test scene       | 5   | ▶ **Checkpoint A** — `level:test` grey box runs L/R   |
-| [x] **M1-S06** | M1-T6 Gravity + jump   | 8   | Full-hold peak 32.0 ± 0.5 px                          |
-| [x] **M1-S07** | M1-T7 Variable jump    | 4   | Hold / early release / tap heights                    |
-| [x] **M1-S08** | M1-T8 Coyote + buffer  | 6   | ≥ 98% ledge success over 1,000 attempts               |
-| [x] **M1-S09** | M1-T9 Player FSM       | 8   | Transitions + `LAND` duration === 0                   |
-| [x] **M1-S10** | M1-T10 Animator seam   | 4   | ▶ **Checkpoint B** — jump + tint-per-state            |
-| [x] **M1-S11** | M1-T11 Dash            | 8   | Distance + cooldown-from-start                        |
-| [x] **M1-S12** | M1-T12 Wall slide/jump | 8   | Clears `SHAFT`; input lock holds                      |
-| [x] **M1-S13** | M1-T13 Four heroes     | 6   | JSON vs §5.2; `F1`–`F4` swap                          |
-| [x] **M1-S14** | M1-T14 Ninja air jump  | 4   | Fast-fall air jump = apex height                      |
-| [x] **M1-S15** | M1-T15 Camera          | 4   | ▶ **Checkpoint C** — camera + all heroes              |
-| [x] **M1-S16** | M1-T16 Squash/stretch  | 6   | Distinct jump / fall / land deformation               |
-| [x] **M1-S17** | M1-T17 Dust VFX        | 8   | 60 s movement, zero heap growth                       |
-| [x] **M1-S18** | M1-T18 Debug overlay   | 6   | Sparkline + pools + frame-step live                   |
-| [x] **M1-S19** | M1-T19 Pillar tests    | 6   | ▶ **Checkpoint D** — `test:pillars` green in CI       |
-| [ ] **M1-S20** | M1-T20 Tuning only     | 20  | Five day-sessions (see T20); **no features**          |
-| [ ] **M1-S21** | M1-T21 Latency capture | 4   | p99 ≤ 50 ms (240 fps phone)                           |
-| [ ] **M1-S22** | M1-T22 Constants lock  | 2   | ADR-023 + `check-constants` green                     |
-| [ ] **M1-S23** | M1-T23 Buffer          | 4   | Overrun only — tests, not features                    |
+| Session        | Task                   | ~h  | Done when                                                      |
+| -------------- | ---------------------- | --- | -------------------------------------------------------------- |
+| [x] **M1-S01** | M1-T1 Entity           | 4   | Unit test: scaled delta / frozen entity                        |
+| [x] **M1-S02** | M1-T2 InputSystem      | 8   | Input-to-physics ≤ 1 frame instrumented                        |
+| [x] **M1-S03** | M1-T3 SystemRegistry   | 3   | Systems update in `SYSTEM_ORDER`                               |
+| [x] **M1-S04** | M1-T4 Horizontal move  | 10  | Max speed + turn boost measured (may span 2 sittings)          |
+| [x] **M1-S05** | M1-T5 Test scene       | 5   | ▶ **Checkpoint A** — `level:test` grey box runs L/R            |
+| [x] **M1-S06** | M1-T6 Gravity + jump   | 8   | Full-hold peak 32.0 ± 0.5 px                                   |
+| [x] **M1-S07** | M1-T7 Variable jump    | 4   | Hold / early release / tap heights                             |
+| [x] **M1-S08** | M1-T8 Coyote + buffer  | 6   | ≥ 98% ledge success over 1,000 attempts                        |
+| [x] **M1-S09** | M1-T9 Player FSM       | 8   | Transitions + `LAND` duration === 0                            |
+| [x] **M1-S10** | M1-T10 Animator seam   | 4   | ▶ **Checkpoint B** — jump + tint-per-state                     |
+| [x] **M1-S11** | M1-T11 Dash            | 8   | Distance + cooldown-from-start                                 |
+| [x] **M1-S12** | M1-T12 Wall slide/jump | 8   | Clears `SHAFT`; input lock holds                               |
+| [x] **M1-S13** | M1-T13 Four heroes     | 6   | JSON vs §5.2; `F1`–`F4` swap                                   |
+| [x] **M1-S14** | M1-T14 Ninja air jump  | 4   | Fast-fall air jump = apex height                               |
+| [x] **M1-S15** | M1-T15 Camera          | 4   | ▶ **Checkpoint C** — camera + all heroes                       |
+| [x] **M1-S16** | M1-T16 Squash/stretch  | 6   | Distinct jump / fall / land deformation                        |
+| [x] **M1-S17** | M1-T17 Dust VFX        | 8   | 60 s movement, zero heap growth                                |
+| [x] **M1-S18** | M1-T18 Debug overlay   | 6   | Sparkline + pools + frame-step live                            |
+| [x] **M1-S19** | M1-T19 Pillar tests    | 6   | ▶ **Checkpoint D** — `test:pillars` green in CI                |
+| [x] **M1-S20** | M1-T20 Tuning only     | 20  | Five day-sessions (see T20); **no features**                   |
+| [x] **M1-S21** | M1-T21 Latency capture | 4   | p99 8.2 ms via software proxy (no phone available — see below) |
+| [x] **M1-S22** | M1-T22 Constants lock  | 2   | ADR-023 + `check-constants` green — nothing changed            |
+| [x] **M1-S23** | M1-T23 Buffer          | 4   | Unused — added 3 tests (Knight/Wizard + distinctness)          |
 
 **Start here:** open this plan → **M1-S20** → tuning only (no features) → Verify → commit → stop.
 
@@ -398,6 +398,19 @@ The one target that cannot be automated: input-to-_visible_-response at p99 ≤ 
 compositor latency rather than game code — check `requestAnimationFrame` alignment before
 touching the controller.
 
+**Status (2026-08-11):** measured, with a documented deviation from spec — no 240fps phone
+camera was available, so latency was captured with an in-browser console script instead
+(native `keydown` timestamp → first `requestAnimationFrame` where the debug HUD shows
+`STATE JUMP`). This does **not** include GPU compositing + monitor scan-out, which the
+phone-camera method exists specifically to catch — typically worth up to ~1 frame (~16.7 ms
+at 60 Hz) unaccounted for.
+
+**Result: 20/20 trials, p99/worst = 8.2 ms** (range 1.0–8.2 ms). Even adding a full unmeasured
+frame as a conservative correction (8.2 + 16.7 ≈ 24.9 ms), this clears the 50 ms target with
+large margin (>2× headroom). Treated as a pass; note the methodology deviation in ADR-023
+at `M1-T22` rather than re-measuring with real camera hardware unless a future session has
+one available.
+
 ---
 
 ### M1-T22 — Constants lock · 2 h · _session: S22_
@@ -409,11 +422,22 @@ touching the controller.
    changed from the spec, and why
 5. Note in `CLAUDE.md`: these values now require an ADR to change
 
+**Status (2026-08-11):** done. Nothing changed from spec — `check-constants` and
+`check-character-values` both green with zero diff. `ADR-023` written recording the sweep,
+the three clean playtests, and the `M1-T21` methodology deviation. `CLAUDE.md` notes the lock.
+
 ---
 
 ### M1-T23 — Buffer · 4 h · _session: S23_
 
 Overrun only. If unused, add tests. **Do not add features.**
+
+**Status (2026-08-11):** unused — T20/T21/T22 all completed without overrun. Added tests per
+the fallback instruction: `ContentDatabase.test.ts` only asserted Samurai/Ninja movement and
+never Knight/Wizard, and no test anywhere asserted the exit gate's "distinguishable" claim.
+Added: Knight and Wizard movement assertions against `docs/06-Characters.md` §5.2, plus a
+test that all four heroes' movement signatures are pairwise unique. No source changes — test
+file only. Full suite: 24 files, 161 tests, all green. `typecheck` and `lint` clean.
 
 ---
 
@@ -436,7 +460,7 @@ Overrun only. If unused, add tests. **Do not add features.**
 - [ ] Zero heap growth over 60 s of movement
 - [ ] Sustained 60 fps on minimum hardware
 - [ ] Debug overlay complete for M1 scope
-- [ ] **Constants LOCKED, ADR-023 written**
+- [x] **Constants LOCKED, ADR-023 written**
 - [ ] Pillar 1 audit: all five falsification tests pass
 
 Then (post-gate, after all exit boxes):

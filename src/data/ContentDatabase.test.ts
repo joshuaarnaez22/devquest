@@ -37,4 +37,55 @@ describe('ContentDatabase', () => {
     expect(ninja.dashIFrames).toBe(true);
     expect(ninja.dashIFrameGraceMs).toBe(80);
   });
+
+  it('knight movement matches docs/06-Characters.md §5.2', () => {
+    const result = ContentDatabase.create();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.character('knight').movement).toMatchObject({
+      runSpeed: 78,
+      groundAccel: 700,
+      groundDecel: 900,
+      airAccel: 420,
+      airDecel: 280,
+      jumpVelocity: -230,
+      airJumps: 0,
+      dashSpeed: 210,
+      dashDurationMs: 140,
+      dashCooldownMs: 700,
+      dashIFrames: false,
+      wallSlideSpeed: 90,
+    });
+  });
+
+  it('wizard movement matches docs/06-Characters.md §5.2', () => {
+    const result = ContentDatabase.create();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.character('wizard').movement).toMatchObject({
+      runSpeed: 82,
+      groundAccel: 820,
+      groundDecel: 1100,
+      airAccel: 560,
+      airDecel: 380,
+      jumpVelocity: -232,
+      airJumps: 0,
+      dashSpeed: 240,
+      dashDurationMs: 150,
+      dashCooldownMs: 600,
+      dashIFrames: false,
+      wallSlideSpeed: 80,
+    });
+  });
+
+  it('all four heroes are movement-distinguishable (M1 exit gate)', () => {
+    const result = ContentDatabase.create();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const signatures = CHARACTER_IDS.map(id => {
+      const m = result.value.character(id).movement;
+      return `${m.runSpeed}|${m.jumpVelocity}|${m.dashSpeed}|${m.wallSlideSpeed}`;
+    });
+    expect(new Set(signatures).size).toBe(CHARACTER_IDS.length);
+  });
 });
