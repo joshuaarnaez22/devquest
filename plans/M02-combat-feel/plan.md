@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S02** (`M2-T2`) · S01 done
+**Status:** 🔄 In progress · next **M2-S03** (`M2-T3`) · S01–S02 done
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -48,7 +48,7 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | Session        | Task                                | ~h  | Done when                                                          |
 | -------------- | ----------------------------------- | --- | ------------------------------------------------------------------ |
 | [x] **M2-S01** | M2-T1 Components                    | 8   | Poise break/regen + i-frame max-not-sum unit-tested                |
-| [ ] **M2-S02** | M2-T2 Hitbox / Hurtbox              | 8   | 83 ms window over 5 frames = exactly 1 hit                         |
+| [x] **M2-S02** | M2-T2 Hitbox / Hurtbox              | 8   | 83 ms window over 5 frames = exactly 1 hit                         |
 | [ ] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                 |
 | [ ] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — hitbox at `windupMs` ±1 frame; combo chains   |
 | [ ] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
@@ -106,6 +106,14 @@ Also implement the generosity asymmetry (§5.2): player hitbox +3 px leading edg
 −2 px per side, enemy hurtbox +2 px per side. Invisible, and it is what makes combat feel fair.
 
 **Verify:** test — activate an 83 ms hitbox over 5 frames against one victim; assert exactly one hit.
+
+**Status (2026-08-11):** done. `Box.ts` (shared `BoxSpec`/`Aabb`, `aabbOverlap`, `expand`,
+`GENEROSITY` profiles), `Hitbox.ts` (schedule/active-window/dedup/rect/cancel), `Hurtbox.ts`
+(geometry + enable). 19 tests incl. the 83 ms / 5-frame single-hit case. Split from §5.1's
+illustrative code: the component stays pure (no Phaser body) — a system applies `rect`/`active`
+to the Arcade body in T3, since `components` is Phaser-free. **Generosity interpretation
+(§5.2):** modelled as explicit per-edge deltas; "+2 px vertically" read as +1 top/+1 bottom and
+"leading edge" as the forward edge — flag for review if a different centring was intended.
 
 ---
 
