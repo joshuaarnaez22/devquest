@@ -443,25 +443,25 @@ file only. Full suite: 24 files, 161 tests, all green. `typecheck` and `lint` cl
 
 ## Exit gate
 
-- [ ] Input-to-velocity ≤ 1 frame, measured
-- [ ] Input-to-visible ≤ 50 ms at p99, 240 fps capture
-- [ ] Ledge-jump success ≥ 98% over 1,000 automated attempts
-- [ ] 0 dropped inputs over 10,000 fuzzed
-- [ ] **Zero landing recovery frames** — `LAND` duration is 0
-- [ ] All four movement configs implemented and distinguishable
-- [ ] **`PlayerController.ts` contains zero `characterId` branches** (grep)
-- [ ] Coyote stored as an absolute timestamp
-- [ ] Air jump zeroes negative `vy` first
-- [ ] Jump cut applied once per jump
-- [ ] Wall jump locks horizontal input 120 ms
-- [ ] Dash cooldown measured from start
-- [ ] **Three external playtesters report the movement feels good, unprompted**
-- [ ] "It didn't register" ≤ 1 per 10 minutes of play
-- [ ] Zero heap growth over 60 s of movement
-- [ ] Sustained 60 fps on minimum hardware
-- [ ] Debug overlay complete for M1 scope
+- [x] Input-to-velocity ≤ 1 frame, measured — `p1.latency` (`test:pillars`)
+- [ ] Input-to-visible ≤ 50 ms at p99, 240 fps capture — _software proxy 8.2 ms (ADR-023); literal 240fps camera not run_
+- [x] Ledge-jump success ≥ 98% over 1,000 automated attempts — `p1.coyote` + `PlayerController.test` harness
+- [x] 0 dropped inputs over 10,000 fuzzed — `p1.fuzz`
+- [x] **Zero landing recovery frames** — `LAND` duration is 0 — `p1.noLandingRecovery` + `PlayerStates.test`
+- [x] All four movement configs implemented and distinguishable — `ContentDatabase.test` distinctness + Knight/Wizard/Samurai/Ninja assertions
+- [x] **`PlayerController.ts` contains zero `characterId` branches** (grep) — verified none
+- [x] Coyote stored as an absolute timestamp — `coyoteExpiresAt` (`PlayerController.ts:263`) + tests
+- [x] Air jump zeroes negative `vy` first — `PlayerController.ts:281` + `air jump from fast fall` test
+- [x] Jump cut applied once per jump — `jump cut applies only once` test
+- [x] Wall jump locks horizontal input 120 ms — `wall jump ... locks 120 ms` test
+- [x] Dash cooldown measured from start — `cooldown is measured from dash start` test
+- [ ] **Three external playtesters report the movement feels good, unprompted** — _3 playtests clean, but "unprompted positive" not explicitly reported_
+- [x] "It didn't register" ≤ 1 per 10 minutes of play — 3 playtests reported zero occurrences (M1-S20 Days 2/4)
+- [x] Zero heap growth over 60 s of movement — live 60s probe +0.16 MB (GC sawtooth); in-game tracker `Δ60s +0.4 MB stable`
+- [ ] Sustained 60 fps on minimum hardware — _reads 100 fps on dev machine; not verified on the 2019 MacBook Air baseline_
+- [x] Debug overlay complete for M1 scope — live-confirmed: sparkline, per-system ms, pools (dust/ghost/particle), frame-step, heap tracker
 - [x] **Constants LOCKED, ADR-023 written**
-- [ ] Pillar 1 audit: all five falsification tests pass
+- [ ] Pillar 1 audit: all five falsification tests pass — _3 of 5 automated (animator-readonly, landing, input-not-ignored); 2 need human playtest + camera_
 
 Then (post-gate, after all exit boxes):
 
