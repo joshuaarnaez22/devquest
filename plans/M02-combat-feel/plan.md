@@ -1,5 +1,6 @@
 # M2 — Combat Feel
 
+**Status:** 🔄 In progress · next **M2-S02** (`M2-T2`) · S01 done
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -35,6 +36,38 @@ Put a header comment on `Skeleton.ts` saying exactly this, or it looks like poor
 
 ---
 
+## Sessions (do not run M2 in one shot)
+
+**One session = one sitting = one task** (except S13, which is five day-sessions inside T13).
+Commit when that session's Verify passes. Do not start the next session in the same breath
+unless you are mid-flow and unblocked. Task IDs stay stable; session IDs are only a work queue.
+
+**Rule:** stop at each ▶ checkpoint and play before continuing. Checkpoints continue M1's
+A–D lettering (E, F, G) and mark the points where combat becomes observable.
+
+| Session        | Task                                | ~h  | Done when                                                          |
+| -------------- | ----------------------------------- | --- | ------------------------------------------------------------------ |
+| [x] **M2-S01** | M2-T1 Components                    | 8   | Poise break/regen + i-frame max-not-sum unit-tested                |
+| [ ] **M2-S02** | M2-T2 Hitbox / Hurtbox              | 8   | 83 ms window over 5 frames = exactly 1 hit                         |
+| [ ] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                 |
+| [ ] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — hitbox at `windupMs` ±1 frame; combo chains   |
+| [ ] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
+| [ ] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives           |
+| [ ] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`               |
+| [ ] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | ▶ **Checkpoint F** — poise break vs flinch visibly distinct        |
+| [ ] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                        |
+| [ ] **M2-S10** | M2-T10 Player damage/i-frames/death | 8   | i-frames block exactly 800 ms; 100 ms flicker                      |
+| [ ] **M2-S11** | M2-T11 Four abilities               | 10  | Each ability works on its hero; parry → 2× crit                    |
+| [ ] **M2-S12** | M2-T12 Crouch                       | 2   | ▶ **Checkpoint G** — Skeleton fight playable end to end            |
+| [ ] **M2-S13** | M2-T13 Combat tuning                | 18  | Five day-sessions (see T13); **no features**; muted-recording test |
+| [ ] **M2-S14** | M2-T14 Debug overlay: combat        | 4   | `F9` renders hitbox/hurtbox/poise/hit-stop                         |
+| [ ] **M2-S15** | M2-T15 Pillar 2 tests + perf gates  | 6   | Five `p2.*` checks green; `resolveQueuedHits()` < 1 ms / 8 hits    |
+| [ ] **M2-S16** | M2-T16 Buffer                       | 2   | Overrun only — tests, not features                                 |
+
+**Start here:** open this plan → **M2-S01** → build → Verify → commit → stop.
+
+---
+
 ## Week 1 — Collision primitives (~30 h)
 
 ### M2-T1 — Components · 8 h
@@ -51,6 +84,13 @@ Put a header comment on `Skeleton.ts` saying exactly this, or it looks like poor
 
 **Verify:** unit tests. Poise break/regen semantics and i-frame max-not-sum are the two that
 must be exact.
+
+**Status (2026-08-11):** done. Five components in `src/components/`, 28 unit tests. Deviation
+from §12: `Poise` takes `now` as a method arg instead of holding a `Clock` — `components` may
+not import `platform` (eslint boundary), and this matches `IFrames` in the same section.
+`Knockback` is a pure impulse holder (decay + one-shot lift + last-wins replace); the
+`impulseScale` config multiplier is passed into `step()` so the component imports nothing.
+Full suite 189/29 green, typecheck + lint + no-cycles clean.
 
 ---
 
