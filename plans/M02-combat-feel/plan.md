@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S03** (`M2-T3`) · S01–S02 done
+**Status:** 🔄 In progress · next **M2-S04** (`M2-T4`) · S01–S03 done · ▶ Checkpoint E next
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -49,7 +49,7 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | -------------- | ----------------------------------- | --- | ------------------------------------------------------------------ |
 | [x] **M2-S01** | M2-T1 Components                    | 8   | Poise break/regen + i-frame max-not-sum unit-tested                |
 | [x] **M2-S02** | M2-T2 Hitbox / Hurtbox              | 8   | 83 ms window over 5 frames = exactly 1 hit                         |
-| [ ] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                 |
+| [x] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                 |
 | [ ] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — hitbox at `windupMs` ±1 frame; combo chains   |
 | [ ] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
 | [ ] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives           |
@@ -128,6 +128,15 @@ unintentional shoving and corner-trapping, and it halves the physics broadphase 
 Resolving inside a callback corrupts the physics group and produces random crashes.
 
 **Verify:** overlap fires, queue fills, nothing resolves until `resolveQueuedHits()`.
+
+**Status (2026-08-11):** done for the buildable half. `src/config/CollisionGroups.ts`
+(bitmask + normative `COMBAT_OVERLAP_PAIRS`, §5.4) and `src/systems/HitQueue.ts`
+(`queue`/`drain`/`clear` — buffers during the step, resolves nothing until drained). 9 tests.
+`HitQueue` is standalone so CombatSystem composes it in T5; priority sort (§9.3) stays in T5
+where fatal/damage are known. **Deferred:** the actual `physics.add.overlap` registration in
+`GameScene` — there are no attack hitboxes (T4) or enemies (T9) to overlap yet, so wiring it
+now would be untestable scaffolding. It lands with the first real hit in T9/T10 via
+`COMBAT_OVERLAP_PAIRS`.
 
 ---
 
