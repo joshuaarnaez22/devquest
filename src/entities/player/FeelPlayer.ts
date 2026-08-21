@@ -5,6 +5,7 @@ import { Entity } from '@entities/Entity';
 import { AttackScheduler } from '@entities/player/AttackScheduler';
 import { SAMURAI_AIR_ATTACK, SAMURAI_COMBO } from '@entities/player/CharacterCombat';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
+import { FrozenInputLatch } from '@entities/player/FrozenInputLatch';
 import { PlayerAnimator } from '@entities/player/PlayerAnimator';
 import { PlayerController, WALL_JUMP_PUSH } from '@entities/player/PlayerController';
 import {
@@ -66,6 +67,8 @@ export class FeelPlayer extends Entity {
    */
   private readonly attack = new AttackScheduler();
   private readonly attackHitbox = new Hitbox();
+  /** Attack/dash/special presses that land while frozen by hit stop (M2-T6, §6.2 P3). */
+  private readonly frozenInput = new FrozenInputLatch();
   private movement: CharacterMovement = SAMURAI_MOVEMENT;
   private animPrefix = 'samurai';
   private facing: -1 | 1 = 1;
@@ -149,6 +152,11 @@ export class FeelPlayer extends Entity {
   get velocityX(): number {
     const body = this.body as Phaser.Physics.Arcade.Body | null;
     return body?.velocity.x ?? 0;
+  }
+
+  /** While frozen, `onUpdate` never runs — latch the raw press so it is not lost. */
+  protected override onFrozenTick(): void {
+    this.frozenInput.captureWhileFrozen(this.frames.frame);
   }
 
   /**
@@ -373,9 +381,17 @@ export class FeelPlayer extends Entity {
     this.fsmHost.inputToWall = inputToWall;
     this.fsmHost.jumpKind = this.jumpKind;
     this.fsmHost.bufferedJump = this.jumpKind === 'ground' || this.isBufferActive(frame, t);
-    this.fsmHost.wantsDash = frame.dashPressed;
-    this.fsmHost.wantsAttack = frame.attackPressed;
-    this.fsmHost.wantsSpecial = frame.specialPressed;
+    // Input buffered during hit stop, never dropped (docs/07 §6.2, P3) — a press that
+    // landed on a frozen frame (captured via onFrozenTick) is honored here exactly
+    // once, on the first real frame after release.
+    const buffered = this.frozenInput.applyAndClear({
+      attack: frame.attackPressed,
+      dash: frame.dashPressed,
+      special: frame.specialPressed,
+    });
+    this.fsmHost.wantsDash = buffered.dash;
+    this.fsmHost.wantsAttack = buffered.attack;
+    this.fsmHost.wantsSpecial = buffered.special;
     this.fsmHost.downHeld = frame.moveY > 0;
     this.fsmHost.dashing = this.controller.isDashing;
     this.fsmHost.dashReady =

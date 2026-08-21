@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S06** (`M2-T6`) · S01–S05 done · ▶ Checkpoint E confirmed (e2e)
+**Status:** 🔄 In progress · next **M2-S07** (`M2-T7`) · S01–S06 done · ▶ Checkpoint E confirmed (e2e)
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -52,7 +52,7 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | [x] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                 |
 | [x] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — confirmed via e2e (`combo.spec.ts`), see T5   |
 | [x] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
-| [ ] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives           |
+| [x] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives           |
 | [ ] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`               |
 | [ ] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | ▶ **Checkpoint F** — poise break vs flinch visibly distinct        |
 | [ ] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                        |
@@ -230,6 +230,32 @@ and lurches when released. It reads as "the hit stop feels wrong" with no obviou
 
 **Verify:** three tests — particles continue during a freeze; two 110 ms requests produce a
 110 ms freeze; velocity survives the freeze intact.
+
+**Status (2026-08-11):** done, all four rules. `src/systems/HitStopSystem.ts` implements
+`HitStopScale` (the M1 seam already wired into `Entity.update()`) and matches
+`CombatSinks.requestHitStop`'s exact signature so it plugs into `CombatSystem`'s fan-out
+without an adapter, once GameScene wiring happens (deferred like T3's — no real enemy exists
+yet to freeze against). Single global `freezeUntil` + a `frozen` id set, exactly per §6.2's
+own sample: longest-wins-never-additive falls out of `if (end > freezeUntil)` naturally.
+
+**Velocity/gravity save-restore** upgrades `Entity.update()`'s M1 placeholder (its own comment
+already flagged this as "lands with HitStopSystem (M2)"). One real deviation from §6.2's
+illustrative code: it hardcodes `allowGravity = true` on release, but `FeelPlayer` permanently
+sets `allowGravity = false` and integrates gravity manually (`PHYSICS.GRAVITY_Y` is a real
+nonzero world gravity — confirmed in `PhaserConfig.ts` — so a hardcoded restore would silently
+re-enable Arcade's own gravity underneath the player's manual math). Entity now saves and
+restores the entity's own prior value instead of hardcoding `true`.
+
+**Input buffered, never dropped** is the one requiring real new plumbing: `Entity.update()`
+skips `onUpdate` entirely while frozen (correct for motion), which meant `FeelPlayer` never
+even looked at `InputFrame` on a frozen frame — silently dropping any one-frame
+`attackPressed`/`dashPressed`/`specialPressed` edge that landed there (jump already survives
+this via its own absolute-timestamp `JUMP_BUFFER`; the other three had no such protection).
+Added `Entity.onFrozenTick()` (runs every frozen frame instead of `onUpdate`) and
+`FrozenInputLatch` (pure, tested) — `FeelPlayer` latches a press during the freeze and applies
+it exactly once on the first real frame after release.
+
+275/40 unit suite green (+16), typecheck/lint/cycles clean.
 
 ---
 
