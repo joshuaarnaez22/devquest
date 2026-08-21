@@ -8,7 +8,7 @@ const SPEC: BoxSpec = { width: 20, height: 16, offsetX: 12, offsetY: 0 };
 function makeHit(attackerId: number, victimId: number): QueuedHit {
   const hitbox = new Hitbox();
   hitbox.schedule(0, 0, 83, SPEC);
-  return { hitbox, attackerId, victimId, point: { x: 0, y: 0 }, source: 'melee' };
+  return { hitbox, attackerId, victimId, point: { x: 0, y: 0 }, source: 'melee', step: null };
 }
 
 describe('HitQueue — buffer during physics, resolve after (§10.1)', () => {

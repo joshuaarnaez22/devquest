@@ -11,7 +11,7 @@ describe('EventBus', () => {
       attacker: 1,
       victim: 2,
       damage: 5,
-      kind: 'melee',
+      kind: 'light',
       point: { x: 0, y: 0 },
     };
     bus.emit('combat:hit', payload);

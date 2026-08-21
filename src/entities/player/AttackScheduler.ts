@@ -1,4 +1,4 @@
-import { hitboxSpecFor, type AttackStep } from '@entities/player/AttackStep';
+import { hitboxSpecFor, type AttackStep } from '@components/AttackStep';
 import type { Hitbox } from '@components/Hitbox';
 
 /**

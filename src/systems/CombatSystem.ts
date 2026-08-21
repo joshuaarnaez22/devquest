@@ -1,0 +1,342 @@
+import {
+  DEATH_VFX,
+  FLASH_COLOUR,
+  HIT_TIERS,
+  KILL_BONUS,
+  PARTICLE_FOR_HIT_KIND,
+  type DamageNumberStyle,
+  type HitKind,
+  type ParticleId,
+  type VfxId,
+} from '@config/CombatFeedback';
+import type { Health } from '@components/Health';
+import type { IFrames } from '@components/IFrames';
+import type { Poise } from '@components/Poise';
+import type { EntityId, Vec2 } from '@core/GameEvents';
+import type { HitQueue, QueuedHit } from '@systems/HitQueue';
+
+/**
+ * Every field required — omitting a feedback layer is a compile error, not a runtime
+ * gap (docs/07-Combat.md §6.1). This is Pillar 2's falsification test #1 enforced by
+ * the type system.
+ */
+export interface HitResolution {
+  readonly attacker: EntityId;
+  readonly victim: EntityId;
+  readonly attackInstanceId: number;
+  readonly point: Readonly<Vec2>;
+  readonly kind: HitKind;
+
+  readonly damage: number;
+  readonly poiseDamage: number;
+  readonly fatal: boolean;
+
+  readonly hitStopMs: number;
+
+  readonly flashMs: number;
+  readonly flashColour: number;
+
+  readonly knockback: Readonly<{
+    readonly speed: number;
+    readonly dirX: -1 | 1;
+    readonly liftY: number;
+    readonly decayMs: number;
+  }>;
+
+  readonly vfxId: VfxId;
+  readonly vfxAngleDeg: number;
+
+  /**
+   * NOT independently specified by §6.6 — that section only gives per-kind `trauma`,
+   * consumed via `CameraSystem.addTrauma` (see `applyResolution` in §11.1, which reads
+   * `res.kind`/`res.fatal`, never `res.shake`). Derived here from already-normative
+   * `HIT_TIERS` fields (trauma → amplitude, hitStopMs → durationMs) rather than
+   * inventing new numbers. Flag for review if a distinct per-kind shake table exists.
+   */
+  readonly shake: Readonly<{ readonly amplitude: number; readonly durationMs: number }>;
+
+  readonly staggerMs: number;
+
+  readonly numberStyle: DamageNumberStyle;
+
+  readonly particleId: ParticleId;
+  readonly particleCount: number;
+
+  /** Only meaningful when `fatal`. Elite/boss selection lands with M4+ content. */
+  readonly deathVfxId: VfxId;
+}
+
+/** §7.1 — every term present even where it is 1.0 in M2 (charms/assist/guard land later). */
+export interface DamageFormulaInputs {
+  readonly attackMultiplier: number; // 2.0 parry-critical, else 1.0
+  readonly charmMultiplier: number; // product of equipped charms, 0.8-1.3 (M6)
+  readonly assistMultiplier: number; // player-damage-taken only (M11)
+  readonly guardMultiplier: number; // 0.25 Knight guarding from front, else 1.0 (M2-T11)
+}
+
+export const DEFAULT_FORMULA_INPUTS: DamageFormulaInputs = {
+  attackMultiplier: 1,
+  charmMultiplier: 1,
+  assistMultiplier: 1,
+  guardMultiplier: 1,
+};
+
+/** What CombatSystem needs from a hit's target — not the concrete Entity/FeelPlayer. */
+export interface CombatVictim {
+  readonly id: EntityId;
+  readonly isPlayer: boolean;
+  readonly active: boolean;
+  readonly health: Health;
+  readonly poise: Poise;
+  readonly iFrames: IFrames;
+  /** Character/enemy stat, 0.6-1.3 (§6.4). */
+  readonly knockbackTaken: number;
+  /** Enemy stat, 0.0-0.9; 0 for the player (§6.4). */
+  readonly knockbackResist: number;
+  /** `victimArmour`, 0.0-0.5; 0 for the player (§7.1). */
+  readonly armour: number;
+  /** Stagger duration scale, 0..1 (§6.7). */
+  readonly poiseResist: number;
+  /** Full-stagger duration for this entity type, ms (§6.7, §8.2). */
+  readonly baseStaggerMs: number;
+}
+
+/**
+ * The nine feedback layers as an injected fan-out contract (§10 — CombatSystem calls
+ * into consumers, nothing calls into CombatSystem). Layers 1-5 and 8 fire synchronously
+ * at resolution time; layers 6-7 (plus the poise-break particle burst) are deferred by
+ * `delay(hitStopMs, …)` so the stagger/number are visible rather than eaten by the
+ * freeze (§6.7); layer 9 fires synchronously alongside them (§11.1's `applyDeath` is
+ * called outside the delayed block). `delay` is scheduling infrastructure, not a layer.
+ */
+export interface CombatSinks {
+  requestHitStop(ms: number, participants: readonly EntityId[]): void;
+  applyFlash(victimId: EntityId, colour: number, flashMs: number): void;
+  applyKnockback(victimId: EntityId, knockback: HitResolution['knockback']): void;
+  spawnSlashVfx(vfxId: VfxId, point: Readonly<Vec2>, angleDeg: number): void;
+  addCameraTrauma(amount: number): void;
+  burstParticles(particleId: ParticleId, point: Readonly<Vec2>, count: number): void;
+  applyStagger(victimId: EntityId, staggerMs: number, poiseBroken: boolean): void;
+  spawnDamageNumber(damage: number, point: Readonly<Vec2>, style: DamageNumberStyle): void;
+  applyDeath(victimId: EntityId, res: HitResolution): void;
+  emitHit(res: HitResolution): void;
+  delay(ms: number, cb: () => void): void;
+}
+
+/** Trauma added on top of a hit's own tier trauma when the hit is fatal (§6.6). */
+function traumaFor(kind: HitKind, fatal: boolean): number {
+  const base = HIT_TIERS[kind].trauma;
+  return fatal ? base + KILL_BONUS.trauma : base;
+}
+
+/** §7.1 — clamped to a minimum of 1; never zero except explicit block/parry paths (M2-T11). */
+export function computeDamage(
+  baseDamage: number,
+  victimArmour: number,
+  inputs: DamageFormulaInputs = DEFAULT_FORMULA_INPUTS,
+): number {
+  const raw =
+    baseDamage *
+    inputs.attackMultiplier *
+    inputs.charmMultiplier *
+    inputs.assistMultiplier *
+    (1 - victimArmour) *
+    inputs.guardMultiplier;
+  return Math.max(1, Math.round(raw));
+}
+
+/** §9.3 same-frame ordering: fatal DESC, damage DESC, attackerIsPlayer DESC. */
+export function compareHitPriority(
+  a: { readonly fatal: boolean; readonly damage: number; readonly attackerIsPlayer: boolean },
+  b: { readonly fatal: boolean; readonly damage: number; readonly attackerIsPlayer: boolean },
+): number {
+  if (a.fatal !== b.fatal) return a.fatal ? -1 : 1;
+  if (a.damage !== b.damage) return b.damage - a.damage;
+  if (a.attackerIsPlayer !== b.attackerIsPlayer) return a.attackerIsPlayer ? -1 : 1;
+  return 0;
+}
+
+/**
+ * `QueuedHit.source` (how the overlap was detected) and `HitKind` (the feedback tier)
+ * overlap but are not the same vocabulary. A melee hit's kind comes from its
+ * `AttackStep.hitKind` (light/heavy for the Samurai combo); contact/hazard sources map
+ * 1:1. `projectile` has no ranged-attack model yet (Wizard's is M2-T11) — defaulted to
+ * `ranged` as the closest fit, flagged for when a real projectile step exists.
+ */
+function resolveHitKind(hit: QueuedHit): HitKind {
+  if (hit.step !== null) return hit.step.hitKind;
+  if (hit.source === 'contact' || hit.source === 'hazard') return hit.source;
+  return 'ranged'; // 'melee' with no step, or 'projectile' — no model yet, placeholder
+}
+
+/** §6.4 — step overrides win (more precise than the generic tier); resist/taken scale it. */
+function computeKnockback(
+  hit: QueuedHit,
+  tier: HitResolution['knockback'] & { readonly decayMs: number },
+  victim: CombatVictim,
+): HitResolution['knockback'] {
+  const baseSpeed = hit.step?.knockback ?? tier.speed;
+  const lift = hit.step?.knockbackLift ?? tier.liftY;
+  const dirX: -1 | 1 = hit.point.x >= 0 ? 1 : -1; // caller resolves the true sign
+  return {
+    speed: baseSpeed * victim.knockbackTaken * (1 - victim.knockbackResist),
+    dirX,
+    liftY: lift,
+    decayMs: tier.decayMs,
+  };
+}
+
+/** §6.7 — full stagger scaled by poise resist when broken, else a flat 100ms flinch. */
+function computeStagger(poiseBroken: boolean, victim: CombatVictim): number {
+  return poiseBroken ? victim.baseStaggerMs * (1 - victim.poiseResist) : 100;
+}
+
+/** §6.8 — the four style branches reachable without guard/heal systems (M2-T11+). */
+function computeNumberStyle(
+  kind: HitKind,
+  isCritical: boolean,
+  isPlayer: boolean,
+): DamageNumberStyle {
+  if (isCritical) return 'critical';
+  if (kind === 'magic') return 'magic';
+  return isPlayer ? 'playerDamage' : 'normal';
+}
+
+/**
+ * Pure: builds the full `HitResolution` for one queued hit against its (not-yet-damaged)
+ * victim. Damage/poise damage from §7.1/§7.3; the rest defaults from `HIT_TIERS[kind]`,
+ * with the melee step's own knockback/vfxAngleDeg overriding the tier default where a
+ * step is present (a step's numbers are more precise than the generic tier).
+ */
+export function buildResolution(
+  hit: QueuedHit,
+  victim: CombatVictim,
+  formula: DamageFormulaInputs = DEFAULT_FORMULA_INPUTS,
+): HitResolution {
+  const kind = resolveHitKind(hit);
+  const tier = HIT_TIERS[kind];
+  const baseDamage = hit.step?.damage ?? 0;
+  const damage = computeDamage(baseDamage, victim.armour, formula);
+  const fatal = victim.health.value - damage <= 0;
+  const poiseBroken = victim.poise.value - baseDamage <= 0;
+
+  return {
+    attacker: hit.attackerId,
+    victim: hit.victimId,
+    attackInstanceId: hit.hitbox.instance,
+    point: hit.point,
+    kind,
+
+    damage,
+    poiseDamage: baseDamage,
+    fatal,
+
+    hitStopMs: fatal ? tier.hitStopMs + KILL_BONUS.hitStopMs : tier.hitStopMs,
+
+    flashMs: tier.flashMs,
+    flashColour: fatal ? FLASH_COLOUR.fatal : FLASH_COLOUR.normal,
+
+    knockback: computeKnockback(
+      hit,
+      {
+        speed: tier.knockbackSpeed,
+        dirX: 1,
+        liftY: tier.knockbackLift,
+        decayMs: tier.knockbackDecayMs,
+      },
+      victim,
+    ),
+
+    vfxId: tier.vfxId,
+    vfxAngleDeg: hit.step?.vfxAngleDeg ?? 0,
+
+    shake: { amplitude: tier.trauma, durationMs: tier.hitStopMs },
+
+    staggerMs: computeStagger(poiseBroken, victim),
+
+    numberStyle: computeNumberStyle(kind, formula.attackMultiplier >= 2, victim.isPlayer),
+
+    particleId: PARTICLE_FOR_HIT_KIND[kind],
+    particleCount: tier.particleCount,
+
+    deathVfxId: DEATH_VFX.normal,
+  };
+}
+
+/**
+ * Resolves everything queued since the last drain (§11.1). Damage/poise apply
+ * immediately; the nine feedback layers fan out to `sinks`. `resolveQueuedHits` is
+ * called once per frame, AFTER the physics step (§10.1) — never from inside an
+ * overlap callback.
+ */
+export class CombatSystem {
+  constructor(
+    private readonly queue: HitQueue,
+    private readonly victims: ReadonlyMap<EntityId, CombatVictim>,
+    private readonly sinks: CombatSinks,
+    private readonly now: () => number,
+  ) {}
+
+  queueHit(hit: QueuedHit): void {
+    this.queue.queue(hit);
+  }
+
+  resolveQueuedHits(): void {
+    const batch = this.queue.drain();
+    if (batch.length === 0) return;
+
+    const withVictims = batch
+      .map(hit => ({ hit, victim: this.victims.get(hit.victimId) }))
+      .filter((x): x is { hit: QueuedHit; victim: CombatVictim } => x.victim !== undefined);
+
+    const scored = withVictims.map(({ hit, victim }) => {
+      const baseDamage = hit.step?.damage ?? 0;
+      const damage = computeDamage(baseDamage, victim.armour);
+      const attackerIsPlayer = this.victims.get(hit.attackerId)?.isPlayer ?? false;
+      return {
+        hit,
+        victim,
+        fatal: victim.health.value - damage <= 0,
+        damage,
+        attackerIsPlayer,
+      };
+    });
+
+    scored.sort(compareHitPriority);
+
+    for (const { hit, victim } of scored) {
+      if (!victim.active) continue;
+      if (victim.health.isDead) continue; // covers §9.3 rule 7 — later hits on a dead victim
+      if (victim.iFrames.isActive(this.now())) continue;
+      if (!hit.hitbox.canHit(hit.victimId)) continue;
+
+      hit.hitbox.markHit(hit.victimId);
+      const res = buildResolution(hit, victim);
+      this.applyResolution(res, victim);
+    }
+  }
+
+  private applyResolution(res: HitResolution, victim: CombatVictim): void {
+    const now = this.now();
+    victim.health.damage(res.damage);
+    const poiseBroken = victim.poise.damage(res.poiseDamage, now);
+
+    this.sinks.requestHitStop(res.hitStopMs, [res.attacker, res.victim]);
+    this.sinks.applyFlash(res.victim, res.flashColour, res.flashMs);
+    this.sinks.applyKnockback(res.victim, res.knockback);
+    this.sinks.spawnSlashVfx(res.vfxId, res.point, res.vfxAngleDeg);
+    this.sinks.addCameraTrauma(traumaFor(res.kind, res.fatal));
+    this.sinks.burstParticles(res.particleId, res.point, res.particleCount);
+
+    this.sinks.delay(res.hitStopMs, () => {
+      if (!victim.active) return;
+      this.sinks.applyStagger(res.victim, res.staggerMs, poiseBroken);
+      this.sinks.spawnDamageNumber(res.damage, res.point, res.numberStyle);
+      if (poiseBroken) this.sinks.burstParticles('poise_break', res.point, 12);
+    });
+
+    if (res.fatal) this.sinks.applyDeath(res.victim, res);
+
+    this.sinks.emitHit(res);
+  }
+}

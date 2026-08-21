@@ -54,4 +54,9 @@ describe('Samurai Blade Chain data (§7.2.3)', () => {
     expect(SAMURAI_AIR_ATTACK.comboWindowMs).toBe(0);
     expect(SAMURAI_AIR_ATTACK.index).toBe(1);
   });
+
+  it('vfx angles match §6.5: rising slash +45°, air attack (downward) +75°', () => {
+    expect(SAMURAI_COMBO[0]?.vfxAngleDeg).toBe(45);
+    expect(SAMURAI_AIR_ATTACK.vfxAngleDeg).toBe(75);
+  });
 });

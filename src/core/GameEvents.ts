@@ -1,3 +1,5 @@
+import type { HitKind } from '@config/CombatFeedback';
+
 /** M0 stub branded-id stand-ins — replaced in later milestones. */
 export type EntityId = number;
 export type EnemyDefId = string;
@@ -11,7 +13,8 @@ export type PortfolioSectionId = string;
 export type SceneKey = string;
 export type SettingKey = string;
 
-export type HitKind = 'contact' | 'melee' | 'projectile';
+/** Re-exported for callers that only need the event payload shape (M2-T5). */
+export type { HitKind };
 export type Vec2 = { readonly x: number; readonly y: number };
 
 /** Typed game event payloads (expand as systems land). */

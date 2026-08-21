@@ -14,12 +14,12 @@ import {
 } from '@entities/player/PlayerStates';
 import { SquashStretch } from '@entities/ProceduralAnim';
 import { now } from '@platform/Clock';
+import type { AttackStep } from '@components/AttackStep';
 import type { EventBus } from '@core/EventBus';
 import type { GameEventMap } from '@core/GameEvents';
 import type { InputFrame, InputFrameSource } from '@core/InputFrame';
 import type { StateMachine } from '@core/StateMachine';
 import type { CharacterContent, CharacterId } from '@data/CharacterTypes';
-import type { AttackStep } from '@entities/player/AttackStep';
 import type { CharacterMovement } from '@entities/player/CharacterMovement';
 import type { PlayerStateId } from '@entities/player/PlayerStateId';
 import type { PlayerFsmHost } from '@entities/player/PlayerStates';

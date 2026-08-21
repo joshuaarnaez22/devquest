@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S05** (`M2-T5`) · S01–S04 done (Checkpoint E live-check pending)
+**Status:** 🔄 In progress · next **M2-S06** (`M2-T6`) · S01–S05 done · ▶ Checkpoint E confirmed (e2e)
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -50,8 +50,8 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | [x] **M2-S01** | M2-T1 Components                    | 8   | Poise break/regen + i-frame max-not-sum unit-tested                |
 | [x] **M2-S02** | M2-T2 Hitbox / Hurtbox              | 8   | 83 ms window over 5 frames = exactly 1 hit                         |
 | [x] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                 |
-| [x] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | Logic tested; ▶ **Checkpoint E** live combo-chain check pending    |
-| [ ] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
+| [x] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — confirmed via e2e (`combo.spec.ts`), see T5   |
+| [x] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
 | [ ] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives           |
 | [ ] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`               |
 | [ ] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | ▶ **Checkpoint F** — poise break vs flinch visibly distinct        |
@@ -183,6 +183,34 @@ Every damage number in the game must be reproducible by hand from that formula.
 `HIT_TIERS` lookup table (§12), normative.
 
 **Verify:** integration test asserting all nine side effects fire on one hit.
+
+**Status (2026-08-11):** done. `HitResolution`/`CombatVictim`/`CombatSinks`/`HIT_TIERS` (the
+last two in `src/config/CombatFeedback.ts` — `VfxId`/`ParticleId`/`DamageNumberStyle` also
+enumerated there, from §6.5/§6.8/§6.9/§6.10). `resolveQueuedHits()` implements §7.1 damage,
+§7.3 poise damage, §9.3 same-frame priority sort (fatal DESC/damage DESC/attackerIsPlayer
+DESC — "discard later hits on a dead victim" falls out of the existing dead-check for free),
+and fans out to 9 injected sinks (T6-T8 will implement them against real systems). The Verify
+integration test passes; §7.2's four worked damage examples (A-D) are locked in as regression
+fixtures. 259/38 unit suite green, typecheck/lint/cycles clean.
+
+**Also closed the M2-T4 Checkpoint E live-check** that was left pending (preview pane was
+hidden all session): added `e2e/combo.spec.ts` (real Playwright, not the interactive pane) —
+9/9 passing across Chromium/Firefox/WebKit, asserting the Samurai combo actually chains
+ATTACK_1→ATTACK_2→ATTACK_3→IDLE with real keyboard events. Found and fixed a real e2e-only
+bug in the test itself: Playwright's `keyboard.press()` does down+up faster than one 16.67ms
+frame, invisible to `InputSystem`'s per-frame edge detection — fixed by holding the key down
+across a frame boundary before releasing.
+
+**Deviations flagged for review:**
+
+- `HitResolution.shake` has no independent per-kind spec (§6.6 only gives `trauma`, consumed
+  via `addTrauma`) — derived from already-normative `HIT_TIERS` fields (trauma→amplitude,
+  hitStopMs→durationMs) rather than inventing new numbers.
+- `QueuedHit.source: 'projectile'` has no ranged/magic model yet (Wizard's is M2-T11) —
+  `resolveHitKind` defaults it to `ranged` as a placeholder.
+- `AttackStep` moved from `entities/player/` to `components/` — `systems` (`HitQueue`) needed
+  to reference it for `QueuedHit.step`, and `systems`/`entities` are sibling layers that
+  cannot import each other.
 
 ---
 
