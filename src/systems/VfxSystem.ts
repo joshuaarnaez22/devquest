@@ -1,3 +1,5 @@
+import Phaser from 'phaser';
+import { VFX_VISUAL, type VfxId } from '@config/CombatFeedback';
 import { Depth } from '@config/Depth';
 import { Palette } from '@config/Palette';
 import { VFX } from '@config/VfxConstants';
@@ -11,10 +13,9 @@ import {
   type DustKind,
 } from '@systems/vfxRules';
 import type { EventBus } from '@core/EventBus';
-import type { GameEventMap } from '@core/GameEvents';
+import type { GameEventMap, Vec2 } from '@core/GameEvents';
 import type { Poolable } from '@core/ObjectPool';
 import type { System } from '@core/SystemRegistry';
-import type Phaser from 'phaser';
 
 /** Feet / motion sample for continuous dust (run trail, skid). */
 export interface PlayerVfxSource {
@@ -41,6 +42,12 @@ interface GhostSprite extends Poolable {
   lifeMs: number;
 }
 
+interface SlashSprite extends Poolable {
+  readonly view: Phaser.GameObjects.Rectangle;
+  lifeMs: number;
+  maxLifeMs: number;
+}
+
 interface PendingAfterimage {
   dueInMs: number;
   x: number;
@@ -64,8 +71,10 @@ export class VfxSystem implements System {
   private source: PlayerVfxSource | null = null;
   private dustPool: ObjectPool<DustSprite> | null = null;
   private ghostPool: ObjectPool<GhostSprite> | null = null;
+  private slashPool: ObjectPool<SlashSprite> | null = null;
   private readonly dustLive: DustSprite[] = [];
   private readonly ghostLive: GhostSprite[] = [];
+  private readonly slashLive: SlashSprite[] = [];
   private readonly pendingGhosts: PendingAfterimage[] = [];
   private runDustMs = 0;
   private wasSkidding = false;
@@ -85,6 +94,11 @@ export class VfxSystem implements System {
       VFX.AFTERIMAGE_POOL_INITIAL,
       VFX.AFTERIMAGE_POOL_MAX,
     );
+    this.slashPool = new ObjectPool(
+      () => this.makeSlash(scene),
+      VFX.SLASH_POOL_INITIAL,
+      VFX.SLASH_POOL_MAX,
+    );
 
     bus.on('player:jumped', p => this.spawnDust('dust_jump', p.x, p.y), this);
     bus.on('player:landed', p => this.onLanded(p.impactSpeed, p.x, p.y), this);
@@ -103,9 +117,14 @@ export class VfxSystem implements System {
     return this.ghostPool?.stats ?? { free: 0, live: 0, peak: 0 };
   }
 
+  get slashStats() {
+    return this.slashPool?.stats ?? { free: 0, live: 0, peak: 0 };
+  }
+
   postPhysics(_time: number, delta: number): void {
     this.tickDust(delta);
     this.tickGhosts(delta);
+    this.tickSlashes(delta);
     this.tickPendingGhosts(delta);
     this.tickContinuousDust(delta);
   }
@@ -114,14 +133,40 @@ export class VfxSystem implements System {
     this.bus?.offAllFor(this);
     this.dustPool?.releaseAll();
     this.ghostPool?.releaseAll();
+    this.slashPool?.releaseAll();
     this.dustPool = null;
     this.ghostPool = null;
+    this.slashPool = null;
     this.dustLive.length = 0;
     this.ghostLive.length = 0;
+    this.slashLive.length = 0;
     this.pendingGhosts.length = 0;
     this.scene = null;
     this.bus = null;
     this.source = null;
+  }
+
+  /**
+   * Layer 4 — slash/impact VFX (docs/07 §6.5). `point` is already the caller's
+   * pre-offset spawn position (contact point shifted 40% toward the victim, computed
+   * by `CombatSystem`) — this method only draws at it. Grey placeholder rectangles
+   * (ADD-blended) until M3 art; sizing/duration from `VFX_VISUAL`.
+   */
+  spawnSlash(vfxId: VfxId, point: Readonly<Vec2>, angleDeg: number): void {
+    const pool = this.slashPool;
+    if (pool === null) return;
+    const fx = pool.acquire();
+    if (fx === undefined) return;
+    const visual = VFX_VISUAL[vfxId];
+    const lifeMs = (visual.frames / 60) * 1000;
+    fx.maxLifeMs = lifeMs;
+    fx.lifeMs = lifeMs;
+    fx.view.setPosition(point.x, point.y);
+    fx.view.setSize(visual.width, visual.height);
+    fx.view.setAngle(angleDeg);
+    fx.view.setAlpha(1);
+    fx.view.setVisible(true);
+    fx.view.setActive(true);
   }
 
   /** Test / debug — force a dust puff without the bus. */
@@ -239,6 +284,18 @@ export class VfxSystem implements System {
     }
   }
 
+  private tickSlashes(delta: number): void {
+    const pool = this.slashPool;
+    if (pool === null) return;
+    for (let i = this.slashLive.length - 1; i >= 0; i--) {
+      const fx = this.slashLive[i];
+      if (fx === undefined) continue;
+      fx.lifeMs -= delta;
+      fx.view.setAlpha(Math.max(0, fx.lifeMs / fx.maxLifeMs));
+      if (fx.lifeMs <= 0) pool.release(fx);
+    }
+  }
+
   private makeDust(scene: Phaser.Scene): DustSprite {
     const view = scene.add.rectangle(0, 0, VFX.DUST_SIZE, VFX.DUST_SIZE * 0.75, Palette.N5, 0.7);
     view.setDepth(Depth.VFX_WORLD);
@@ -260,6 +317,32 @@ export class VfxSystem implements System {
         view.setActive(false);
         const i = this.dustLive.indexOf(self);
         if (i >= 0) this.dustLive.splice(i, 1);
+      },
+    };
+    return self;
+  }
+
+  private makeSlash(scene: Phaser.Scene): SlashSprite {
+    // Palette N7 as the grey-box placeholder fill; ADD blend per §6.5's table —
+    // every row specifies it.
+    const view = scene.add.rectangle(0, 0, 1, 1, Palette.N7, 1);
+    view.setDepth(Depth.VFX_WORLD);
+    view.setBlendMode(Phaser.BlendModes.ADD);
+    view.setVisible(false);
+    view.setActive(false);
+    const self: SlashSprite = {
+      view,
+      lifeMs: 0,
+      maxLifeMs: 0,
+      active: false,
+      reset: () => {
+        this.slashLive.push(self);
+      },
+      onDespawn: () => {
+        view.setVisible(false);
+        view.setActive(false);
+        const i = this.slashLive.indexOf(self);
+        if (i >= 0) this.slashLive.splice(i, 1);
       },
     };
     return self;

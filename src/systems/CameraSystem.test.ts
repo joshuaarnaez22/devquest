@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { HIT_TIERS } from '@config/CombatFeedback';
 import { CameraSystem } from '@systems/CameraSystem';
 import type { CameraFollowTarget, CameraHandle } from '@systems/CameraSystem';
 
@@ -49,6 +50,14 @@ describe('CameraSystem', () => {
     cam.addTrauma(0.8);
     cam.addTrauma(0.8);
     expect(cam.traumaLevel).toBe(CameraSystem.MAX_TRAUMA);
+  });
+
+  it('four simultaneous heavy hits clamp rather than sum (M2-T7 Verify, §6.6)', () => {
+    // 4 x HIT_TIERS.heavy.trauma (0.26) = 1.04 — over MAX_TRAUMA if summed unclamped.
+    const cam = new CameraSystem();
+    for (let i = 0; i < 4; i++) cam.addTrauma(HIT_TIERS.heavy.trauma);
+    expect(cam.traumaLevel).toBe(CameraSystem.MAX_TRAUMA);
+    expect(cam.traumaLevel).toBeLessThan(4 * HIT_TIERS.heavy.trauma);
   });
 
   it('syncFollow writes rounded scroll without Phaser startFollow', () => {

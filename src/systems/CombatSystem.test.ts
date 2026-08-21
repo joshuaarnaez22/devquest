@@ -60,6 +60,7 @@ interface VictimOpts {
   readonly armour: number;
   readonly poiseResist: number;
   readonly baseStaggerMs: number;
+  readonly centre: { readonly x: number; readonly y: number };
 }
 
 const VICTIM_DEFAULTS: VictimOpts = {
@@ -74,6 +75,7 @@ const VICTIM_DEFAULTS: VictimOpts = {
   armour: 0,
   poiseResist: 0,
   baseStaggerMs: 220,
+  centre: { x: 0, y: 0 },
 };
 
 function makeVictim(overrides: Partial<VictimOpts> = {}): CombatVictim {
@@ -90,6 +92,7 @@ function makeVictim(overrides: Partial<VictimOpts> = {}): CombatVictim {
     armour: opts.armour,
     poiseResist: opts.poiseResist,
     baseStaggerMs: opts.baseStaggerMs,
+    centre: opts.centre,
   };
 }
 
@@ -234,7 +237,7 @@ describe('buildResolution', () => {
   it('poise damage always equals base damage, unaffected by multipliers (§7.3)', () => {
     const hit = makeHit({ step: SAMURAI_HIT_1 });
     const victim = makeVictim({ hp: 100 });
-    const res = buildResolution(hit, victim, {
+    const res = buildResolution(hit, victim, undefined, {
       attackMultiplier: 2,
       charmMultiplier: 1.3,
       assistMultiplier: 1,
@@ -264,9 +267,37 @@ describe('buildResolution', () => {
 
   it('knockback scales by victim knockbackTaken and (1 - knockbackResist)', () => {
     const hit = makeHit({ step: SAMURAI_HIT_1 });
+    // poiseMax 12 < 22 poise damage, so this hit breaks poise — poiseScale is 1.0, isolating
+    // the taken/resist factors under test here from the poiseScale test below.
     const victim = makeVictim({ hp: 100, knockbackTaken: 1.25, knockbackResist: 0.5 });
     const res = buildResolution(hit, victim);
     expect(res.knockback.speed).toBeCloseTo(70 * 1.25 * 0.5, 5);
+  });
+
+  it('a poise-intact victim receives only 35% knockback — this is what makes heavy enemies feel heavy (§6.4)', () => {
+    const hit = makeHit({ step: SAMURAI_HIT_1 }); // 22 poise damage
+    const intact = buildResolution(hit, makeVictim({ hp: 100, poiseMax: 60 })); // 60-22=38, intact
+    expect(intact.knockback.speed).toBeCloseTo(70 * 0.35, 5);
+
+    const broken = buildResolution(hit, makeVictim({ hp: 100, poiseMax: 12 })); // 12-22<=0, broken
+    expect(broken.knockback.speed).toBe(70); // full — poiseScale 1.0
+  });
+
+  it('knockback direction is Math.sign(victim.x - attacker.x) (§6.4)', () => {
+    const hit = makeHit({ step: SAMURAI_HIT_1 });
+    const victim = makeVictim({ hp: 100, poiseMax: 12, centre: { x: 100, y: 0 } });
+
+    const attackerLeft = { x: 50, y: 0 };
+    expect(buildResolution(hit, victim, attackerLeft).knockback.dirX).toBe(1); // pushed right
+
+    const attackerRight = { x: 150, y: 0 };
+    expect(buildResolution(hit, victim, attackerRight).knockback.dirX).toBe(-1); // pushed left
+  });
+
+  it('exact positional alignment defaults knockback direction to +1 (no facing at this layer)', () => {
+    const hit = makeHit({ step: SAMURAI_HIT_1 });
+    const victim = makeVictim({ hp: 100, poiseMax: 12, centre: { x: 100, y: 0 } });
+    expect(buildResolution(hit, victim, { x: 100, y: 0 }).knockback.dirX).toBe(1);
   });
 
   it('poise-broken stagger scales by (1 - poiseResist); intact poise is a flat 100ms flinch', () => {
@@ -283,7 +314,7 @@ describe('buildResolution', () => {
 
   it('numberStyle: critical > magic > playerDamage > normal', () => {
     const hit = makeHit({ step: SAMURAI_HIT_1 });
-    const crit = buildResolution(hit, makeVictim({ hp: 100 }), {
+    const crit = buildResolution(hit, makeVictim({ hp: 100 }), undefined, {
       attackMultiplier: 2,
       charmMultiplier: 1,
       assistMultiplier: 1,
@@ -345,6 +376,28 @@ describe('CombatSystem.resolveQueuedHits — nine layers fire on one hit (Verify
     expect(names).toContain('spawnDamageNumber'); // Layer 7
     expect(names).not.toContain('applyDeath'); // Layer 9 — not fatal, must NOT fire
     expect(names).toContain('emitHit');
+  });
+
+  it('positions the slash VFX 40% of the way from the contact point toward the victim centre (§6.5)', () => {
+    const queue = new HitQueue();
+    const attacker = makeVictim({ id: 1, isPlayer: true, hp: 100 });
+    const victim = makeVictim({ id: 99, hp: 100, poiseMax: 12, centre: { x: 100, y: 0 } });
+    const victims = new Map([
+      [attacker.id, attacker],
+      [victim.id, victim],
+    ]);
+    const { sinks, calls } = makeRecordingSinks();
+    const combat = new CombatSystem(queue, victims, sinks, () => 0);
+
+    combat.queueHit(
+      makeHit({ attackerId: 1, victimId: 99, step: SAMURAI_HIT_1, x: 0 }), // contact at x=0
+    );
+    combat.resolveQueuedHits();
+
+    const vfx = calls.find(c => c.name === 'spawnSlashVfx');
+    expect(vfx).toBeDefined();
+    const point = vfx?.args[1] as { x: number; y: number } | undefined;
+    expect(point?.x).toBeCloseTo(40, 5); // 0 + (100 - 0) * 0.4 — NOT the raw contact point (0)
   });
 
   it('fires applyDeath (layer 9) only when the hit is fatal', () => {

@@ -99,6 +99,8 @@ export interface CombatVictim {
   readonly poiseResist: number;
   /** Full-stagger duration for this entity type, ms (§6.7, §8.2). */
   readonly baseStaggerMs: number;
+  /** World-space centre, for knockback direction (§6.4) and VFX positioning (§6.5). */
+  readonly centre: Readonly<Vec2>;
 }
 
 /**
@@ -169,21 +171,34 @@ function resolveHitKind(hit: QueuedHit): HitKind {
   return 'ranged'; // 'melee' with no step, or 'projectile' — no model yet, placeholder
 }
 
-/** §6.4 — step overrides win (more precise than the generic tier); resist/taken scale it. */
+/**
+ * §6.4 — step overrides win (more precise than the generic tier); knockbackTaken/resist
+ * scale it, and a poise-intact victim receives only 35% (`poiseScale`) — this is what
+ * makes a heavy enemy feel heavy: it shrugs off light hits and only launches once broken.
+ */
 function computeKnockback(
   hit: QueuedHit,
   tier: HitResolution['knockback'] & { readonly decayMs: number },
   victim: CombatVictim,
+  ctx: { readonly attackerCentre: Readonly<Vec2>; readonly poiseBroken: boolean },
 ): HitResolution['knockback'] {
   const baseSpeed = hit.step?.knockback ?? tier.speed;
   const lift = hit.step?.knockbackLift ?? tier.liftY;
-  const dirX: -1 | 1 = hit.point.x >= 0 ? 1 : -1; // caller resolves the true sign
+  // Math.sign(victim.x - attacker.x) (§6.4); exact alignment has no facing to fall back
+  // on at this layer (CombatVictim carries no facing), so it defaults to +1.
+  const diff = victim.centre.x - ctx.attackerCentre.x;
+  const dirX: -1 | 1 = diff === 0 ? 1 : diff > 0 ? 1 : -1;
+  const poiseScale = ctx.poiseBroken ? 1.0 : 0.35;
   return {
-    speed: baseSpeed * victim.knockbackTaken * (1 - victim.knockbackResist),
+    speed: baseSpeed * victim.knockbackTaken * (1 - victim.knockbackResist) * poiseScale,
     dirX,
     liftY: lift,
     decayMs: tier.decayMs,
   };
+}
+
+function lerpPoint(a: Readonly<Vec2>, b: Readonly<Vec2>, t: number): Vec2 {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
 /** §6.7 — full stagger scaled by poise resist when broken, else a flat 100ms flinch. */
@@ -207,10 +222,16 @@ function computeNumberStyle(
  * victim. Damage/poise damage from §7.1/§7.3; the rest defaults from `HIT_TIERS[kind]`,
  * with the melee step's own knockback/vfxAngleDeg overriding the tier default where a
  * step is present (a step's numbers are more precise than the generic tier).
+ *
+ * `attackerCentre` defaults to the victim's own centre (a neutral "no direction info"
+ * stand-in — resolves knockback `dirX` to +1) for callers that only care about damage/
+ * timing math and not positioning; `CombatSystem.resolveQueuedHits` always supplies the
+ * real attacker position.
  */
 export function buildResolution(
   hit: QueuedHit,
   victim: CombatVictim,
+  attackerCentre: Readonly<Vec2> = victim.centre,
   formula: DamageFormulaInputs = DEFAULT_FORMULA_INPUTS,
 ): HitResolution {
   const kind = resolveHitKind(hit);
@@ -245,6 +266,7 @@ export function buildResolution(
         decayMs: tier.knockbackDecayMs,
       },
       victim,
+      { attackerCentre, poiseBroken },
     ),
 
     vfxId: tier.vfxId,
@@ -311,7 +333,8 @@ export class CombatSystem {
       if (!hit.hitbox.canHit(hit.victimId)) continue;
 
       hit.hitbox.markHit(hit.victimId);
-      const res = buildResolution(hit, victim);
+      const attackerCentre = this.victims.get(hit.attackerId)?.centre ?? victim.centre;
+      const res = buildResolution(hit, victim, attackerCentre);
       this.applyResolution(res, victim);
     }
   }
@@ -324,7 +347,10 @@ export class CombatSystem {
     this.sinks.requestHitStop(res.hitStopMs, [res.attacker, res.victim]);
     this.sinks.applyFlash(res.victim, res.flashColour, res.flashMs);
     this.sinks.applyKnockback(res.victim, res.knockback);
-    this.sinks.spawnSlashVfx(res.vfxId, res.point, res.vfxAngleDeg);
+    // Slash VFX draws 40% of the way from the contact point toward the victim's centre
+    // (§6.5) — on the attacker reads as a whiff. res.point itself stays the raw contact
+    // point for particles/damage numbers, which use no such offset.
+    this.sinks.spawnSlashVfx(res.vfxId, lerpPoint(res.point, victim.centre, 0.4), res.vfxAngleDeg);
     this.sinks.addCameraTrauma(traumaFor(res.kind, res.fatal));
     this.sinks.burstParticles(res.particleId, res.point, res.particleCount);
 

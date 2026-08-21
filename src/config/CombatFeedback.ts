@@ -139,3 +139,21 @@ export const DEATH_VFX = {
   normal: 'explosion_small',
   elite: 'explosion_large',
 } as const satisfies Record<string, VfxId>;
+
+export interface VfxVisual {
+  readonly width: number;
+  readonly height: number;
+  /** Frames @60fps; duration = frames/60*1000ms. Art itself lands in M3; M2 draws greys. */
+  readonly frames: number;
+}
+
+/** Slash/impact size (§6.5) and death explosion size (§6.10). All ADD-blended. */
+export const VFX_VISUAL: Readonly<Record<VfxId, VfxVisual>> = {
+  slash_light: { width: 32, height: 32, frames: 5 },
+  slash_heavy: { width: 48, height: 48, frames: 7 },
+  slash_magic: { width: 40, height: 40, frames: 6 },
+  impact_small: { width: 16, height: 16, frames: 4 },
+  impact_spike: { width: 24, height: 24, frames: 5 },
+  explosion_small: { width: 32, height: 32, frames: 8 },
+  explosion_large: { width: 64, height: 64, frames: 12 },
+} as const;

@@ -6,6 +6,9 @@ export const VFX = {
   AFTERIMAGE_POOL_MAX: 12,
   PARTICLE_POOL_INITIAL: 200,
   PARTICLE_POOL_MAX: 200,
+  /** Slash/impact combat VFX (docs/07 §6.5) — a swing rarely overlaps more than a few. */
+  SLASH_POOL_INITIAL: 6,
+  SLASH_POOL_MAX: 12,
 
   RUN_DUST_INTERVAL_MS: 180,
   RUN_DUST_MIN_SPEED: 40,

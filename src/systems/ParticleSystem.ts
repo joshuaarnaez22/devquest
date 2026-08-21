@@ -2,6 +2,8 @@ import { Depth } from '@config/Depth';
 import { Palette } from '@config/Palette';
 import { VFX } from '@config/VfxConstants';
 import { ObjectPool } from '@core/ObjectPool';
+import type { ParticleId } from '@config/CombatFeedback';
+import type { Vec2 } from '@core/GameEvents';
 import type { Poolable } from '@core/ObjectPool';
 import type { System } from '@core/SystemRegistry';
 import type Phaser from 'phaser';
@@ -46,10 +48,14 @@ export class ParticleSystem implements System {
   }
 
   /**
-   * Spawn up to `count` particles at (x, y). Uses fixed cardinal velocities —
-   * no Math.random (ADR-019); Rng wiring lands with combat sparks.
+   * Layer 8 — impact particles (docs/07 §6.9). Implements `CombatSinks.burstParticles`.
+   * `particleId` is accepted (not ignored, as in the M1 skeleton) so the call site is
+   * genuinely material-aware end to end — visuals stay a single grey placeholder shape
+   * until M3 art gives `bone_chip`/`blood_mote`/etc. their own look. Fixed cardinal
+   * velocities, no `Math.random` (ADR-019); capped at 8 regardless of `count` so one
+   * dense hit cannot itself blow the frame's particle budget.
    */
-  burst(_kind: string, x: number, y: number, count: number): void {
+  burst(_particleId: ParticleId, point: Readonly<Vec2>, count: number): void {
     const pool = this.pool;
     if (pool === null) return;
     const n = Math.min(count, 8);
@@ -61,7 +67,7 @@ export class ParticleSystem implements System {
       p.vy = Math.sin(angle) * 40 - 20;
       p.maxLifeMs = 280;
       p.lifeMs = 280;
-      p.view.setPosition(x, y);
+      p.view.setPosition(point.x, point.y);
       p.view.setAlpha(0.8);
       p.view.setVisible(true);
       p.view.setActive(true);

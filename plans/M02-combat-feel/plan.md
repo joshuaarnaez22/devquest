@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S07** (`M2-T7`) · S01–S06 done · ▶ Checkpoint E confirmed (e2e)
+**Status:** 🔄 In progress · next **M2-S08** (`M2-T8`) · S01–S07 done · ▶ Checkpoint E confirmed (e2e)
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -53,7 +53,7 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | [x] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — confirmed via e2e (`combo.spec.ts`), see T5   |
 | [x] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
 | [x] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives           |
-| [ ] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`               |
+| [x] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`               |
 | [ ] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | ▶ **Checkpoint F** — poise break vs flinch visibly distinct        |
 | [ ] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                        |
 | [ ] **M2-S10** | M2-T10 Player damage/i-frames/death | 8   | i-frames block exactly 800 ms; 100 ms flicker                      |
@@ -274,6 +274,33 @@ hit either invisible or nauseating.
 
 **Verify:** unrounded shake offsets cause visible shimmer — confirm rounding is applied. Four
 simultaneous hits clamp rather than sum.
+
+**Status (2026-08-11):** done, all five. **Layer 5 (camera shake) was already fully built in
+M1** — `CameraSystem.addTrauma`/`traumaOffset` already match §6.6 exactly (quadratic, rounded,
+clamped, 4px max); only added the literal "four simultaneous hits" regression case using real
+`HIT_TIERS.heavy.trauma` (both Verify items now covered). New: `HitFlash` (`components/`, pure
+hold/fade timing + `lerpColour`; a caller applies the result via `setTintFill`/`clearTint` once
+wired). `KnockbackSystem` (implements `CombatSinks.applyKnockback` directly; ADDs to velocity,
+never overrides). `VfxSystem.spawnSlash` (pooled, ADD-blended placeholder rects sized from a new
+`VFX_VISUAL` table). `ParticleSystem.burst` now genuinely accepts `ParticleId` instead of an
+ignored `string` — visuals stay one grey placeholder shape until M3 art.
+
+**Two real gaps found and fixed in T5's `CombatSystem`, not new to T7:** (1) knockback
+`dirX` was a `hit.point.x >= 0` placeholder, not `Math.sign(victim.x - attacker.x)` per §6.4 —
+`CombatVictim` gained a `centre` field and `buildResolution` an `attackerCentre` parameter to
+fix it properly. (2) the poise-intact 35% knockback scale (§6.4's `poiseScale`) was never
+wired in at all. Both are now regression-tested with exact §6.4 values. The VFX 40%-toward-
+victim offset (§6.5) is computed in `CombatSystem.applyResolution` via `lerpPoint`, not stored
+on `HitResolution` (keeps `res.point` the raw contact point for particles/damage numbers,
+which use no such offset) — also regression-tested.
+
+`KNOCKBACK_IMPULSE_SCALE` (§6.4's illustrative code) has no value anywhere in the docs;
+`Knockback.step()` already defaults its own `impulseScale` param to 1 (a no-op) from S01
+for exactly this reason, so `KnockbackSystem` doesn't introduce a new constant for it.
+
+301/42 unit suite green (+22), typecheck/lint/cycles clean. Nothing to test in the UI —
+none of these sinks are wired into `GameScene` yet (deferred like T3's, no real combat exists
+to trigger them until T9/T10).
 
 ---
 
