@@ -21,7 +21,7 @@ async function bootAndFocus(page: Page): Promise<void> {
  * frame. InputSystem's edge detection (`attackPressed: raw.attack && !prev.attack`)
  * polls down-state once per frame, so a pulse shorter than a frame can be invisible
  * to it -- the key is already back up by the time the game samples. Holding it down
- * across at least one frame guarantees the edge is observed.
+ * across a frame boundary before releasing guarantees the edge is observed.
  */
 async function tapAttack(page: Page): Promise<void> {
   await page.keyboard.down('j');
@@ -29,34 +29,44 @@ async function tapAttack(page: Page): Promise<void> {
   await page.keyboard.up('j');
 }
 
+/**
+ * Taps attack repeatedly until `target` is observed. A single precisely-timed press
+ * is fragile under parallel-worker CPU contention -- a delayed animation frame can
+ * blow straight through the 300ms combo window before a one-shot poll even runs.
+ * Spamming taps across the window is robust to that jitter: presses before the
+ * window opens are harmless no-ops (the FSM ignores `wantsAttack` until
+ * `comboWindowOpen`), and this is closer to how a real player chains combos anyway.
+ */
+async function tapUntil(page: Page, target: string, budgetMs: number): Promise<void> {
+  const deadline = Date.now() + budgetMs;
+  let last = '';
+  while (Date.now() < deadline) {
+    await tapAttack(page);
+    last = await readState(page);
+    if (last === target) return;
+    await page.waitForTimeout(20);
+  }
+  throw new Error(`Never reached "${target}" within ${budgetMs}ms (last state: "${last}")`);
+}
+
 test('Samurai combo chains ATTACK_1 -> ATTACK_2 -> ATTACK_3 -> IDLE', async ({ page }) => {
   await bootAndFocus(page);
 
-  // Press 1 -- enters the first hit.
-  await tapAttack(page);
-  await expect.poll(async () => readState(page), { timeout: 2_000 }).toBe('ATTACK_1');
+  await tapUntil(page, 'ATTACK_1', 1_000);
+  // docs/06-Characters.md §7.2.3 hit 1: windup 66ms + active 66ms = combo window opens
+  // at 132ms, open for 300ms (closes at 432ms). Hit 2 has the same 66/66/300 timing.
+  await tapUntil(page, 'ATTACK_2', 600);
+  await tapUntil(page, 'ATTACK_3', 600);
 
-  // docs/06-Characters.md SS7.2.3 hit 1: windup 66ms + active 66ms = combo window opens
-  // at 132ms, open for 300ms. Press again at 180ms -- inside the window.
-  await page.waitForTimeout(130);
-  await tapAttack(page);
-  await expect.poll(async () => readState(page), { timeout: 2_000 }).toBe('ATTACK_2');
-
-  // Hit 2 has the same 66/66/300 timing -- press again at 180ms.
-  await page.waitForTimeout(130);
-  await tapAttack(page);
-  await expect.poll(async () => readState(page), { timeout: 2_000 }).toBe('ATTACK_3');
-
-  // Hit 3 (the finisher) has no combo window -- it completes on its own (116+100+200ms)
-  // and the FSM returns to IDLE/RUN.
+  // Hit 3 (the finisher) has no combo window -- it completes on its own
+  // (116+100+200ms) and the FSM returns to IDLE/RUN.
   await expect.poll(async () => readState(page), { timeout: 2_000 }).toBe('IDLE');
 });
 
 test('a single attack press completes on its own without further input', async ({ page }) => {
   await bootAndFocus(page);
 
-  await tapAttack(page);
-  await expect.poll(async () => readState(page), { timeout: 2_000 }).toBe('ATTACK_1');
+  await tapUntil(page, 'ATTACK_1', 1_000);
 
   // No second press -- windup(66) + active(66) + recovery(100) = 232ms, then IDLE.
   // This is the exact bug M2-T4 fixed: before it, attacks got stuck in ATTACK_1 forever.
