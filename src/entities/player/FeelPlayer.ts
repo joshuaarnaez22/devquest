@@ -1,6 +1,9 @@
 import { Depth } from '@config/Depth';
 import { FEEL } from '@config/GameConstants';
+import { Hitbox } from '@components/Hitbox';
 import { Entity } from '@entities/Entity';
+import { AttackScheduler } from '@entities/player/AttackScheduler';
+import { SAMURAI_AIR_ATTACK, SAMURAI_COMBO } from '@entities/player/CharacterCombat';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
 import { PlayerAnimator } from '@entities/player/PlayerAnimator';
 import { PlayerController, WALL_JUMP_PUSH } from '@entities/player/PlayerController';
@@ -16,6 +19,7 @@ import type { GameEventMap } from '@core/GameEvents';
 import type { InputFrame, InputFrameSource } from '@core/InputFrame';
 import type { StateMachine } from '@core/StateMachine';
 import type { CharacterContent, CharacterId } from '@data/CharacterTypes';
+import type { AttackStep } from '@entities/player/AttackStep';
 import type { CharacterMovement } from '@entities/player/CharacterMovement';
 import type { PlayerStateId } from '@entities/player/PlayerStateId';
 import type { PlayerFsmHost } from '@entities/player/PlayerStates';
@@ -56,6 +60,12 @@ export class FeelPlayer extends Entity {
   private readonly fsm: StateMachine<PlayerFsmHost, PlayerStateId>;
   private readonly animator: PlayerAnimator;
   private readonly squash: SquashStretch;
+  /**
+   * Attack scheduling (M2-T4). In M2 every hero swings the Samurai Blade Chain —
+   * per-hero combos are authored later — so combat feel is tuned on the reference.
+   */
+  private readonly attack = new AttackScheduler();
+  private readonly attackHitbox = new Hitbox();
   private movement: CharacterMovement = SAMURAI_MOVEMENT;
   private animPrefix = 'samurai';
   private facing: -1 | 1 = 1;
@@ -235,7 +245,9 @@ export class FeelPlayer extends Entity {
 
     this.refreshGrounded(body, t);
     this.syncFsmHost(frame, t);
+    const prevId = this.fsm.id;
     tickPlayerFsm(this.fsm, { time, delta });
+    this.updateAttack(prevId, t);
     if (this.fsm.id !== 'DASH') {
       this.controller.clearDashFinished();
     }
@@ -370,6 +382,38 @@ export class FeelPlayer extends Entity {
       this.controller.isDashCooldownReady(t) && (this.grounded || this.airDashAvailable);
     this.fsmHost.dashFinished = this.controller.dashFinished;
     this.fsmHost.wallJumpLockExpired = this.controller.isWallJumpLockExpired(t);
+    // Attack timing (M2-T4). Idle scheduler reports both false, so non-attack
+    // states — which ignore these — are unaffected.
+    this.fsmHost.comboWindowOpen = this.attack.comboWindowOpen(t);
+    this.fsmHost.animComplete = this.attack.animComplete(t);
+    this.fsmHost.comboLength = SAMURAI_COMBO.length;
+  }
+
+  /** The AttackStep a given attack state runs, or null for non-attack states. */
+  private attackStepFor(id: PlayerStateId): AttackStep | null {
+    switch (id) {
+      case 'ATTACK_1':
+        return SAMURAI_COMBO[0] ?? null;
+      case 'ATTACK_2':
+        return SAMURAI_COMBO[1] ?? null;
+      case 'ATTACK_3':
+        return SAMURAI_COMBO[2] ?? null;
+      case 'AIR_ATTACK':
+        return SAMURAI_AIR_ATTACK;
+      default:
+        return null;
+    }
+  }
+
+  /** Begin the scheduler on attack-state entry, advance its hitbox, end on exit. */
+  private updateAttack(prevId: PlayerStateId, t: number): void {
+    const step = this.attackStepFor(this.fsm.id);
+    if (step !== null) {
+      if (prevId !== this.fsm.id) this.attack.begin(step, t, this.attackHitbox);
+      this.attackHitbox.update(t);
+    } else if (this.attack.active) {
+      this.attack.end();
+    }
   }
 
   private isBufferActive(frame: InputFrame, t: number): boolean {

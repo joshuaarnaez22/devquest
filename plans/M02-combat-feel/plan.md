@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S04** (`M2-T4`) · S01–S03 done · ▶ Checkpoint E next
+**Status:** 🔄 In progress · next **M2-S05** (`M2-T5`) · S01–S04 done (Checkpoint E live-check pending)
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -50,7 +50,7 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | [x] **M2-S01** | M2-T1 Components                    | 8   | Poise break/regen + i-frame max-not-sum unit-tested                |
 | [x] **M2-S02** | M2-T2 Hitbox / Hurtbox              | 8   | 83 ms window over 5 frames = exactly 1 hit                         |
 | [x] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                 |
-| [ ] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — hitbox at `windupMs` ±1 frame; combo chains   |
+| [x] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | Logic tested; ▶ **Checkpoint E** live combo-chain check pending    |
 | [ ] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
 | [ ] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives           |
 | [ ] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`               |
@@ -153,6 +153,18 @@ cancels into dash and jump at any point.
 violates Pillar 1.
 
 **Verify:** hitbox activates at exactly `windupMs` after state entry, ±1 frame.
+
+**Status (2026-08-11):** logic done and unit-tested (228/36 suite green, typecheck/lint/cycles
+clean). `AttackStep.ts`, `CharacterCombat.ts` (`SAMURAI_COMBO`/`SAMURAI_AIR_ATTACK` — combo
+totals match §7.2.3 exactly: 880 ms, 78 dmg), `AttackScheduler.ts` (Verify test passes: hitbox
+active at `windupMs` ±1 frame). Wired into `FeelPlayer` — this also fixes a real bug where
+attacks previously got stuck in `ATTACK_1` forever (nothing fed `animComplete`/
+`comboWindowOpen` to the FSM before this). **Not yet confirmed live**: watching the combo
+chain on screen (the Checkpoint E visual half) — the preview pane was hidden/unfocused for
+the whole session, an environment issue not a code issue. Re-verify with the pane visible
+before treating Checkpoint E as fully closed. `rangeY`/`offsetY` on the combo steps and all of
+`SAMURAI_AIR_ATTACK` are derived, not normative (§7.2.3 gives no vertical/air numbers) —
+flagged in `CharacterCombat.ts` for review.
 
 ---
 
