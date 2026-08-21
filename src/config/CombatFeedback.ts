@@ -128,6 +128,16 @@ export const FLASH_COLOUR = {
   blocked: 0x9a97a6, // Palette N5
 } as const;
 
+/** Damage-number colour by style (§6.8's style table). */
+export const DAMAGE_NUMBER_COLOUR: Readonly<Record<DamageNumberStyle, number>> = {
+  normal: 0xf2f0f5, // N7
+  critical: 0xffd23f, // S3
+  magic: 0xbd6fd1, // M4
+  playerDamage: 0xf04a4a, // S1
+  heal: 0x2fbf6b, // S2
+  blocked: 0x9a97a6, // N5
+} as const;
+
 /** Kill-bonus additions (§6.2, §6.6). Added on top of the tier's own value when fatal. */
 export const KILL_BONUS = {
   hitStopMs: 30,

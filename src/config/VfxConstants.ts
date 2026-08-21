@@ -9,6 +9,9 @@ export const VFX = {
   /** Slash/impact combat VFX (docs/07 §6.5) — a swing rarely overlaps more than a few. */
   SLASH_POOL_INITIAL: 6,
   SLASH_POOL_MAX: 12,
+  /** Death radial flash (docs/07 §6.10) — rare; more than 2-4 dying at once is unlikely in M2. */
+  DEATH_FLASH_POOL_INITIAL: 2,
+  DEATH_FLASH_POOL_MAX: 4,
 
   RUN_DUST_INTERVAL_MS: 180,
   RUN_DUST_MIN_SPEED: 40,

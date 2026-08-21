@@ -48,6 +48,11 @@ interface SlashSprite extends Poolable {
   maxLifeMs: number;
 }
 
+interface DeathFlashSprite extends Poolable {
+  readonly view: Phaser.GameObjects.Arc;
+  lifeMs: number;
+}
+
 interface PendingAfterimage {
   dueInMs: number;
   x: number;
@@ -72,9 +77,11 @@ export class VfxSystem implements System {
   private dustPool: ObjectPool<DustSprite> | null = null;
   private ghostPool: ObjectPool<GhostSprite> | null = null;
   private slashPool: ObjectPool<SlashSprite> | null = null;
+  private deathFlashPool: ObjectPool<DeathFlashSprite> | null = null;
   private readonly dustLive: DustSprite[] = [];
   private readonly ghostLive: GhostSprite[] = [];
   private readonly slashLive: SlashSprite[] = [];
+  private readonly deathFlashLive: DeathFlashSprite[] = [];
   private readonly pendingGhosts: PendingAfterimage[] = [];
   private runDustMs = 0;
   private wasSkidding = false;
@@ -98,6 +105,11 @@ export class VfxSystem implements System {
       () => this.makeSlash(scene),
       VFX.SLASH_POOL_INITIAL,
       VFX.SLASH_POOL_MAX,
+    );
+    this.deathFlashPool = new ObjectPool(
+      () => this.makeDeathFlash(scene),
+      VFX.DEATH_FLASH_POOL_INITIAL,
+      VFX.DEATH_FLASH_POOL_MAX,
     );
 
     bus.on('player:jumped', p => this.spawnDust('dust_jump', p.x, p.y), this);
@@ -125,6 +137,7 @@ export class VfxSystem implements System {
     this.tickDust(delta);
     this.tickGhosts(delta);
     this.tickSlashes(delta);
+    this.tickDeathFlashes(delta);
     this.tickPendingGhosts(delta);
     this.tickContinuousDust(delta);
   }
@@ -134,16 +147,37 @@ export class VfxSystem implements System {
     this.dustPool?.releaseAll();
     this.ghostPool?.releaseAll();
     this.slashPool?.releaseAll();
+    this.deathFlashPool?.releaseAll();
     this.dustPool = null;
     this.ghostPool = null;
     this.slashPool = null;
+    this.deathFlashPool = null;
     this.dustLive.length = 0;
     this.ghostLive.length = 0;
     this.slashLive.length = 0;
+    this.deathFlashLive.length = 0;
     this.pendingGhosts.length = 0;
     this.scene = null;
     this.bus = null;
     this.source = null;
+  }
+
+  /**
+   * Layer 9 (partial) — the death radial flash (docs/07 §6.10): a 200ms white circle
+   * at 20% alpha, expanding from 8px to 40px. The rest of §6.10 (explosion VFX,
+   * material particles x3, coin scatter, death animation) needs a real enemy with
+   * drops/animation (M2-T9+) and is not built here.
+   */
+  spawnDeathFlash(point: Readonly<Vec2>): void {
+    const pool = this.deathFlashPool;
+    if (pool === null) return;
+    const fx = pool.acquire();
+    if (fx === undefined) return;
+    fx.lifeMs = 200;
+    fx.view.setPosition(point.x, point.y);
+    fx.view.setRadius(8);
+    fx.view.setVisible(true);
+    fx.view.setActive(true);
   }
 
   /**
@@ -296,6 +330,19 @@ export class VfxSystem implements System {
     }
   }
 
+  private tickDeathFlashes(delta: number): void {
+    const pool = this.deathFlashPool;
+    if (pool === null) return;
+    for (let i = this.deathFlashLive.length - 1; i >= 0; i--) {
+      const fx = this.deathFlashLive[i];
+      if (fx === undefined) continue;
+      fx.lifeMs -= delta;
+      const t = Math.min(1, 1 - fx.lifeMs / 200); // 0 -> 1 over the 200ms window
+      fx.view.setRadius(8 + (40 - 8) * t);
+      if (fx.lifeMs <= 0) pool.release(fx);
+    }
+  }
+
   private makeDust(scene: Phaser.Scene): DustSprite {
     const view = scene.add.rectangle(0, 0, VFX.DUST_SIZE, VFX.DUST_SIZE * 0.75, Palette.N5, 0.7);
     view.setDepth(Depth.VFX_WORLD);
@@ -343,6 +390,28 @@ export class VfxSystem implements System {
         view.setActive(false);
         const i = this.slashLive.indexOf(self);
         if (i >= 0) this.slashLive.splice(i, 1);
+      },
+    };
+    return self;
+  }
+
+  private makeDeathFlash(scene: Phaser.Scene): DeathFlashSprite {
+    const view = scene.add.circle(0, 0, 8, 0xffffff, 0.2); // white, 20% alpha, per §6.10
+    view.setDepth(Depth.SCREEN_FLASH);
+    view.setVisible(false);
+    view.setActive(false);
+    const self: DeathFlashSprite = {
+      view,
+      lifeMs: 0,
+      active: false,
+      reset: () => {
+        this.deathFlashLive.push(self);
+      },
+      onDespawn: () => {
+        view.setVisible(false);
+        view.setActive(false);
+        const i = this.deathFlashLive.indexOf(self);
+        if (i >= 0) this.deathFlashLive.splice(i, 1);
       },
     };
     return self;

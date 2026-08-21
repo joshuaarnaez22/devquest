@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DAMAGE_NUMBER_COLOUR,
   HIT_TIERS,
   PARTICLE_FOR_HIT_KIND,
   VFX_VISUAL,
+  type DamageNumberStyle,
   type HitKind,
   type VfxId,
 } from '@config/CombatFeedback';
@@ -16,6 +18,14 @@ const VFX_IDS: readonly VfxId[] = [
   'impact_spike',
   'explosion_small',
   'explosion_large',
+];
+const NUMBER_STYLES: readonly DamageNumberStyle[] = [
+  'normal',
+  'critical',
+  'magic',
+  'playerDamage',
+  'heal',
+  'blocked',
 ];
 
 describe('HIT_TIERS (§12, NORMATIVE)', () => {
@@ -109,5 +119,22 @@ describe('VFX_VISUAL (§6.5, §6.10)', () => {
   it("slash_light's 5 frames @ 60fps matches §6.5's documented 83ms duration", () => {
     const ms = (VFX_VISUAL.slash_light.frames / 60) * 1000;
     expect(ms).toBeCloseTo(83, 0);
+  });
+});
+
+describe('DAMAGE_NUMBER_COLOUR (§6.8)', () => {
+  it('has exactly one entry per DamageNumberStyle, no more, no less', () => {
+    expect(Object.keys(DAMAGE_NUMBER_COLOUR).sort()).toEqual([...NUMBER_STYLES].sort());
+  });
+
+  it('matches the documented hex values exactly', () => {
+    expect(DAMAGE_NUMBER_COLOUR).toEqual({
+      normal: 0xf2f0f5,
+      critical: 0xffd23f,
+      magic: 0xbd6fd1,
+      playerDamage: 0xf04a4a,
+      heal: 0x2fbf6b,
+      blocked: 0x9a97a6,
+    });
   });
 });

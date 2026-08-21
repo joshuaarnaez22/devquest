@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S08** (`M2-T8`) · S01–S07 done · ▶ Checkpoint E confirmed (e2e)
+**Status:** 🔄 In progress · next **M2-S09** (`M2-T9`) · S01–S08 done · ▶ Checkpoint E confirmed (e2e); Checkpoint F pending real combat (T9+)
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -45,24 +45,24 @@ unless you are mid-flow and unblocked. Task IDs stay stable; session IDs are onl
 **Rule:** stop at each ▶ checkpoint and play before continuing. Checkpoints continue M1's
 A–D lettering (E, F, G) and mark the points where combat becomes observable.
 
-| Session        | Task                                | ~h  | Done when                                                          |
-| -------------- | ----------------------------------- | --- | ------------------------------------------------------------------ |
-| [x] **M2-S01** | M2-T1 Components                    | 8   | Poise break/regen + i-frame max-not-sum unit-tested                |
-| [x] **M2-S02** | M2-T2 Hitbox / Hurtbox              | 8   | 83 ms window over 5 frames = exactly 1 hit                         |
-| [x] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                 |
-| [x] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — confirmed via e2e (`combo.spec.ts`), see T5   |
-| [x] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                |
-| [x] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives           |
-| [x] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`               |
-| [ ] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | ▶ **Checkpoint F** — poise break vs flinch visibly distinct        |
-| [ ] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                        |
-| [ ] **M2-S10** | M2-T10 Player damage/i-frames/death | 8   | i-frames block exactly 800 ms; 100 ms flicker                      |
-| [ ] **M2-S11** | M2-T11 Four abilities               | 10  | Each ability works on its hero; parry → 2× crit                    |
-| [ ] **M2-S12** | M2-T12 Crouch                       | 2   | ▶ **Checkpoint G** — Skeleton fight playable end to end            |
-| [ ] **M2-S13** | M2-T13 Combat tuning                | 18  | Five day-sessions (see T13); **no features**; muted-recording test |
-| [ ] **M2-S14** | M2-T14 Debug overlay: combat        | 4   | `F9` renders hitbox/hurtbox/poise/hit-stop                         |
-| [ ] **M2-S15** | M2-T15 Pillar 2 tests + perf gates  | 6   | Five `p2.*` checks green; `resolveQueuedHits()` < 1 ms / 8 hits    |
-| [ ] **M2-S16** | M2-T16 Buffer                       | 2   | Overrun only — tests, not features                                 |
+| Session        | Task                                | ~h  | Done when                                                           |
+| -------------- | ----------------------------------- | --- | ------------------------------------------------------------------- |
+| [x] **M2-S01** | M2-T1 Components                    | 8   | Poise break/regen + i-frame max-not-sum unit-tested                 |
+| [x] **M2-S02** | M2-T2 Hitbox / Hurtbox              | 8   | 83 ms window over 5 frames = exactly 1 hit                          |
+| [x] **M2-S03** | M2-T3 Collision groups + queue      | 6   | Overlap queues; nothing resolves inside a callback                  |
+| [x] **M2-S04** | M2-T4 Attack scheduling + combo     | 8   | ▶ **Checkpoint E** — confirmed via e2e (`combo.spec.ts`), see T5    |
+| [x] **M2-S05** | M2-T5 CombatSystem + HitResolution  | 10  | All nine side effects fire on one hit (integration)                 |
+| [x] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives            |
+| [x] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`                |
+| [x] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | Buildable pieces done; ▶ **Checkpoint F** pending real combat (T9+) |
+| [ ] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                         |
+| [ ] **M2-S10** | M2-T10 Player damage/i-frames/death | 8   | i-frames block exactly 800 ms; 100 ms flicker                       |
+| [ ] **M2-S11** | M2-T11 Four abilities               | 10  | Each ability works on its hero; parry → 2× crit                     |
+| [ ] **M2-S12** | M2-T12 Crouch                       | 2   | ▶ **Checkpoint G** — Skeleton fight playable end to end             |
+| [ ] **M2-S13** | M2-T13 Combat tuning                | 18  | Five day-sessions (see T13); **no features**; muted-recording test  |
+| [ ] **M2-S14** | M2-T14 Debug overlay: combat        | 4   | `F9` renders hitbox/hurtbox/poise/hit-stop                          |
+| [ ] **M2-S15** | M2-T15 Pillar 2 tests + perf gates  | 6   | Five `p2.*` checks green; `resolveQueuedHits()` < 1 ms / 8 hits     |
+| [ ] **M2-S16** | M2-T16 Buffer                       | 2   | Overrun only — tests, not features                                  |
 
 **Start here:** open this plan → **M2-S01** → build → Verify → commit → stop.
 
@@ -316,6 +316,30 @@ is invisible inside the freeze.
 | 9 Death          | Explosion, +30 ms hit stop, +0.10 trauma, 3× particles, coin scatter with a **300 ms collection delay** so the sparkle is not eaten by the explosion             |
 
 **Verify:** poise break and flinch are visually distinguishable at 1× without reading numbers.
+
+**Status (2026-08-11):** buildable pieces done. `Flinch` (`components/`, pure 100ms timing —
+the poise-intact case; the poise-broken "full stagger" case is `fsm.force('HURT', ctx)` per
+§11.1's pseudocode, which needs a real victim FSM and doesn't exist until Skeleton, T9).
+`DamageNumberSystem` — pooled, `Quad.easeOut` rise (12px/500ms), fade over the final 200ms,
+colour-coded via the new `DAMAGE_NUMBER_COLOUR` table, proximity stacking via the pure
+`damageNumberRules.ts` (`stackOffsetY`/`damageNumberText`, both tested). `VfxSystem.
+spawnDeathFlash` — the one net-new Layer 9 visual (200ms white circle, 8→40px). The
+poise-break particle burst (12, white ring) was already wired in T5's `CombatSystem`.
+
+**Deferred, not buildable yet:** the FSM-force for full stagger (needs an enemy FSM, T9), the
+death explosion/3x particle multiplier/`combat:kill` emit (these are a live `CombatSinks`
+adapter's job — T9/T10, once there is a real victim to wire), coin scatter (needs an enemy's
+`drops` array — T9+ content), and the death sprite animation (M3 art).
+
+**Font note:** `devquest-6px`/`devquest-8px` (§6.8) do not exist until M3's real atlas —
+`DamageNumberSystem` uses the existing M1 debug bitmap font (`debug`, fixed 8px) as a
+placeholder, so the normal/critical size distinction is not yet represented; colour-coding is
+real. **Checkpoint F itself is NOT confirmable yet** — unlike Checkpoint E (closed via e2e
+because the combo was already live-wired), nothing built in T5-T8 is wired into `GameScene`;
+"poise break vs flinch visibly distinct" needs an actual fight, which doesn't exist until the
+Skeleton (T9) lands and gets wired up.
+
+315/44 unit suite green (+14), typecheck/lint/cycles clean. Nothing to test in the UI.
 
 ---
 
