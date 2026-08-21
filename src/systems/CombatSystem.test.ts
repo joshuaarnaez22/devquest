@@ -14,6 +14,7 @@ import {
 } from '@systems/CombatSystem';
 import { HitQueue, type QueuedHit } from '@systems/HitQueue';
 import type { AttackStep } from '@components/AttackStep';
+import type { EnemyAttackStep } from '@components/EnemyAttackStep';
 import type { EntityId } from '@core/GameEvents';
 
 // docs/06-Characters.md §7.2.3 hit 1 — Rising slash.
@@ -46,6 +47,25 @@ const SAMURAI_HIT_3: AttackStep = {
   knockback: 140,
   knockbackLift: -60,
   arcDegrees: 180,
+};
+
+// docs/08-Enemy-System.md §6.1.3 — Skeleton Basic overhead swing.
+const SKELETON_OVERHEAD_SWING: EnemyAttackStep = {
+  id: 'overhead_swing',
+  displayName: 'Overhead swing',
+  windupMs: 600,
+  activeMs: 133,
+  recoverMs: 500,
+  damage: 10,
+  hitKind: 'light',
+  hitbox: { w: 26, h: 26, ox: 10, oy: 0 },
+  arcDegrees: 0,
+  unblockable: false,
+  minRange: 0,
+  maxRange: 26,
+  cooldownMs: 900,
+  weight: 1,
+  telegraph: { animKey: 'windup_overhead', flashOnFrame: 2, audioId: null, selfIlluminate: false },
 };
 
 interface VictimOpts {
@@ -99,18 +119,25 @@ function makeVictim(overrides: Partial<VictimOpts> = {}): CombatVictim {
 function makeHit(opts: {
   readonly attackerId?: EntityId;
   readonly victimId?: EntityId;
-  readonly step?: AttackStep | null;
+  readonly step?: AttackStep | EnemyAttackStep | null;
   readonly source?: QueuedHit['source'];
   readonly x?: number;
 }): QueuedHit {
   const hitbox = new Hitbox();
   const step = opts.step === undefined ? SAMURAI_HIT_1 : opts.step;
-  if (step) {
+  if (step && 'index' in step) {
     hitbox.schedule(0, 0, step.activeMs, {
       width: step.rangeX,
       height: step.rangeY,
       offsetX: step.offsetX,
       offsetY: step.offsetY,
+    });
+  } else if (step) {
+    hitbox.schedule(0, 0, step.activeMs, {
+      width: step.hitbox.w,
+      height: step.hitbox.h,
+      offsetX: step.hitbox.ox,
+      offsetY: step.hitbox.oy,
     });
   } else {
     hitbox.schedule(0, 0, 40, { width: 10, height: 10, offsetX: 0, offsetY: 0 });
@@ -298,6 +325,16 @@ describe('buildResolution', () => {
     const hit = makeHit({ step: SAMURAI_HIT_1 });
     const victim = makeVictim({ hp: 100, poiseMax: 12, centre: { x: 100, y: 0 } });
     expect(buildResolution(hit, victim, { x: 100, y: 0 }).knockback.dirX).toBe(1);
+  });
+
+  it('an EnemyAttackStep (no knockback/vfxAngleDeg fields) falls back to the tier defaults (M2-T9)', () => {
+    const hit = makeHit({ step: SKELETON_OVERHEAD_SWING });
+    // poiseMax 5 < 10 dmg breaks poise, isolating the fallback from the separate 35% scale.
+    const res = buildResolution(hit, makeVictim({ hp: 100, poiseMax: 5 }));
+    expect(res.damage).toBe(10);
+    expect(res.kind).toBe('light');
+    expect(res.knockback.speed).toBeCloseTo(70, 5); // HIT_TIERS.light.knockbackSpeed, not a step override
+    expect(res.vfxAngleDeg).toBe(0); // no per-step angle exists for enemy attacks
   });
 
   it('poise-broken stagger scales by (1 - poiseResist); intact poise is a flat 100ms flinch', () => {

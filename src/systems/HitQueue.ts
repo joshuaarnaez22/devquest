@@ -1,12 +1,13 @@
 import type { AttackStep } from '@components/AttackStep';
+import type { EnemyAttackStep } from '@components/EnemyAttackStep';
 import type { Hitbox } from '@components/Hitbox';
 import type { CombatHitSource } from '@config/CollisionGroups';
 import type { EntityId, Vec2 } from '@core/GameEvents';
 
 /**
  * A hit detected during the physics step, awaiting resolution afterward (§10.1, §12).
- * `step` is the melee AttackStep that produced this hit, or `null` for contact/hazard
- * sources (§12's `EnemyAttackStep` joins the union in M2-T9, once enemy attacks exist).
+ * `step` is whichever attack produced this hit — `AttackStep` (player) or
+ * `EnemyAttackStep` (M2-T9) — or `null` for contact/hazard sources.
  */
 export interface QueuedHit {
   readonly hitbox: Hitbox;
@@ -14,7 +15,7 @@ export interface QueuedHit {
   readonly victimId: EntityId;
   readonly point: Vec2;
   readonly source: CombatHitSource;
-  readonly step: AttackStep | null;
+  readonly step: AttackStep | EnemyAttackStep | null;
 }
 
 /**

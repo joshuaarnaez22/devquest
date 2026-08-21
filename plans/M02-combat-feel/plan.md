@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S09** (`M2-T9`) · S01–S08 done · ▶ Checkpoint E confirmed (e2e); Checkpoint F pending real combat (T9+)
+**Status:** 🔄 In progress · next **M2-S10** (`M2-T10`) · S01–S09 done · ▶ Checkpoint E confirmed (e2e); Checkpoint F pending real combat (T10)
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -55,7 +55,7 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | [x] **M2-S06** | M2-T6 HitStopSystem                 | 8   | Particles continue; 2×110 ms → 110 ms; velocity survives            |
 | [x] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`                |
 | [x] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | Buildable pieces done; ▶ **Checkpoint F** pending real combat (T9+) |
-| [ ] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                         |
+| [x] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                         |
 | [ ] **M2-S10** | M2-T10 Player damage/i-frames/death | 8   | i-frames block exactly 800 ms; 100 ms flicker                       |
 | [ ] **M2-S11** | M2-T11 Four abilities               | 10  | Each ability works on its hero; parry → 2× crit                     |
 | [ ] **M2-S12** | M2-T12 Crouch                       | 2   | ▶ **Checkpoint G** — Skeleton fight playable end to end             |
@@ -360,6 +360,48 @@ tell, dodge, punish."
 
 **Verify:** the full state cycle runs. It never walks off a ledge. The 500 ms recovery fits two
 Samurai combo hits.
+
+**Status (2026-08-21):** done. `SkeletonStateId.ts`/`SkeletonStates.ts` — the shared 9-state
+subset a Basic melee enemy actually reaches (`SPAWN`/`REPOSITION`/`SPECIAL`/`SEARCH` omitted,
+see the two flagged simplifications below), same `state()`/`allowedTransitions()` pattern as
+`PlayerStates.ts`, 25 tests including the full happy-path cycle and every `poiseBroken → HURT`
+edge. `SkeletonCombat.ts` — stats/timings/attack numbers from §6.1.1/§6.1.3/§8.2 inline per
+ADR-004 (poise 12, regen 1500ms, stagger 220ms, overhead swing 600/133/500ms). `SkeletonMovement.ts`
+— pure `resolvePatrolVelocity`/`resolveChaseVelocity`, 7 tests, so the "never walks off a ledge"
+behaviour is unit-tested independent of Phaser. `Skeleton.ts` (`entities/enemy/`) — the Phaser
+glue: Arcade body + standard gravity, `Health`/`Poise`/`Knockback`/`Hitbox`/`Hurtbox` (hurtbox
+gets `GENEROSITY.ENEMY_HURTBOX` per §5.2 of `07-Combat.md`) + `Facing`/`VisionCone`/`LedgeSensor`,
+FSM-driven movement and attack-hitbox scheduling on WINDUP entry. Not unit-tested directly
+(Phaser glue, same precedent as `VfxSystem`/`ParticleSystem`) — its correctness rests on the
+tested pure pieces (`SkeletonStates`, `SkeletonMovement`) it wires together.
+
+Also landed the M2-T3 deferral this unblocks: `QueuedHit.step` is now `AttackStep |
+EnemyAttackStep | null`; `CombatSystem.ts` gained an `isPlayerAttackStep` type guard so
+`computeKnockback`/`buildResolution` fall back to `HIT_TIERS` defaults for enemy attacks
+(no `knockback`/`knockbackLift`/`vfxAngleDeg` on `EnemyAttackStep`), with a regression test
+proving the fallback.
+
+**Two flagged simplifications** (diagram in §5.1 vs. what a single-attack Basic Skeleton needs):
+
+- **No waypoint system exists yet (M3)** — `PATROL --> IDLE : reached waypoint` has no trigger,
+  so the Skeleton patrols indefinitely, reversing only at a ledge/wall via `LedgeSensor`, until
+  it spots the player. `SEARCH` is omitted entirely (no lost-player re-acquisition logic yet) —
+  `CHASE`/`RECOVER`/`HURT`'s "lost player" edges go straight to `IDLE` instead.
+- **`WINDUP --> RECOVER : interrupted (poise broken)` vs. the universal `WINDUP --> HURT : poise
+broken`** — the source diagram has both edges on the same trigger. Resolved in favour of the
+  universal rule (poise break always → `HURT`, matching §8.1's "on break: full stagger"); the
+  `RECOVER` edge would skip the stagger the player just earned, contradicting the fairness
+  contract in §5.2. Flag if a future enemy actually needs the softer `RECOVER` interrupt.
+
+**Not yet wired into `GameScene`** — no `physics.add.overlap` registration, no spawning, no
+`CombatSinks` adapter calling `Skeleton.receiveHit`. Per the plan's own T9/T10 split, that lands
+in **T10** alongside player damage/i-frames — building it now against nothing to overlap with
+would be untestable scaffolding (same reasoning T3 already used to defer `COMBAT_OVERLAP_PAIRS`
+wiring). `receiveHit(damage, poiseDamage, t)` is the seam T10 hangs the adapter off.
+
+365/48 unit suite green (+32), typecheck/lint/cycles clean. **Nothing to test in the UI** — same
+as T5-T8: the Skeleton runs its full AI cycle standalone (proven by the FSM/movement unit tests)
+but isn't spawned into a scene yet, so there's no live view of it until T10's `GameScene` wiring.
 
 ---
 

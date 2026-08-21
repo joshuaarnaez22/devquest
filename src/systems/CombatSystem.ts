@@ -9,11 +9,22 @@ import {
   type ParticleId,
   type VfxId,
 } from '@config/CombatFeedback';
+import type { AttackStep } from '@components/AttackStep';
 import type { Health } from '@components/Health';
 import type { IFrames } from '@components/IFrames';
 import type { Poise } from '@components/Poise';
 import type { EntityId, Vec2 } from '@core/GameEvents';
 import type { HitQueue, QueuedHit } from '@systems/HitQueue';
+
+/**
+ * `AttackStep` (player) has `index: 1|2|3`; `EnemyAttackStep` has `id: string` and no
+ * `index` at all — a reliable discriminant between the two `QueuedHit.step` union
+ * members. Enemy attacks carry no per-step knockback/vfxAngleDeg override (§8's
+ * schema has none), so those always fall back to the `HIT_TIERS[kind]` default.
+ */
+function isPlayerAttackStep(step: NonNullable<QueuedHit['step']>): step is AttackStep {
+  return 'index' in step;
+}
 
 /**
  * Every field required — omitting a feedback layer is a compile error, not a runtime
@@ -182,8 +193,9 @@ function computeKnockback(
   victim: CombatVictim,
   ctx: { readonly attackerCentre: Readonly<Vec2>; readonly poiseBroken: boolean },
 ): HitResolution['knockback'] {
-  const baseSpeed = hit.step?.knockback ?? tier.speed;
-  const lift = hit.step?.knockbackLift ?? tier.liftY;
+  const playerStep = hit.step !== null && isPlayerAttackStep(hit.step) ? hit.step : null;
+  const baseSpeed = playerStep?.knockback ?? tier.speed;
+  const lift = playerStep?.knockbackLift ?? tier.liftY;
   // Math.sign(victim.x - attacker.x) (§6.4); exact alignment has no facing to fall back
   // on at this layer (CombatVictim carries no facing), so it defaults to +1.
   const diff = victim.centre.x - ctx.attackerCentre.x;
@@ -270,7 +282,7 @@ export function buildResolution(
     ),
 
     vfxId: tier.vfxId,
-    vfxAngleDeg: hit.step?.vfxAngleDeg ?? 0,
+    vfxAngleDeg: hit.step !== null && isPlayerAttackStep(hit.step) ? hit.step.vfxAngleDeg : 0,
 
     shake: { amplitude: tier.trauma, durationMs: tier.hitStopMs },
 
