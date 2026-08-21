@@ -44,4 +44,10 @@ export class Poise {
   get normalised(): number {
     return this.current / this.max;
   }
+
+  /** Full pool, hit timer cleared — player respawn (docs/07 §9.1) and pooled-entity reuse. */
+  reset(): void {
+    this.current = this.max;
+    this.lastHitAt = -Infinity;
+  }
 }

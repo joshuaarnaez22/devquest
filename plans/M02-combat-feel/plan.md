@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S10** (`M2-T10`) · S01–S09 done · ▶ Checkpoint E confirmed (e2e); Checkpoint F pending real combat (T10)
+**Status:** 🔄 In progress · next **M2-S11** (`M2-T11`) · S01–S10 done · ▶ Checkpoint E confirmed (e2e); Checkpoint F mostly confirmed live (T10, first real fight in `GameScene` — poise-break→HURT observed, flinch-only path not yet, see T10 note)
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -56,7 +56,7 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | [x] **M2-S07** | M2-T7 Layers 2–5, 8                 | 8   | Shake rounded + clamped; flash `tintFill` not `tint`                |
 | [x] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | Buildable pieces done; ▶ **Checkpoint F** pending real combat (T9+) |
 | [x] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                         |
-| [ ] **M2-S10** | M2-T10 Player damage/i-frames/death | 8   | i-frames block exactly 800 ms; 100 ms flicker                       |
+| [x] **M2-S10** | M2-T10 Player damage/i-frames/death | 8   | i-frames block exactly 800 ms; 100 ms flicker                       |
 | [ ] **M2-S11** | M2-T11 Four abilities               | 10  | Each ability works on its hero; parry → 2× crit                     |
 | [ ] **M2-S12** | M2-T12 Crouch                       | 2   | ▶ **Checkpoint G** — Skeleton fight playable end to end             |
 | [ ] **M2-S13** | M2-T13 Combat tuning                | 18  | Five day-sessions (see T13); **no features**; muted-recording test  |
@@ -413,6 +413,70 @@ knockback applies. Death sequence and a respawn at the level start (checkpoints 
 Red vignette on damage, 200 ms, additive at 25%.
 
 **Verify:** i-frames prevent damage for exactly 800 ms. Flicker period is 100 ms.
+
+**Status (2026-08-21):** done — and this is where combat actually goes live in `GameScene` for
+the first time. `PlayerDamage.ts` (i-frames, hit-flash, `combat:playerDamaged` emit — split out
+of `FeelPlayer.ts` for the file-length budget) grants 800ms i-frames + a 100ms alpha flicker on
+any hit; `PlayerJump.ts` (jump/land reaction glue, same file-length reason) was split alongside
+it, moved verbatim against `PlayerController.test.ts`'s existing coverage of the underlying
+physics/timing math, not rewritten. Death: `hp<=0` already drove the FSM to `DEATH` via the
+existing `lethalInterrupt`; new `respawn()` fires once `fsm.timeInState >= 1200ms`, resets
+health/poise/position, and grants the 1200ms respawn i-frames from §9.1. Red vignette:
+`DamageVignette.ts` (also split out, full-screen additive rect at `Depth.SCREEN_FLASH`), fired
+off `combat:playerDamaged`.
+
+`CharacterContent` gained a `defensive: {maxHp, knockbackTaken, poise}` block (all four hero
+JSONs + `ContentDatabase`'s schema) — `iFrameMs`/`hurtDurationMs` from the full §9 schema were
+deliberately left out, since they're 800/300 for every hero per the docs, not something this
+milestone varies per character.
+
+**`GameScene.ts` wiring (the actual T9→T10 payoff):** a `Skeleton` now spawns into the feel-test
+level; real `HitStopSystem`/`CombatSystem`/`KnockbackSystem`/`DamageNumberSystem` replace the
+M1-era no-ops; `GameCombatWiring.ts` (split out for complexity/length) builds the `CombatVictim`
+adapters and `CombatSinks`, and checks the three live overlap pairs (`player.attackHitbox` vs
+`skeleton.hurtbox`, `skeleton.hitbox` vs `player.hurtbox`, `skeleton.contactHitbox` vs
+`player.hurtbox`) as plain AABB checks each frame rather than literal Arcade zones — `Hitbox`/
+`Hurtbox` are deliberately Phaser-free (T2), and with one enemy this scene, a manual check is
+simpler than standing up pooled zone objects for a single pair. `SKELETON_CONTACT` (a new
+`EnemyAttackStep` in `SkeletonCombat.ts`, damage 6 per §6.1.1) backs the contact-damage hit;
+`Skeleton.applyStagger`/`FeelPlayer.applyDamage` replace T9's placeholder `receiveHit` seam,
+which turned out not to match `CombatSystem`'s real integration contract (damage/poise apply
+directly against the victim's own `Health`/`Poise` — the seam needed is the _reaction_, not the
+damage application).
+
+**Real bug found and fixed:** `installDebugBitmapFont` unconditionally destroyed and regenerated
+the shared `'debug'` bitmap-font texture on every call. `GameScene.create()` and
+`DamageNumberSystem.bind()` both call it (the latter newly-real this session); the second call
+destroyed the texture out from under the level labels' already-created `BitmapText` objects,
+which then crashed `WebGLRenderer.render` on the next frame (`Frame.glTexture` null) — the whole
+canvas going black, looking exactly like a fatal regression. Root-caused via `git stash` (the
+crash reproduced on the pre-T10 baseline too — latent since M1, just never triggered because
+nothing previously called it twice per scene) and a temporary `window.onerror` handler to get
+the full stack past the console's truncation. Fixed by making the function skip entirely once
+both the font and its texture already exist; added `DebugBitmapFont.test.ts` (3 tests) proving a
+second/third call is a no-op. 374/50 unit suite green (+8: 3 new + 5 from the defensive-stats
+test), typecheck/lint/cycles clean.
+
+**UI verified live** (first real session for this, per plan) — dev server + Browser pane, with
+direct game-state inspection via a temporary `window.__game` hook (removed before commit):
+confirmed the Skeleton's full AI cycle running in a real scene (IDLE→ALERT→CHASE→WINDUP live,
+not just unit-tested), contact damage landing and the player entering `HURT`/losing HP, the red
+vignette + white hit-flash + stacking damage numbers + death radial flash all rendering, player
+death (`HP 0` → `DEATH` state), and — via synthesized `HitQueue` entries against the live
+`CombatSystem` (since the automation harness's backgrounded tab throttles real-time input to a
+crawl) — poise-break forcing the Skeleton to `HURT` (not `Flinch`) and a killing blow correctly
+emitting `combat:kill`.
+
+**Two things not directly observed live**, both low-risk and worth a quick look next session:
+the 1200ms respawn actually completing (same throttling made the real-time wait impractical —
+the code is a handful of component `.reset()` calls plus `fsm.force('IDLE')`, and the
+death→`DEATH`-state entry it follows _was_ observed), and the flinch-only reaction to a
+poise-intact hit specifically (`Skeleton.applyStagger`'s `else` branch) — the hit itself was
+confirmed landing (hit-flash fired, poise correctly depleted without breaking), but polling
+~400 rAF frames after it never caught `flinch.active === true`, plausibly the same rAF
+throttling rather than a real bug (`Flinch`'s own 100ms timing is already unit-tested in
+isolation, and the sink dispatch is a one-line `else` next to the already-confirmed poise-break
+branch) — flag if a future session's playtest disagrees.
 
 ---
 

@@ -2,13 +2,17 @@ import { Depth } from '@config/Depth';
 import { expand, GENEROSITY } from '@components/Box';
 import { enemyHitboxSpecFor } from '@components/EnemyAttackStep';
 import { Facing } from '@components/Facing';
+import { Flinch } from '@components/Flinch';
 import { Health } from '@components/Health';
 import { Hitbox } from '@components/Hitbox';
+import { HitFlash } from '@components/HitFlash';
 import { Hurtbox } from '@components/Hurtbox';
+import { IFrames } from '@components/IFrames';
 import { Knockback } from '@components/Knockback';
 import { LedgeSensor } from '@components/LedgeSensor';
 import { Poise } from '@components/Poise';
 import { VisionCone } from '@components/VisionCone';
+import { SkeletonAnimator } from '@entities/enemy/SkeletonAnimator';
 import {
   SKELETON_OVERHEAD_SWING,
   SKELETON_SENSE,
@@ -30,8 +34,12 @@ import type { SkeletonStateId } from '@entities/enemy/SkeletonStateId';
 import type { SkeletonFsmHost } from '@entities/enemy/SkeletonStates';
 import type Phaser from 'phaser';
 
-const BODY_W = 14;
-const BODY_H = 28;
+/** docs/07-Combat.md §5.3 — NORMATIVE Skeleton body. Offset kept 0,0 against this
+ * placeholder box texture (sized exactly to the body), same deviation `FeelPlayer`
+ * already takes against its own table row — the table's offset centres a smaller
+ * body inside a larger real sprite frame, which doesn't exist until M3 art. */
+const BODY_W = 12;
+const BODY_H = 26;
 
 /** Pull-based, like `FeelPlayer`'s `InputFrameSource` — `position` is null while no player exists. */
 export interface TargetSource {
@@ -43,17 +51,23 @@ export interface TargetSource {
  * inline, per ADR-004: extraction to the JSON `EnemyDefinition` framework (§9) is
  * M4's job, once a second enemy exists to generalise from.
  *
- * Not yet wired into `GameScene` (`COMBAT_OVERLAP_PAIRS`/`CombatSinks`) — that lands
- * in M2-T10 alongside player damage, per the plan. `receiveHit` is the seam T10 hangs
- * a live `CombatSinks` adapter off; until then this entity runs its full AI cycle
- * standalone against an injected target/tilemap-stub, which is exactly what T9's
- * verify criteria (full cycle runs, never walks off a ledge) need.
+ * `health`/`poise`/`iFrames`/`armour`/`knockbackTaken`/`knockbackResist`/`poiseResist`/
+ * `baseStaggerMs`/`centre` are the raw pieces a `CombatVictim` adapter (built in
+ * `GameScene`, M2-T10) reads; `applyStagger` is the seam `CombatSinks.applyStagger`
+ * calls after hit stop ends. `iFrames` is never granted — docs/07 §9.2, "Enemies
+ * have none" — it exists only so this entity satisfies `CombatVictim`'s shape.
  */
 export class Skeleton extends Entity {
   readonly health = new Health(SKELETON_STATS.maxHp);
   readonly poise = new Poise(SKELETON_STATS.poise, SKELETON_STATS.poiseRegenDelayMs);
+  readonly iFrames = new IFrames();
+  readonly flinch = new Flinch();
+  readonly hitFlash = new HitFlash();
   readonly knockback = new Knockback();
   readonly hitbox = new Hitbox();
+  /** Re-armed every frame in `onUpdate` — the body is a persistent contact threat,
+   * not a windowed attack; the player's own i-frames throttle repeat hits (§9.1). */
+  readonly contactHitbox = new Hitbox();
   readonly hurtbox = new Hurtbox(
     expand(
       { width: BODY_W, height: BODY_H, offsetX: 0, offsetY: -BODY_H / 2 },
@@ -61,9 +75,18 @@ export class Skeleton extends Entity {
     ),
   );
 
+  /** §6.1.1 armour 0.00; knockback/poise resist have no Skeleton-specific values in
+   * the docs, defaulted neutral (1.0/0.0) — flag if a future tier varies them. */
+  readonly armour = SKELETON_STATS.armour;
+  readonly knockbackTaken = 1;
+  readonly knockbackResist = 0;
+  readonly poiseResist = 0;
+  readonly baseStaggerMs = SKELETON_STATS.staggerMs;
+
   private readonly facingC = new Facing(1);
   private readonly vision = new VisionCone(SKELETON_SENSE);
   private readonly ledge = new LedgeSensor();
+  private readonly animator: SkeletonAnimator;
   private readonly fsmHost: SkeletonFsmHost;
   private readonly fsm: StateMachine<SkeletonFsmHost, SkeletonStateId>;
   private readonly target: TargetSource;
@@ -95,6 +118,8 @@ export class Skeleton extends Entity {
 
     this.fsmHost = createSkeletonFsmHost();
     this.fsm = createSkeletonStateMachine(this.fsmHost, 'IDLE');
+    this.animator = new SkeletonAnimator(this);
+    this.animator.update({ state: 'IDLE', facing: 1 });
 
     opts.scene.add.existing(this);
     this.setDepth(Depth.ENEMY);
@@ -110,11 +135,23 @@ export class Skeleton extends Entity {
     return this.facingC.value;
   }
 
-  /** The seam a `CombatSinks` adapter calls once T10 wires this enemy into `GameScene`. */
-  receiveHit(damage: number, poiseDamage: number, t: number): void {
-    const broke = this.poise.damage(poiseDamage, t);
-    this.health.damage(damage);
-    if (broke) this.pendingPoiseBroken = true;
+  /** World-space centre — `CombatVictim.centre`, for knockback direction and VFX. */
+  get centre(): Vec2 {
+    return { x: this.x, y: this.y - BODY_H / 2 };
+  }
+
+  /**
+   * `CombatSinks.applyStagger` — called after hit stop ends (docs/07 §6.7). A poise
+   * break forces the FULL stagger via the FSM's universal `poiseBroken -> HURT` edge
+   * (consumed on the next `syncFsmHost`); an intact poise only starts a 100ms
+   * `Flinch` — the AI keeps running, matching §8.1's "flinch only, AI continues".
+   */
+  applyStagger(poiseBroken: boolean): void {
+    if (poiseBroken) {
+      this.pendingPoiseBroken = true;
+    } else {
+      this.flinch.start();
+    }
   }
 
   protected override onUpdate(time: number, delta: number): void {
@@ -130,6 +167,21 @@ export class Skeleton extends Entity {
     this.applyMovement(body, targetPos);
     this.hitbox.update(t);
     this.poise.update(t);
+    this.flinch.update(delta);
+    this.hitFlash.update(delta);
+    // Re-armed every frame — a persistent contact threat, not a windowed attack (§9.1).
+    this.contactHitbox.schedule(t, 0, Math.max(delta, 1), {
+      width: BODY_W,
+      height: BODY_H,
+      offsetX: 0,
+      offsetY: -BODY_H / 2,
+    });
+    this.contactHitbox.update(t);
+    this.animator.update({
+      state: this.fsm.id,
+      facing: this.facingC.value,
+      flashColour: this.hitFlash.currentColour(),
+    });
   }
 
   private syncFsmHost(targetPos: Readonly<Vec2> | null, t: number): void {

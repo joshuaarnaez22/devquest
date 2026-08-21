@@ -58,3 +58,14 @@ describe('Poise regen is all-or-nothing after regenDelayMs (§8.1)', () => {
     expect(p.value).toBe(MAX);
   });
 });
+
+describe('Poise.reset (docs/07 §9.1 respawn)', () => {
+  it('restores the full pool and clears the hit timer', () => {
+    const p = new Poise(MAX, REGEN);
+    p.damage(5, 1000);
+    p.reset();
+    expect(p.value).toBe(MAX);
+    p.update(1000 + REGEN); // would have regenerated anyway; confirms no dangling state
+    expect(p.value).toBe(MAX);
+  });
+});

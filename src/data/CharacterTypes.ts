@@ -21,9 +21,22 @@ export interface CharacterMovementData {
   readonly wallSlideSpeed: number;
 }
 
+/**
+ * The subset of `CharacterDefensive` (docs/06 §9's full NORMATIVE schema) M2-T10
+ * needs. `iFrameMs`/`hurtDurationMs` are omitted — both are 800ms/300ms for every
+ * hero per docs/07 §9.1 and `PLAYER_STATE_DURATION_MS.HURT`, so a per-character
+ * override field would vary an axis nothing yet uses (two-implementations rule).
+ */
+export interface CharacterDefensiveData {
+  readonly maxHp: number;
+  readonly knockbackTaken: number;
+  readonly poise: number;
+}
+
 export interface CharacterContent {
   readonly id: CharacterId;
   readonly displayName: string;
   readonly animPrefix: string;
   readonly movement: CharacterMovementData;
+  readonly defensive: CharacterDefensiveData;
 }

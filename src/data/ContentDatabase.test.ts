@@ -78,6 +78,32 @@ describe('ContentDatabase', () => {
     });
   });
 
+  it('defensive stats match docs/06-Characters.md §7.1-§7.4', () => {
+    const result = ContentDatabase.create();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.character('knight').defensive).toEqual({
+      maxHp: 140,
+      knockbackTaken: 0.6,
+      poise: 40,
+    });
+    expect(result.value.character('samurai').defensive).toEqual({
+      maxHp: 100,
+      knockbackTaken: 1.0,
+      poise: 20,
+    });
+    expect(result.value.character('ninja').defensive).toEqual({
+      maxHp: 70,
+      knockbackTaken: 1.25,
+      poise: 8,
+    });
+    expect(result.value.character('wizard').defensive).toEqual({
+      maxHp: 65,
+      knockbackTaken: 1.3,
+      poise: 6,
+    });
+  });
+
   it('all four heroes are movement-distinguishable (M1 exit gate)', () => {
     const result = ContentDatabase.create();
     expect(result.ok).toBe(true);

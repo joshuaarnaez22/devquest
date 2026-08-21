@@ -74,7 +74,18 @@ function patternFor(ch: string): readonly string[] {
   return PATTERNS['.']!;
 }
 
+/**
+ * Idempotent — multiple callers in the same scene (`GameScene` itself,
+ * `DamageNumberSystem`) each call this defensively. Regenerating unconditionally
+ * used to destroy-and-recreate the shared texture on every call, leaving any
+ * `BitmapText` already created against the old `Frame` pointing at a dead texture
+ * (`Frame.glTexture` null, crashing `WebGLRenderer.render` on the next draw) — the
+ * font's pixels never change, so re-drawing them on a second call has no purpose.
+ */
 export function installDebugBitmapFont(scene: Phaser.Scene): void {
+  if (scene.cache.bitmapFont.exists(DEBUG_FONT_KEY) && scene.textures.exists(DEBUG_FONT_KEY)) {
+    return;
+  }
   if (scene.cache.bitmapFont.exists(DEBUG_FONT_KEY)) {
     scene.cache.bitmapFont.remove(DEBUG_FONT_KEY);
   }

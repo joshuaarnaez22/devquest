@@ -2,8 +2,10 @@ import { SYSTEM_ORDER_GAMEPLAY } from '@config/SystemOrder';
 import { Profiler } from '@core/Profiler';
 import { SystemRegistry } from '@core/SystemRegistry';
 import { CameraSystem } from '@systems/CameraSystem';
+import { DamageNumberSystem } from '@systems/DamageNumberSystem';
 import { DebugSystem } from '@systems/DebugSystem';
 import { InputSystem } from '@systems/InputSystem';
+import { KnockbackSystem } from '@systems/KnockbackSystem';
 import { NoOpSystem } from '@systems/NoOpSystem';
 import { ParticleSystem } from '@systems/ParticleSystem';
 import { VfxSystem } from '@systems/VfxSystem';
@@ -45,6 +47,12 @@ function createGameplaySystem(id: GameplaySystemId): System {
   }
   if (id === 'debug') {
     return new DebugSystem();
+  }
+  if (id === 'knockback') {
+    return new KnockbackSystem();
+  }
+  if (id === 'damageNumbers') {
+    return new DamageNumberSystem();
   }
   return new NoOpSystem(id);
 }

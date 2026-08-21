@@ -17,5 +17,10 @@
     "dashIFrames": false,
     "dashIFrameGraceMs": 0,
     "wallSlideSpeed": 80
+  },
+  "defensive": {
+    "maxHp": 65,
+    "knockbackTaken": 1.3,
+    "poise": 6
   }
 }

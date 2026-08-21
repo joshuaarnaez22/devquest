@@ -1,6 +1,11 @@
 import { Depth } from '@config/Depth';
 import { FEEL } from '@config/GameConstants';
+import { expand, GENEROSITY } from '@components/Box';
+import { Health } from '@components/Health';
 import { Hitbox } from '@components/Hitbox';
+import { Hurtbox } from '@components/Hurtbox';
+import { Knockback } from '@components/Knockback';
+import { Poise } from '@components/Poise';
 import { Entity } from '@entities/Entity';
 import { AttackScheduler } from '@entities/player/AttackScheduler';
 import { SAMURAI_AIR_ATTACK, SAMURAI_COMBO } from '@entities/player/CharacterCombat';
@@ -8,26 +13,34 @@ import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
 import { FrozenInputLatch } from '@entities/player/FrozenInputLatch';
 import { PlayerAnimator } from '@entities/player/PlayerAnimator';
 import { PlayerController, WALL_JUMP_PUSH } from '@entities/player/PlayerController';
+import { PlayerDamage } from '@entities/player/PlayerDamage';
+import { createJumpState, onLanded, resolveJump } from '@entities/player/PlayerJump';
 import {
   createPlayerFsmHost,
   createPlayerStateMachine,
+  PLAYER_STATE_DURATION_MS,
   tickPlayerFsm,
 } from '@entities/player/PlayerStates';
 import { SquashStretch } from '@entities/ProceduralAnim';
 import { now } from '@platform/Clock';
 import type { AttackStep } from '@components/AttackStep';
 import type { EventBus } from '@core/EventBus';
-import type { GameEventMap } from '@core/GameEvents';
+import type { GameEventMap, Vec2 } from '@core/GameEvents';
 import type { InputFrame, InputFrameSource } from '@core/InputFrame';
 import type { StateMachine } from '@core/StateMachine';
 import type { CharacterContent, CharacterId } from '@data/CharacterTypes';
 import type { CharacterMovement } from '@entities/player/CharacterMovement';
+import type { JumpDeps, PlayerJumpState } from '@entities/player/PlayerJump';
 import type { PlayerStateId } from '@entities/player/PlayerStateId';
 import type { PlayerFsmHost } from '@entities/player/PlayerStates';
 import type Phaser from 'phaser';
 
 const BODY_W = 14;
 const BODY_H = 28;
+
+/** Player poise regen delay has no documented value (docs/07 §8.2's table is enemies
+ * only) — chosen to match the Skeleton's, flag if a real value surfaces (M2-T13). */
+const PLAYER_POISE_REGEN_MS = 1500;
 
 /**
  * Downward speed left on the body while grounded so the next Arcade step still
@@ -47,11 +60,25 @@ function senseWallDir(body: Phaser.Physics.Arcade.Body): -1 | 0 | 1 {
 
 export class FeelPlayer extends Entity {
   readonly controller: PlayerController;
+  /** Rebuilt in `setCharacter` — `maxHp`/`poise` vary per hero (docs/06 §7). */
+  health = new Health(100);
+  poise = new Poise(20, PLAYER_POISE_REGEN_MS);
+  readonly knockback = new Knockback();
+  readonly hurtbox = new Hurtbox(
+    expand(
+      { width: BODY_W, height: BODY_H, offsetX: 0, offsetY: -BODY_H / 2 },
+      GENEROSITY.PLAYER_HURTBOX,
+    ),
+  );
+  /** §7.1/§6.4 — always 0 for the player, per `CombatVictim`'s own field comments. */
+  readonly armour = 0;
+  readonly knockbackResist = 0;
+  readonly poiseResist = 0;
+  readonly baseStaggerMs = PLAYER_STATE_DURATION_MS.HURT ?? 300;
   grounded = false;
   coyoteActive = false;
   bufferActive = false;
   dashCooldownRemainingMs = 0;
-  lastJumpHeight = 0;
   characterId: CharacterId = 'samurai';
   displayName = 'Samurai';
 
@@ -66,19 +93,21 @@ export class FeelPlayer extends Entity {
    * per-hero combos are authored later — so combat feel is tuned on the reference.
    */
   private readonly attack = new AttackScheduler();
-  private readonly attackHitbox = new Hitbox();
+  readonly attackHitbox = new Hitbox();
   /** Attack/dash/special presses that land while frozen by hit stop (M2-T6, §6.2 P3). */
   private readonly frozenInput = new FrozenInputLatch();
   private movement: CharacterMovement = SAMURAI_MOVEMENT;
+  /** `CombatVictim.knockbackTaken` — varies per hero (docs/06 §7). */
+  knockbackTaken = 1;
   private animPrefix = 'samurai';
   private facing: -1 | 1 = 1;
-  private jumpOriginY: number | null = null;
-  private airJumpsRemaining = SAMURAI_MOVEMENT.airJumps;
-  /** One air dash per airborne period — docs/06 §5.5. */
-  private airDashAvailable = true;
-  private coyoteExpiresAt = 0;
-  private jumpKind: PlayerFsmHost['jumpKind'] = null;
+  /** Jump/land reaction state — split into `PlayerJump.ts` (M2-T10, file-length budget). */
+  readonly jumpState: PlayerJumpState;
   private wallDir: -1 | 0 | 1 = 0;
+  /** i-frames, hit-flash, and the damage bus event — split out (M2-T10) to keep this file
+   * under budget. Public: `CombatVictim`/`CombatSinks` adapters read `.iFrames`/`.hitFlash`. */
+  readonly damage: PlayerDamage;
+  private readonly respawnPoint: Vec2;
 
   constructor(opts: {
     readonly scene: Phaser.Scene;
@@ -90,6 +119,9 @@ export class FeelPlayer extends Entity {
     super(opts.scene, opts.x, opts.y, 'player-box');
     this.frames = opts.frames;
     this.bus = opts.bus;
+    this.damage = new PlayerDamage(opts.bus, this.id);
+    this.jumpState = createJumpState(SAMURAI_MOVEMENT.airJumps);
+    this.respawnPoint = { x: opts.x, y: opts.y };
     // Bottom-centre — squash must not lift feet (docs/14 §8.1).
     this.setOrigin(0.5, 1);
     opts.scene.physics.add.existing(this);
@@ -111,6 +143,11 @@ export class FeelPlayer extends Entity {
     this.setVisible(true);
   }
 
+  /** World-space centre — `CombatVictim.centre`. */
+  get centre(): Vec2 {
+    return { x: this.x, y: this.y - BODY_H / 2 };
+  }
+
   /** Hot-swap hero from ContentDatabase (F1–F4). */
   setCharacter(content: CharacterContent): void {
     this.characterId = content.id;
@@ -118,21 +155,55 @@ export class FeelPlayer extends Entity {
     this.animPrefix = content.animPrefix;
     this.movement = content.movement;
     this.controller.setMovement(content.movement);
-    this.airJumpsRemaining = content.movement.airJumps;
-    this.airDashAvailable = true;
+    this.jumpState.airJumpsRemaining = content.movement.airJumps;
+    this.jumpState.airDashAvailable = true;
     this.controller.refreshDashCooldown();
+    this.health = new Health(content.defensive.maxHp);
+    this.poise = new Poise(content.defensive.poise, PLAYER_POISE_REGEN_MS);
+    this.knockbackTaken = content.defensive.knockbackTaken;
     const body = this.body as Phaser.Physics.Arcade.Body;
     this.applyMaxVelocity(body);
     this.animator.update({
       state: this.fsm.id,
       facing: this.facing,
       animPrefix: this.animPrefix,
+      flashColour: this.damage.flashColour,
     });
+  }
+
+  /** See `PlayerDamage.applyDamage` — must stay synchronous (docs/07 §9.3). */
+  applyDamage(t: number): void {
+    this.damage.applyDamage(t, this.health.value);
+  }
+
+  private respawn(t: number): void {
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    this.health.reset();
+    this.poise.reset();
+    body.reset(this.respawnPoint.x, this.respawnPoint.y);
+    this.controller.setVerticalVelocity(0);
+    this.damage.grantRespawnIFrames(t);
+    this.grounded = true;
+    this.jumpState.originY = null;
+    this.jumpState.airJumpsRemaining = this.movement.airJumps;
+    this.jumpState.airDashAvailable = true;
+    this.jumpState.coyoteExpiresAt = 0;
+    this.controller.refreshDashCooldown();
+    this.fsm.force('IDLE', { time: t, delta: 0 });
   }
 
   private applyMaxVelocity(body: Phaser.Physics.Arcade.Body): void {
     const maxVx = Math.max(this.movement.dashSpeed, WALL_JUMP_PUSH, this.movement.runSpeed * 1.5);
     body.setMaxVelocity(maxVx, 400);
+  }
+
+  private jumpDeps(): JumpDeps {
+    return {
+      controller: this.controller,
+      bus: this.bus,
+      squash: this.squash,
+      maxAirJumps: this.movement.airJumps,
+    };
   }
 
   /** Current FSM id — docs/06 §6. */
@@ -142,6 +213,11 @@ export class FeelPlayer extends Entity {
 
   get facingDir(): -1 | 1 {
     return this.facing;
+  }
+
+  /** The `AttackStep` the current attack-hitbox activation belongs to, or `null`. */
+  get currentAttackStep(): AttackStep | null {
+    return this.attack.current;
   }
 
   get runSpeed(): number {
@@ -167,7 +243,7 @@ export class FeelPlayer extends Entity {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const frame = this.frames.frame;
     const t = now();
-    this.jumpKind = null;
+    this.jumpState.kind = null;
     this.wallDir = senseWallDir(body);
 
     this.controller.beginFrame(delta);
@@ -185,17 +261,29 @@ export class FeelPlayer extends Entity {
     if (this.controller.isDashing) {
       // Velocity locked inside tickDash; no gravity / horizontal / jump.
     } else {
-      this.resolveJump(frame, t, body.y);
+      const outcome = resolveJump(this.jumpState, this.jumpDeps(), {
+        frame,
+        t,
+        x: this.x,
+        y: body.y,
+        grounded: this.grounded,
+        wallDir: this.wallDir,
+        moveState: this.moveState,
+      });
+      if (outcome.setGroundedFalse) this.grounded = false;
       if (!this.controller.isWallJumpLocked(t)) {
         this.controller.applyHorizontal(frame, this.moveState, this.grounded);
       }
       this.applyVerticalMotion(frame);
     }
 
-    this.coyoteActive = !this.grounded && t < this.coyoteExpiresAt;
+    this.coyoteActive = !this.grounded && t < this.jumpState.coyoteExpiresAt;
     this.bufferActive = this.isBufferActive(frame, t);
     this.dashCooldownRemainingMs = this.controller.dashCooldownRemainingMs(t);
     this.squash.tick(delta, this.grounded, this.controller.verticalVelocity);
+
+    this.damage.tick(delta);
+    this.setAlpha(this.damage.flickerAlpha(t));
   }
 
   private applyVerticalMotion(frame: InputFrame): void {
@@ -210,10 +298,10 @@ export class FeelPlayer extends Entity {
     this.controller.applyJumpCut(frame);
     this.controller.applyGravity();
     const body = this.body as Phaser.Physics.Arcade.Body;
-    if (this.jumpOriginY !== null) {
-      const height = this.jumpOriginY - body.y;
-      if (height > this.lastJumpHeight) {
-        this.lastJumpHeight = height;
+    if (this.jumpState.originY !== null) {
+      const height = this.jumpState.originY - body.y;
+      if (height > this.jumpState.lastHeight) {
+        this.jumpState.lastHeight = height;
       }
     }
   }
@@ -223,13 +311,13 @@ export class FeelPlayer extends Entity {
       now: t,
       facing: this.facing,
       grounded: this.grounded,
-      airDashAvailable: this.airDashAvailable,
+      airDashAvailable: this.jumpState.airDashAvailable,
     });
     if (result.kind !== 'started') return;
 
-    this.coyoteExpiresAt = 0;
+    this.jumpState.coyoteExpiresAt = 0;
     if (!this.grounded) {
-      this.airDashAvailable = false;
+      this.jumpState.airDashAvailable = false;
     }
     this.bus.emit('player:dashed', {
       x: this.x,
@@ -256,6 +344,14 @@ export class FeelPlayer extends Entity {
     const prevId = this.fsm.id;
     tickPlayerFsm(this.fsm, { time, delta });
     this.updateAttack(prevId, t);
+    if (prevId !== 'DEATH' && this.fsm.id === 'DEATH') {
+      this.bus.emit('combat:playerDied', { atCheckpoint: null }); // checkpoints are M3
+    } else if (
+      this.fsm.id === 'DEATH' &&
+      this.fsm.timeInState >= (PLAYER_STATE_DURATION_MS.DEATH ?? 0)
+    ) {
+      this.respawn(t);
+    }
     if (this.fsm.id !== 'DASH') {
       this.controller.clearDashFinished();
     }
@@ -263,8 +359,9 @@ export class FeelPlayer extends Entity {
       state: this.fsm.id,
       facing: this.facing,
       animPrefix: this.animPrefix,
+      flashColour: this.damage.flashColour,
     });
-    this.jumpKind = null;
+    this.jumpState.kind = null;
   }
 
   private refreshGrounded(body: Phaser.Physics.Arcade.Body, t: number): void {
@@ -274,95 +371,24 @@ export class FeelPlayer extends Entity {
     this.grounded = !rising && onFloor;
 
     if (this.grounded && !wasGrounded) {
-      this.onLanded(body.y, t);
+      const outcome = onLanded(this.jumpState, this.jumpDeps(), {
+        frame: this.frames.frame,
+        x: this.x,
+        y: body.y,
+        t,
+      });
+      if (outcome.setGroundedFalse) this.grounded = false;
     } else if (!this.grounded && wasGrounded && !rising) {
-      this.jumpOriginY = body.y;
-      this.coyoteExpiresAt = t + FEEL.COYOTE_TIME;
+      this.jumpState.originY = body.y;
+      this.jumpState.coyoteExpiresAt = t + FEEL.COYOTE_TIME;
     }
 
     if (!this.grounded) return;
-    this.airJumpsRemaining = this.movement.airJumps;
-    this.airDashAvailable = true;
+    this.jumpState.airJumpsRemaining = this.movement.airJumps;
+    this.jumpState.airDashAvailable = true;
     // Keep stick during ground dash — vy=0 drops Arcade floor flags, then a
     // false re-land was calling refreshDashCooldown and wiping the remaining CD.
     this.controller.armGroundStick(GROUND_STICK);
-  }
-
-  private resolveJump(frame: InputFrame, t: number, y: number): void {
-    const jump = this.controller.tryJump(frame, {
-      grounded: this.grounded,
-      coyoteExpiresAt: this.coyoteExpiresAt,
-      airJumpsRemaining: this.airJumpsRemaining,
-      onWall: this.canWallJump(frame, t),
-      wallDir: this.wallDir,
-      now: t,
-    });
-    this.applyJumpResult(jump, y);
-  }
-
-  /** Wall jump only while sliding / able to slide — docs/06 §5.6. */
-  private canWallJump(frame: InputFrame, t: number): boolean {
-    if (this.grounded || this.controller.isDashing) return false;
-    if (this.controller.isWallJumpLocked(t)) return false;
-    if (this.wallDir === 0) return false;
-    if (this.moveState === 'WALL_SLIDE') return true;
-    return frame.moveX === this.wallDir && this.controller.verticalVelocity > 0;
-  }
-
-  private applyJumpResult(jump: ReturnType<PlayerController['tryJump']>, y: number): void {
-    if (jump.kind === 'none') return;
-    this.jumpKind = jump.kind;
-    this.squash.jump();
-    this.bus.emit('player:jumped', {
-      fromCoyote: jump.kind === 'coyote',
-      x: this.x,
-      y: this.y,
-    });
-    if (jump.kind === 'ground' || jump.kind === 'coyote') {
-      this.grounded = false;
-      this.airJumpsRemaining = this.movement.airJumps;
-      this.coyoteExpiresAt = 0;
-      this.jumpOriginY = y;
-    } else if (jump.kind === 'air') {
-      this.airJumpsRemaining = jump.remaining;
-      this.coyoteExpiresAt = 0;
-    } else if (jump.kind === 'wall') {
-      this.grounded = false;
-      this.coyoteExpiresAt = 0;
-      this.jumpOriginY = y;
-      // Restores air jump + refreshes dash (docs/06 §5.6).
-      this.airJumpsRemaining = this.movement.airJumps;
-      this.airDashAvailable = true;
-      this.controller.refreshDashCooldown();
-    }
-  }
-
-  private onLanded(y: number, t: number): void {
-    const impactSpeed = Math.max(0, this.controller.verticalVelocity);
-    this.squash.land(impactSpeed);
-    this.bus.emit('player:landed', { impactSpeed, x: this.x, y: this.y });
-    if (this.jumpOriginY !== null) {
-      this.lastJumpHeight = Math.max(0, this.jumpOriginY - y);
-      this.jumpOriginY = null;
-    }
-    this.controller.setVerticalVelocity(0);
-    this.coyoteExpiresAt = 0;
-    this.airDashAvailable = true;
-    // Landing refresh is for returning from the air (docs/06 §5.5). A ground
-    // dash must keep its start-based cooldown — do not clear mid-timer here
-    // unless we actually left the ground (this method only runs on that edge).
-    this.controller.refreshDashCooldown();
-
-    const frame = this.frames.frame;
-    const jump = this.controller.tryJump(frame, {
-      grounded: true,
-      coyoteExpiresAt: 0,
-      airJumpsRemaining: this.airJumpsRemaining,
-      onWall: false,
-      wallDir: 0,
-      now: t,
-    });
-    this.applyJumpResult(jump, y);
   }
 
   private syncFsmHost(frame: InputFrame, t: number): void {
@@ -375,12 +401,12 @@ export class FeelPlayer extends Entity {
     this.fsmHost.moveX = frame.moveX;
     this.fsmHost.absVx = Math.abs(body.velocity.x);
     this.fsmHost.vy = this.controller.verticalVelocity;
-    this.fsmHost.airJumpsRemaining = this.airJumpsRemaining;
-    this.fsmHost.withinCoyote = !this.grounded && t < this.coyoteExpiresAt;
+    this.fsmHost.airJumpsRemaining = this.jumpState.airJumpsRemaining;
+    this.fsmHost.withinCoyote = !this.grounded && t < this.jumpState.coyoteExpiresAt;
     this.fsmHost.onWall = onWall;
     this.fsmHost.inputToWall = inputToWall;
-    this.fsmHost.jumpKind = this.jumpKind;
-    this.fsmHost.bufferedJump = this.jumpKind === 'ground' || this.isBufferActive(frame, t);
+    this.fsmHost.jumpKind = this.jumpState.kind;
+    this.fsmHost.bufferedJump = this.jumpState.kind === 'ground' || this.isBufferActive(frame, t);
     // Input buffered during hit stop, never dropped (docs/07 §6.2, P3) — a press that
     // landed on a frozen frame (captured via onFrozenTick) is honored here exactly
     // once, on the first real frame after release.
@@ -395,7 +421,7 @@ export class FeelPlayer extends Entity {
     this.fsmHost.downHeld = frame.moveY > 0;
     this.fsmHost.dashing = this.controller.isDashing;
     this.fsmHost.dashReady =
-      this.controller.isDashCooldownReady(t) && (this.grounded || this.airDashAvailable);
+      this.controller.isDashCooldownReady(t) && (this.grounded || this.jumpState.airDashAvailable);
     this.fsmHost.dashFinished = this.controller.dashFinished;
     this.fsmHost.wallJumpLockExpired = this.controller.isWallJumpLockExpired(t);
     // Attack timing (M2-T4). Idle scheduler reports both false, so non-attack
@@ -403,6 +429,10 @@ export class FeelPlayer extends Entity {
     this.fsmHost.comboWindowOpen = this.attack.comboWindowOpen(t);
     this.fsmHost.animComplete = this.attack.animComplete(t);
     this.fsmHost.comboLength = SAMURAI_COMBO.length;
+    // Damage/death (M2-T10).
+    this.fsmHost.hp = this.health.value;
+    this.fsmHost.damaged = this.damage.consumeDamaged();
+    this.fsmHost.hurtElapsed = this.fsm.timeInState >= (PLAYER_STATE_DURATION_MS.HURT ?? 300);
   }
 
   /** The AttackStep a given attack state runs, or null for non-attack states. */

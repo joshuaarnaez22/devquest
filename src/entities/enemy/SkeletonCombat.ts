@@ -58,3 +58,28 @@ export const SKELETON_OVERHEAD_SWING: EnemyAttackStep = {
 };
 
 export const SKELETON_ATTACKS: readonly EnemyAttackStep[] = [SKELETON_OVERHEAD_SWING];
+
+/**
+ * `ENEMY_BODY × PLAYER_HURTBOX` contact damage (docs/07 §5.4/§7.4, docs/08 §6.1.1's
+ * "Contact Dmg" column). Not a scheduled attack — `hitbox` is unused (the overlap
+ * geometry is the Skeleton's own body AABB, checked directly, not this step's box);
+ * the player's own i-frames (800ms) are what throttle repeat hits, not a windup/
+ * cooldown here, so those fields are zeroed.
+ */
+export const SKELETON_CONTACT: EnemyAttackStep = {
+  id: 'contact',
+  displayName: 'Contact',
+  windupMs: 0,
+  activeMs: 0,
+  recoverMs: 0,
+  damage: SKELETON_STATS.contactDamage,
+  hitKind: 'contact',
+  hitbox: { w: 0, h: 0, ox: 0, oy: 0 },
+  arcDegrees: 0,
+  unblockable: false,
+  minRange: 0,
+  maxRange: 0,
+  cooldownMs: 0,
+  weight: 1,
+  telegraph: { animKey: 'contact', flashOnFrame: -1, audioId: null, selfIlluminate: false },
+};

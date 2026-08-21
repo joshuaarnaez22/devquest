@@ -2,19 +2,33 @@ import Phaser from 'phaser';
 import { DISPLAY } from '@config/GameConstants';
 import { EventBus } from '@core/EventBus';
 import { ContentDatabase } from '@data/ContentDatabase';
+import { Skeleton, ensureSkeletonBoxTexture } from '@entities/enemy/Skeleton';
 import { FeelPlayer, ensurePlayerBoxTexture } from '@entities/player/FeelPlayer';
 import { buildFeelTestLevel } from '@level/FeelTestLevel';
+import { now } from '@platform/Clock';
 import { installDebugBitmapFont } from '@platform/DebugBitmapFont';
 import { destroyDomHud, setDomHudText, setDomHudVisible } from '@platform/DebugDomHud';
+import {
+  buildCombatVictims,
+  detectCombatOverlaps,
+  isSolidAt,
+  makeCombatSinks,
+} from '@scenes/GameCombatWiring';
+import { CombatSystem } from '@systems/CombatSystem';
 import { createGameplayRegistry } from '@systems/createGameplayRegistry';
+import { HitQueue } from '@systems/HitQueue';
+import { HitStopSystem } from '@systems/HitStopSystem';
 import { FeelDebugReadout } from '@ui/FeelDebugReadout';
-import type { GameEventMap } from '@core/GameEvents';
+import type { GameEventMap, Vec2 } from '@core/GameEvents';
 import type { Profiler } from '@core/Profiler';
 import type { SystemRegistry } from '@core/SystemRegistry';
 import type { CharacterId } from '@data/CharacterTypes';
+import type { TargetSource } from '@entities/enemy/Skeleton';
 import type { CameraFollowTarget, CameraSystem } from '@systems/CameraSystem';
+import type { DamageNumberSystem } from '@systems/DamageNumberSystem';
 import type { DebugSystem } from '@systems/DebugSystem';
 import type { InputSystem } from '@systems/InputSystem';
+import type { KnockbackSystem } from '@systems/KnockbackSystem';
 import type { ParticleSystem } from '@systems/ParticleSystem';
 import type { PlayerVfxSource, VfxSystem } from '@systems/VfxSystem';
 
@@ -26,18 +40,24 @@ const HERO_HOTKEYS: readonly { readonly code: number; readonly id: CharacterId }
 ];
 
 /**
- * Feel-prototype GameScene — Checkpoint C + VFX + M1-T18 debug overlay.
+ * Feel-prototype GameScene — Checkpoint C + VFX + M1-T18 debug overlay + M2-T10's
+ * first live fight. Combat-adapter construction lives in `GameCombatWiring.ts`.
  */
 export class GameScene extends Phaser.Scene {
   private systems: SystemRegistry | undefined;
   private profiler: Profiler | undefined;
   private player: FeelPlayer | undefined;
+  private skeleton: Skeleton | undefined;
   private readout: FeelDebugReadout | undefined;
   private content: ContentDatabase | undefined;
   private cameraSys: CameraSystem | undefined;
   private vfxSys: VfxSystem | undefined;
   private debugSys: DebugSystem | undefined;
   private bus: EventBus<GameEventMap> | undefined;
+  private hitStop: HitStopSystem | undefined;
+  private hitQueue: HitQueue | undefined;
+  private combat: CombatSystem | undefined;
+  private solidGroups: Phaser.Physics.Arcade.StaticGroup[] = [];
   private heroKeys: Phaser.Input.Keyboard.Key[] = [];
 
   constructor() {
@@ -85,6 +105,63 @@ export class GameScene extends Phaser.Scene {
 
     this.physics.add.collider(this.player, level.solids);
     this.physics.add.collider(this.player, level.softs);
+    this.solidGroups = [level.solids, level.softs];
+
+    ensureSkeletonBoxTexture(this);
+    const player = this.player;
+    const target: TargetSource = {
+      get position(): Readonly<Vec2> | null {
+        return player.active ? { x: player.x, y: player.y } : null;
+      },
+    };
+    this.skeleton = new Skeleton({
+      scene: this,
+      x: level.spawn.x + 80,
+      y: level.floorY,
+      target,
+      isSolidAt: (x, y) => isSolidAt(this.solidGroups, x, y),
+    });
+    this.physics.add.collider(this.skeleton, level.solids);
+    this.physics.add.collider(this.skeleton, level.softs);
+
+    this.hitStop = new HitStopSystem();
+    this.player.setHitStop(this.hitStop);
+    this.skeleton.setHitStop(this.hitStop);
+
+    const knockbackSys = this.systems.get<KnockbackSystem>('knockback');
+    const damageNumbers = this.systems.get<DamageNumberSystem>('damageNumbers');
+    damageNumbers.bind(this);
+    knockbackSys.register(
+      this.player.id,
+      this.player.knockback,
+      this.player.body as Phaser.Physics.Arcade.Body,
+    );
+    knockbackSys.register(
+      this.skeleton.id,
+      this.skeleton.knockback,
+      this.skeleton.body as Phaser.Physics.Arcade.Body,
+    );
+
+    this.hitQueue = new HitQueue();
+    this.combat = new CombatSystem(
+      this.hitQueue,
+      buildCombatVictims(this.player, this.skeleton),
+      makeCombatSinks({
+        player: this.player,
+        skeleton: this.skeleton,
+        hitStop: this.hitStop,
+        knockbackSys,
+        damageNumbers,
+        vfx: this.vfxSys,
+        particles,
+        cameraSys: this.cameraSys,
+        bus: this.bus,
+        delay: (ms, cb) => {
+          this.time.delayedCall(ms, cb);
+        },
+      }),
+      now,
+    );
 
     this.vfxSys.bind(this, this.bus);
     particles.bind(this);
@@ -216,6 +293,15 @@ export class GameScene extends Phaser.Scene {
     systems.update(time, dt);
     player.update(time, dt);
     player.syncAfterPhysics(time, dt);
+    this.skeleton?.update(time, dt);
+
+    const skeleton = this.skeleton;
+    const queue = this.hitQueue;
+    if (skeleton !== undefined && queue !== undefined) {
+      detectCombatOverlaps(player, skeleton, queue);
+    }
+    this.combat?.resolveQueuedHits();
+
     systems.postPhysics(time, dt);
   }
 
@@ -239,7 +325,7 @@ export class GameScene extends Phaser.Scene {
       coyoteActive: player.coyoteActive,
       bufferActive: player.bufferActive,
       dashCooldownRemainingMs: player.dashCooldownRemainingMs,
-      lastJumpHeight: player.lastJumpHeight,
+      lastJumpHeight: player.jumpState.lastHeight,
     };
     const showFeel = debug === undefined || !debug.overlayVisible;
     readout.setVisible(showFeel);
@@ -271,6 +357,11 @@ export class GameScene extends Phaser.Scene {
     this.debugSys = undefined;
     this.bus = undefined;
     this.player = undefined;
+    this.skeleton = undefined;
+    this.hitStop = undefined;
+    this.hitQueue = undefined;
+    this.combat = undefined;
+    this.solidGroups = [];
     this.content = undefined;
   }
 }

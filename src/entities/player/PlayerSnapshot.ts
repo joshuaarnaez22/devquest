@@ -10,4 +10,6 @@ export interface PlayerSnapshot {
   readonly facing: -1 | 1;
   /** Animation key prefix, e.g. `samurai` — unused until art packs land. */
   readonly animPrefix: string;
+  /** Layer 2 hit-flash colour (docs/07 §6.3), overriding the state tint while set. */
+  readonly flashColour?: number | null;
 }

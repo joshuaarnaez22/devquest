@@ -7,7 +7,12 @@ import samuraiJson from '../../public/assets/data/characters/samurai.json';
 import wizardJson from '../../public/assets/data/characters/wizard.json';
 import type { Result } from '@core/Result';
 import type { ValidationIssue } from '@core/SchemaValidator';
-import type { CharacterContent, CharacterId, CharacterMovementData } from '@data/CharacterTypes';
+import type {
+  CharacterContent,
+  CharacterDefensiveData,
+  CharacterId,
+  CharacterMovementData,
+} from '@data/CharacterTypes';
 
 const MOVEMENT_SCHEMA = {
   type: 'object',
@@ -45,14 +50,25 @@ const MOVEMENT_SCHEMA = {
   },
 } as const;
 
+const DEFENSIVE_SCHEMA = {
+  type: 'object',
+  required: ['maxHp', 'knockbackTaken', 'poise'],
+  properties: {
+    maxHp: { type: 'number' },
+    knockbackTaken: { type: 'number' },
+    poise: { type: 'number' },
+  },
+} as const;
+
 const CHARACTER_SCHEMA = {
   type: 'object',
-  required: ['id', 'displayName', 'animPrefix', 'movement'],
+  required: ['id', 'displayName', 'animPrefix', 'movement', 'defensive'],
   properties: {
     id: { type: 'string' },
     displayName: { type: 'string' },
     animPrefix: { type: 'string' },
     movement: MOVEMENT_SCHEMA,
+    defensive: DEFENSIVE_SCHEMA,
   },
 } as const;
 
@@ -76,11 +92,13 @@ function parseCharacter(
   }
 
   const movement = value['movement'] as CharacterMovementData;
+  const defensive = value['defensive'] as CharacterDefensiveData;
   return Ok({
     id,
     displayName: value['displayName'] as string,
     animPrefix: value['animPrefix'] as string,
     movement: Object.freeze({ ...movement }),
+    defensive: Object.freeze({ ...defensive }),
   });
 }
 

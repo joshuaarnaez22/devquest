@@ -37,16 +37,15 @@ export const STATE_TINT: Readonly<Record<PlayerStateId, number>> = {
  * ESLint `MemberExpression[property.name='body']` enforces this on `*Animator.ts`.
  */
 export class PlayerAnimator {
-  private lastState: PlayerStateId | null = null;
-
   constructor(private readonly sprite: AnimatableSprite) {}
 
+  /**
+   * `flashColour` (Layer 2, docs/07 §6.3) overrides the state tint while set, so a
+   * hit-flash and the base state colour never fight over `setTintFill` — this is the
+   * only place either applies, called unconditionally every frame.
+   */
   update(snap: Readonly<PlayerSnapshot>): void {
-    if (snap.state !== this.lastState) {
-      // Fill (not multiply) — multiply on a grey texture barely reads.
-      this.sprite.setTintFill(STATE_TINT[snap.state]);
-      this.lastState = snap.state;
-    }
+    this.sprite.setTintFill(snap.flashColour ?? STATE_TINT[snap.state]);
     this.sprite.setFlipX(snap.facing === -1);
   }
 }
