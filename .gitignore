@@ -29,3 +29,13 @@ public/assets/atlas/
 *.njsproj
 *.sln
 *.sw?
+
+# Local agent tool config
+.claude/
+.agents/
+
+# graphify knowledge-graph output (regenerated locally, not shared state)
+graphify-out/
+
+# Playwright MCP scratch screenshots
+.playwright-mcp/
