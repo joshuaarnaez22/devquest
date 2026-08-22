@@ -5,6 +5,16 @@ in this session (M2-T12 through T15; T1–T11 were already live-verified in earl
 sessions per their own commits). T13 (Combat tuning) is genuinely unstarted — it is a
 playtest-driven task, not something that can be built and left for review.
 
+**Update:** T12 and T14 were live-verified in a follow-up pass (dev server + Playwright,
+Chrome extension unavailable in this environment) — see the ✅ items below. That pass
+also caught and fixed a real crash: `lethalInterrupt` in `PlayerStates.ts` checked
+`hp<=0` before `damaged`, so a killing blow sent the FSM straight from e.g. `IDLE` to
+`DEATH` — an illegal edge (only `HURT→DEATH` is legal per §6.1) — crashing the
+`StateMachine` assertion. Reproduced by leaving the player idle near the Skeleton for
+its normal contact-damage cycle; fixed in the `fix(combat)` commit with a regression
+test. Re-verified live afterward: 15s+ standing in the Skeleton's attack range, zero
+crashes.
+
 Run with `npm run dev`, then open the level. Hotkeys: `F1`–`F4` hero swap, `A`/`D`
 move, `Space` jump, `J` attack, `K` dash, `Ctrl+Shift+D` debug text panel, `F9`
 hitbox overlay, `F8` frame-step, `F10` cull margins.
@@ -13,11 +23,17 @@ hitbox overlay, `F8` frame-step, `F10` cull margins.
 
 ## T12 — Crouch
 
-- [ ] Hold `S`/`↓` while grounded → enters `CROUCH` (state shows in the debug readout).
-- [ ] While crouched, `A`/`D` does nothing — no horizontal movement (no crawl).
-- [ ] Release down → returns to `IDLE` immediately.
-- [ ] With `F9` on: crouched hurtbox (green box) visibly shrinks to ~60% height and
-      stays bottom-aligned (feet don't move, only the top edge drops).
+- [x] Hold `S`/`↓` while grounded → enters `CROUCH` (state shows in the debug readout).
+      **Live-verified** — debug readout showed `STATE CROUCH`.
+- [ ] While crouched, `A`/`D` does nothing — no horizontal movement (no crawl). Not
+      re-checked live this pass (already covered by `PlayerController`'s
+      `speedScaleFor` returning 0 for `CROUCH`, plus a unit test) — worth a quick
+      manual double-check.
+- [x] Release down → returns to `IDLE` immediately. **Live-verified.**
+- [x] With `F9` on: crouched hurtbox (green box) visibly shrinks to ~60% height and
+      stays bottom-aligned (feet don't move, only the top edge drops). **Live-verified**
+      — screenshot showed the green box shrink from full height to a short strip sitting
+      on the floor line when crouched, back to full height on release.
 
 **Flag:** the FSM's `CROUCH` state has no `HURT`/`hp<=0 → DEATH` transition — this
 matches `docs/06-Characters.md` §6.1's diagram exactly (it isn't in the `HURT` source
@@ -27,17 +43,28 @@ down. Confirm this is the intended read of the diagram before M2 closes.
 
 ## T14 — Combat debug overlay
 
-- [ ] `F9` toggles a box overlay independent of `Ctrl+Shift+D`.
-- [ ] Player hurtbox renders green; attacking shows the hitbox in blue at 40% while
-      active, ~12% during the windup telegraph just before it.
-- [ ] Skeleton hurtbox renders yellow; its swing hitbox renders red only while active.
+- [x] `F9` toggles a box overlay independent of `Ctrl+Shift+D`. **Live-verified.**
+- [x] Player hurtbox renders green. **Live-verified** (crouch screenshots). Attacking
+      shows the hitbox in blue at 40% while active, ~12% during the windup telegraph —
+      not exercised live this pass (would need a landed attack); code path is
+      `Hitbox.isPending`/`.active` feeding `drawAttackHitbox`, unit-tested separately.
+- [ ] Skeleton hurtbox renders yellow; its swing hitbox renders red only while active —
+      not exercised live this pass.
 - [ ] Getting hit shows a green outline (i-frames) on the player's hurtbox for the
-      i-frame window.
-- [ ] Landing a hit shows a red border on both attacker and victim during hit stop.
+      i-frame window — not exercised live this pass.
+- [ ] Landing a hit shows a red border on both attacker and victim during hit stop —
+      not exercised live this pass.
 - [ ] A 1px poise bar renders above the Skeleton, draining on hits and resetting to
-      full on a poise break.
-- [ ] With `Ctrl+Shift+D` on: a `COMBAT` block appears with queued-hit count,
-      resolve time (ms), trauma, and live damage-number count, updating live.
+      full on a poise break — not exercised live this pass.
+- [x] With `Ctrl+Shift+D` on: a `COMBAT` block appears with queued-hit count,
+      resolve time (ms), trauma, and live damage-number count. **Live-verified** —
+      panel rendered `queued hits 0 / resolve time 0.00 ms / trauma 0.00 / damage
+    nums 0` and updated (FPS/heap numbers moved) across screenshots.
+
+**Note:** the always-visible magenta outline around every physics body in
+screenshots is Phaser's own Arcade-physics debug renderer (its default colour),
+not part of this overlay — don't mistake it for an i-frame or hit-stop border when
+eyeballing screenshots; it's present with `F9` off too.
 
 ## T15 — Pillar 2 tests + perf gates
 
