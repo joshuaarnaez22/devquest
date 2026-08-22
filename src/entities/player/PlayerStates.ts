@@ -201,9 +201,15 @@ function softInterrupts(
   return undefined;
 }
 
+/**
+ * `damaged` must win over `hp <= 0` — a killing blow sets both true on the same
+ * frame, and §6.1's diagram only allows `HURT -> DEATH`, never `<state> -> DEATH`
+ * directly. Checking `hp <= 0` first sent a fatal hit straight from e.g. IDLE to
+ * DEATH, an illegal edge per `PLAYER_TRANSITIONS`, crashing the FSM assertion.
+ */
 function lethalInterrupt(host: PlayerFsmHost): PlayerStateId | undefined {
-  if (host.hp <= 0) return 'DEATH';
   if (host.damaged) return 'HURT';
+  if (host.hp <= 0) return 'DEATH';
   return undefined;
 }
 

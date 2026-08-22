@@ -118,6 +118,14 @@ describe('PlayerStates', () => {
       expect(fsm.id).toBe('CROUCH');
     });
 
+    it('a killing blow routes through HURT first, never straight to DEATH (§6.1 — only HURT→DEATH is a legal edge)', () => {
+      const { fsm } = drive('IDLE', h => {
+        h.damaged = true;
+        h.hp = 0;
+      });
+      expect(fsm.id).toBe('HURT');
+    });
+
     it('RUN → IDLE when stopped', () => {
       const { fsm } = drive('RUN', h => {
         h.moveX = 0;
