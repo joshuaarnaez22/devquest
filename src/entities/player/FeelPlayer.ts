@@ -1,6 +1,5 @@
 import { Depth } from '@config/Depth';
 import { FEEL } from '@config/GameConstants';
-import { expand, GENEROSITY } from '@components/Box';
 import { Health } from '@components/Health';
 import { Hitbox } from '@components/Hitbox';
 import { Hurtbox } from '@components/Hurtbox';
@@ -16,6 +15,7 @@ import { PlayerAbilitySlot } from '@entities/player/PlayerAbilitySlot';
 import { PlayerAnimator } from '@entities/player/PlayerAnimator';
 import { updateAttack } from '@entities/player/PlayerAttackStep';
 import { PlayerController, WALL_JUMP_PUSH } from '@entities/player/PlayerController';
+import { BODY_H, BODY_W, STANDING_HURTBOX, updateCrouch } from '@entities/player/PlayerCrouch';
 import { PlayerDamage } from '@entities/player/PlayerDamage';
 import { createJumpState, onLanded, resolveJump } from '@entities/player/PlayerJump';
 import {
@@ -37,9 +37,6 @@ import type { JumpDeps, PlayerJumpState } from '@entities/player/PlayerJump';
 import type { PlayerStateId } from '@entities/player/PlayerStateId';
 import type { PlayerFsmHost } from '@entities/player/PlayerStates';
 import type Phaser from 'phaser';
-
-const BODY_W = 14;
-const BODY_H = 28;
 
 /** Player poise regen delay has no documented value (docs/07 §8.2's table is enemies
  * only) — chosen to match the Skeleton's, flag if a real value surfaces (M2-T13). */
@@ -67,12 +64,7 @@ export class FeelPlayer extends Entity {
   health = new Health(100);
   poise = new Poise(20, PLAYER_POISE_REGEN_MS);
   readonly knockback = new Knockback();
-  readonly hurtbox = new Hurtbox(
-    expand(
-      { width: BODY_W, height: BODY_H, offsetX: 0, offsetY: -BODY_H / 2 },
-      GENEROSITY.PLAYER_HURTBOX,
-    ),
-  );
+  readonly hurtbox = new Hurtbox(STANDING_HURTBOX);
   /** §7.1/§6.4 — always 0 for the player, per `CombatVictim`'s own field comments,
    * except while Guard is actively blocking — `KnightGuard` mutates this directly. */
   readonly armour = 0;
@@ -373,6 +365,7 @@ export class FeelPlayer extends Entity {
     updateAttack(this.attack, this.attackHitbox, { fsmId: this.fsm.id, prevId }, t);
     this.handleSpecialTransition(prevId);
     this.handleDeathTransition(prevId, t);
+    updateCrouch(body, this.hurtbox, prevId, this.fsm.id);
     if (this.fsm.id !== 'DASH') {
       this.controller.clearDashFinished();
     }
