@@ -5,7 +5,9 @@ import type { Aabb } from '@components/Box';
 import type { EventBus } from '@core/EventBus';
 import type { EntityId, GameEventMap } from '@core/GameEvents';
 import type { Skeleton } from '@entities/enemy/Skeleton';
+import type { AbilityTarget } from '@entities/player/abilities/Ability';
 import type { FeelPlayer } from '@entities/player/FeelPlayer';
+import type { AbilityDeps } from '@entities/player/PlayerAbilitySlot';
 import type { CameraSystem } from '@systems/CameraSystem';
 import type { CombatSinks, CombatVictim } from '@systems/CombatSystem';
 import type { DamageNumberSystem } from '@systems/DamageNumberSystem';
@@ -55,13 +57,22 @@ export function buildCombatVictims(
     poise: player.poise,
     iFrames: player.damage.iFrames,
     knockbackTaken: player.knockbackTaken,
-    knockbackResist: player.knockbackResist,
+    // Live getter — `KnightGuard` mutates `player.knockbackResist` per-hit
+    // (docs/06 §9.1's `onIncomingDamage`), so this must not be a snapshot.
+    get knockbackResist() {
+      return player.knockbackResist;
+    },
     armour: player.armour,
     poiseResist: player.poiseResist,
     baseStaggerMs: player.baseStaggerMs,
     get centre() {
       return player.centre;
     },
+    get facing() {
+      return player.facingDir;
+    },
+    onIncomingDamage: (damage, source, fromBehind) =>
+      player.abilitySlot.interceptDamage(damage, source, fromBehind),
   });
   map.set(skeleton.id, {
     id: skeleton.id,
@@ -79,6 +90,9 @@ export function buildCombatVictims(
     baseStaggerMs: skeleton.baseStaggerMs,
     get centre() {
       return skeleton.centre;
+    },
+    get facing() {
+      return skeleton.facingDir;
     },
   });
   return map;
@@ -143,6 +157,7 @@ interface QueuedHitInput {
   readonly victimRect: Aabb;
   readonly source: QueuedHit['source'];
   readonly step: QueuedHit['step'];
+  readonly critical?: boolean;
 }
 
 function makeQueuedHit(input: QueuedHitInput): QueuedHit {
@@ -156,6 +171,7 @@ function makeQueuedHit(input: QueuedHitInput): QueuedHit {
     },
     source: input.source,
     step: input.step,
+    critical: input.critical,
   };
 }
 
@@ -181,6 +197,9 @@ function detectPlayerAttackOnSkeleton(
       victimRect: hurt,
       source: 'melee',
       step,
+      // Knight's guaranteed post-parry critical (docs/06 §7.1.4) — consumed
+      // once per queued hit, not per overlap-check frame.
+      critical: player.abilitySlot.consumeNextAttackCritical(),
     }),
   );
 }
@@ -249,4 +268,57 @@ export function detectCombatOverlaps(
   detectPlayerAttackOnSkeleton(player, skeleton, queue);
   detectSkeletonAttackOnPlayer(player, skeleton, queue);
   detectSkeletonContactOnPlayer(player, skeleton, queue);
+}
+
+/**
+ * `Ability`'s external dependencies (M2-T11) — `getTargets` currently ever
+ * returns 0 or 1 entries (the one Skeleton), but is shaped as a list so Nova's
+ * radius / Iai's line genuinely iterate rather than special-casing a single
+ * hardcoded enemy.
+ */
+export function buildAbilityDeps(
+  skeleton: Skeleton,
+  hitQueue: HitQueue,
+  vfx: VfxSystem,
+  solidGroups: readonly Phaser.Physics.Arcade.StaticGroup[],
+): AbilityDeps {
+  return {
+    hitQueue,
+    vfx,
+    isSolidAt: (x, y) => isSolidAt(solidGroups, x, y),
+    getTargets: (): readonly AbilityTarget[] => {
+      if (!skeleton.active) return [];
+      return [
+        {
+          id: skeleton.id,
+          x: skeleton.x,
+          y: skeleton.y,
+          facingDir: skeleton.facingDir,
+          hurtbox: skeleton.hurtbox,
+          active: skeleton.active,
+        },
+      ];
+    },
+  };
+}
+
+/**
+ * Knight's parry (docs/06 §7.1.4) — `KnightGuard.onIncomingDamage` only returns
+ * the modified damage (the interface's actual return type); the side effects
+ * ("attacker staggered", hit-stop) live here instead, reacting to the
+ * `ability:parried` event it emits.
+ */
+export function wireAbilityReactions(
+  bus: EventBus<GameEventMap>,
+  hitStop: HitStopSystem,
+  skeleton: Skeleton,
+): void {
+  bus.on(
+    'ability:parried',
+    p => {
+      hitStop.request(p.hitstopMs, [p.attacker, p.victim]);
+      if (p.attacker === skeleton.id) skeleton.applyStagger(true);
+    },
+    skeleton,
+  );
 }

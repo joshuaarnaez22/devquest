@@ -112,6 +112,10 @@ export interface CombatVictim {
   readonly baseStaggerMs: number;
   /** World-space centre, for knockback direction (§6.4) and VFX positioning (§6.5). */
   readonly centre: Readonly<Vec2>;
+  /** −1/+1, for `onIncomingDamage`'s `fromBehind` (docs/06 §9.1 — Knight's Guard). */
+  readonly facing: -1 | 1;
+  /** Optional damage interception (docs/06 §9.1) — Knight's Guard is the only user today. */
+  onIncomingDamage?(damage: number, source: EntityId, fromBehind: boolean): number;
 }
 
 /**
@@ -249,7 +253,12 @@ export function buildResolution(
   const kind = resolveHitKind(hit);
   const tier = HIT_TIERS[kind];
   const baseDamage = hit.step?.damage ?? 0;
-  const damage = computeDamage(baseDamage, victim.armour, formula);
+  let damage = computeDamage(baseDamage, victim.armour, formula);
+  if (victim.onIncomingDamage !== undefined) {
+    const dx = attackerCentre.x - victim.centre.x;
+    const fromBehind = dx !== 0 && Math.sign(dx) !== victim.facing;
+    damage = victim.onIncomingDamage(damage, hit.attackerId, fromBehind);
+  }
   const fatal = victim.health.value - damage <= 0;
   const poiseBroken = victim.poise.value - baseDamage <= 0;
 
@@ -325,7 +334,11 @@ export class CombatSystem {
 
     const scored = withVictims.map(({ hit, victim }) => {
       const baseDamage = hit.step?.damage ?? 0;
-      const damage = computeDamage(baseDamage, victim.armour);
+      const formula =
+        hit.critical === true
+          ? { ...DEFAULT_FORMULA_INPUTS, attackMultiplier: 2 }
+          : DEFAULT_FORMULA_INPUTS;
+      const damage = computeDamage(baseDamage, victim.armour, formula);
       const attackerIsPlayer = this.victims.get(hit.attackerId)?.isPlayer ?? false;
       return {
         hit,
@@ -346,7 +359,11 @@ export class CombatSystem {
 
       hit.hitbox.markHit(hit.victimId);
       const attackerCentre = this.victims.get(hit.attackerId)?.centre ?? victim.centre;
-      const res = buildResolution(hit, victim, attackerCentre);
+      const formula =
+        hit.critical === true
+          ? { ...DEFAULT_FORMULA_INPUTS, attackMultiplier: 2 }
+          : DEFAULT_FORMULA_INPUTS;
+      const res = buildResolution(hit, victim, attackerCentre, formula);
       this.applyResolution(res, victim);
     }
   }

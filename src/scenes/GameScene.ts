@@ -3,16 +3,19 @@ import { DISPLAY } from '@config/GameConstants';
 import { EventBus } from '@core/EventBus';
 import { ContentDatabase } from '@data/ContentDatabase';
 import { Skeleton, ensureSkeletonBoxTexture } from '@entities/enemy/Skeleton';
-import { FeelPlayer, ensurePlayerBoxTexture } from '@entities/player/FeelPlayer';
+import { FeelPlayer } from '@entities/player/FeelPlayer';
+import { ensurePlayerBoxTexture } from '@entities/player/PlayerBoxTexture';
 import { buildFeelTestLevel } from '@level/FeelTestLevel';
 import { now } from '@platform/Clock';
 import { installDebugBitmapFont } from '@platform/DebugBitmapFont';
 import { destroyDomHud, setDomHudText, setDomHudVisible } from '@platform/DebugDomHud';
 import {
+  buildAbilityDeps,
   buildCombatVictims,
   detectCombatOverlaps,
   isSolidAt,
   makeCombatSinks,
+  wireAbilityReactions,
 } from '@scenes/GameCombatWiring';
 import { CombatSystem } from '@systems/CombatSystem';
 import { createGameplayRegistry } from '@systems/createGameplayRegistry';
@@ -162,6 +165,11 @@ export class GameScene extends Phaser.Scene {
       }),
       now,
     );
+
+    this.player.abilitySlot.setDeps(
+      buildAbilityDeps(this.skeleton, this.hitQueue, this.vfxSys, this.solidGroups),
+    );
+    wireAbilityReactions(this.bus, this.hitStop, this.skeleton);
 
     this.vfxSys.bind(this, this.bus);
     particles.bind(this);

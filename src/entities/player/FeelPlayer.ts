@@ -7,11 +7,14 @@ import { Hurtbox } from '@components/Hurtbox';
 import { Knockback } from '@components/Knockback';
 import { Poise } from '@components/Poise';
 import { Entity } from '@entities/Entity';
+import { createAbilityFor } from '@entities/player/abilities/AbilityForHero';
 import { AttackScheduler } from '@entities/player/AttackScheduler';
-import { SAMURAI_AIR_ATTACK, SAMURAI_COMBO } from '@entities/player/CharacterCombat';
+import { SAMURAI_COMBO } from '@entities/player/CharacterCombat';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
 import { FrozenInputLatch } from '@entities/player/FrozenInputLatch';
+import { PlayerAbilitySlot } from '@entities/player/PlayerAbilitySlot';
 import { PlayerAnimator } from '@entities/player/PlayerAnimator';
+import { updateAttack } from '@entities/player/PlayerAttackStep';
 import { PlayerController, WALL_JUMP_PUSH } from '@entities/player/PlayerController';
 import { PlayerDamage } from '@entities/player/PlayerDamage';
 import { createJumpState, onLanded, resolveJump } from '@entities/player/PlayerJump';
@@ -70,9 +73,10 @@ export class FeelPlayer extends Entity {
       GENEROSITY.PLAYER_HURTBOX,
     ),
   );
-  /** §7.1/§6.4 — always 0 for the player, per `CombatVictim`'s own field comments. */
+  /** §7.1/§6.4 — always 0 for the player, per `CombatVictim`'s own field comments,
+   * except while Guard is actively blocking — `KnightGuard` mutates this directly. */
   readonly armour = 0;
-  readonly knockbackResist = 0;
+  knockbackResist = 0;
   readonly poiseResist = 0;
   readonly baseStaggerMs = PLAYER_STATE_DURATION_MS.HURT ?? 300;
   grounded = false;
@@ -107,6 +111,9 @@ export class FeelPlayer extends Entity {
   /** i-frames, hit-flash, and the damage bus event — split out (M2-T10) to keep this file
    * under budget. Public: `CombatVictim`/`CombatSinks` adapters read `.iFrames`/`.hitFlash`. */
   readonly damage: PlayerDamage;
+  /** Hero-ability integration (M2-T11) — public: `GameCombatWiring`'s `CombatVictim`
+   * adapter calls `.interceptDamage`, abilities reach it via `ctx.player.abilitySlot`. */
+  readonly abilitySlot: PlayerAbilitySlot;
   private readonly respawnPoint: Vec2;
 
   constructor(opts: {
@@ -120,6 +127,7 @@ export class FeelPlayer extends Entity {
     this.frames = opts.frames;
     this.bus = opts.bus;
     this.damage = new PlayerDamage(opts.bus, this.id);
+    this.abilitySlot = new PlayerAbilitySlot(this, opts.bus);
     this.jumpState = createJumpState(SAMURAI_MOVEMENT.airJumps);
     this.respawnPoint = { x: opts.x, y: opts.y };
     // Bottom-centre — squash must not lift feet (docs/14 §8.1).
@@ -161,6 +169,8 @@ export class FeelPlayer extends Entity {
     this.health = new Health(content.defensive.maxHp);
     this.poise = new Poise(content.defensive.poise, PLAYER_POISE_REGEN_MS);
     this.knockbackTaken = content.defensive.knockbackTaken;
+    this.abilitySlot.sync(this.frames.frame, now(), 0);
+    this.abilitySlot.setAbility(createAbilityFor(content.id));
     const body = this.body as Phaser.Physics.Arcade.Body;
     this.applyMaxVelocity(body);
     this.animator.update({
@@ -195,6 +205,13 @@ export class FeelPlayer extends Entity {
   private applyMaxVelocity(body: Phaser.Physics.Arcade.Body): void {
     const maxVx = Math.max(this.movement.dashSpeed, WALL_JUMP_PUSH, this.movement.runSpeed * 1.5);
     body.setMaxVelocity(maxVx, 400);
+  }
+
+  /** Ninja's Shadow Step (docs/06 §7.3.4) — "restores air jump and dash cooldown". */
+  restoreAirMobility(): void {
+    this.jumpState.airJumpsRemaining = this.movement.airJumps;
+    this.jumpState.airDashAvailable = true;
+    this.controller.refreshDashCooldown();
   }
 
   private jumpDeps(): JumpDeps {
@@ -245,6 +262,7 @@ export class FeelPlayer extends Entity {
     const t = now();
     this.jumpState.kind = null;
     this.wallDir = senseWallDir(body);
+    this.abilitySlot.sync(frame, t, delta);
 
     this.controller.beginFrame(delta);
 
@@ -252,30 +270,38 @@ export class FeelPlayer extends Entity {
       this.facing = frame.moveX;
     }
 
-    // Dash outranks jump (docs/06 §6.3); jump during dash stays buffered.
-    if (!this.controller.isDashing) {
-      this.resolveDash(frame, t);
-    }
-
-    this.controller.tickDash(t);
-    if (this.controller.isDashing) {
-      // Velocity locked inside tickDash; no gravity / horizontal / jump.
+    // SPECIAL is uninterruptible by dash/jump in M2 — only `damaged` breaks it
+    // (per the FSM's own SPECIAL transition); per-ability cancel windows (§9.4)
+    // are a tuning-pass nuance, not built until feel testing asks for one.
+    if (this.moveState === 'SPECIAL') {
+      this.abilitySlot.tickActive();
     } else {
-      const outcome = resolveJump(this.jumpState, this.jumpDeps(), {
-        frame,
-        t,
-        x: this.x,
-        y: body.y,
-        grounded: this.grounded,
-        wallDir: this.wallDir,
-        moveState: this.moveState,
-      });
-      if (outcome.setGroundedFalse) this.grounded = false;
-      if (!this.controller.isWallJumpLocked(t)) {
-        this.controller.applyHorizontal(frame, this.moveState, this.grounded);
+      // Dash outranks jump (docs/06 §6.3); jump during dash stays buffered.
+      if (!this.controller.isDashing) {
+        this.resolveDash(frame, t);
       }
-      this.applyVerticalMotion(frame);
+
+      this.controller.tickDash(t);
+      if (this.controller.isDashing) {
+        // Velocity locked inside tickDash; no gravity / horizontal / jump.
+      } else {
+        const outcome = resolveJump(this.jumpState, this.jumpDeps(), {
+          frame,
+          t,
+          x: this.x,
+          y: body.y,
+          grounded: this.grounded,
+          wallDir: this.wallDir,
+          moveState: this.moveState,
+        });
+        if (outcome.setGroundedFalse) this.grounded = false;
+        if (!this.controller.isWallJumpLocked(t)) {
+          this.controller.applyHorizontal(frame, this.moveState, this.grounded);
+        }
+        this.applyVerticalMotion(frame);
+      }
     }
+    this.abilitySlot.tickPassive();
 
     this.coyoteActive = !this.grounded && t < this.jumpState.coyoteExpiresAt;
     this.bufferActive = this.isBufferActive(frame, t);
@@ -338,20 +364,15 @@ export class FeelPlayer extends Entity {
     const t = now();
     const frame = this.frames.frame;
     this.wallDir = senseWallDir(body);
+    this.abilitySlot.sync(frame, t, delta);
 
     this.refreshGrounded(body, t);
     this.syncFsmHost(frame, t);
     const prevId = this.fsm.id;
     tickPlayerFsm(this.fsm, { time, delta });
-    this.updateAttack(prevId, t);
-    if (prevId !== 'DEATH' && this.fsm.id === 'DEATH') {
-      this.bus.emit('combat:playerDied', { atCheckpoint: null }); // checkpoints are M3
-    } else if (
-      this.fsm.id === 'DEATH' &&
-      this.fsm.timeInState >= (PLAYER_STATE_DURATION_MS.DEATH ?? 0)
-    ) {
-      this.respawn(t);
-    }
+    updateAttack(this.attack, this.attackHitbox, { fsmId: this.fsm.id, prevId }, t);
+    this.handleSpecialTransition(prevId);
+    this.handleDeathTransition(prevId, t);
     if (this.fsm.id !== 'DASH') {
       this.controller.clearDashFinished();
     }
@@ -362,6 +383,25 @@ export class FeelPlayer extends Entity {
       flashColour: this.damage.flashColour,
     });
     this.jumpState.kind = null;
+  }
+
+  private handleSpecialTransition(prevId: PlayerStateId): void {
+    if (prevId !== 'SPECIAL' && this.fsm.id === 'SPECIAL') {
+      this.abilitySlot.onEnter();
+    } else if (prevId === 'SPECIAL' && this.fsm.id !== 'SPECIAL') {
+      this.abilitySlot.onExit(this.fsmHost.damaged ? 'damaged' : 'complete');
+    }
+  }
+
+  private handleDeathTransition(prevId: PlayerStateId, t: number): void {
+    if (prevId !== 'DEATH' && this.fsm.id === 'DEATH') {
+      this.bus.emit('combat:playerDied', { atCheckpoint: null }); // checkpoints are M3
+    } else if (
+      this.fsm.id === 'DEATH' &&
+      this.fsm.timeInState >= (PLAYER_STATE_DURATION_MS.DEATH ?? 0)
+    ) {
+      this.respawn(t);
+    }
   }
 
   private refreshGrounded(body: Phaser.Physics.Arcade.Body, t: number): void {
@@ -427,39 +467,15 @@ export class FeelPlayer extends Entity {
     // Attack timing (M2-T4). Idle scheduler reports both false, so non-attack
     // states — which ignore these — are unaffected.
     this.fsmHost.comboWindowOpen = this.attack.comboWindowOpen(t);
-    this.fsmHost.animComplete = this.attack.animComplete(t);
+    this.fsmHost.animComplete =
+      this.fsm.id === 'SPECIAL' ? this.abilitySlot.isComplete : this.attack.animComplete(t);
     this.fsmHost.comboLength = SAMURAI_COMBO.length;
+    // Ability (M2-T11).
+    this.fsmHost.specialReady = this.abilitySlot.specialReady;
     // Damage/death (M2-T10).
     this.fsmHost.hp = this.health.value;
     this.fsmHost.damaged = this.damage.consumeDamaged();
     this.fsmHost.hurtElapsed = this.fsm.timeInState >= (PLAYER_STATE_DURATION_MS.HURT ?? 300);
-  }
-
-  /** The AttackStep a given attack state runs, or null for non-attack states. */
-  private attackStepFor(id: PlayerStateId): AttackStep | null {
-    switch (id) {
-      case 'ATTACK_1':
-        return SAMURAI_COMBO[0] ?? null;
-      case 'ATTACK_2':
-        return SAMURAI_COMBO[1] ?? null;
-      case 'ATTACK_3':
-        return SAMURAI_COMBO[2] ?? null;
-      case 'AIR_ATTACK':
-        return SAMURAI_AIR_ATTACK;
-      default:
-        return null;
-    }
-  }
-
-  /** Begin the scheduler on attack-state entry, advance its hitbox, end on exit. */
-  private updateAttack(prevId: PlayerStateId, t: number): void {
-    const step = this.attackStepFor(this.fsm.id);
-    if (step !== null) {
-      if (prevId !== this.fsm.id) this.attack.begin(step, t, this.attackHitbox);
-      this.attackHitbox.update(t);
-    } else if (this.attack.active) {
-      this.attack.end();
-    }
   }
 
   private isBufferActive(frame: InputFrame, t: number): boolean {
@@ -470,16 +486,4 @@ export class FeelPlayer extends Entity {
       this.controller.hasUnconsumedJumpBuffer(frame.jumpPressedAt)
     );
   }
-}
-
-export function ensurePlayerBoxTexture(scene: Phaser.Scene): void {
-  if (scene.textures.exists('player-box')) {
-    scene.textures.remove('player-box');
-  }
-  const g = scene.make.graphics({ x: 0, y: 0 });
-  // White base so setTintFill reads as a solid state colour.
-  g.fillStyle(0xffffff, 1);
-  g.fillRect(0, 0, BODY_W, BODY_H);
-  g.generateTexture('player-box', BODY_W, BODY_H);
-  g.destroy();
 }

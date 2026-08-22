@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S11** (`M2-T11`) · S01–S10 done · ▶ Checkpoint E confirmed (e2e); Checkpoint F mostly confirmed live (T10, first real fight in `GameScene` — poise-break→HURT observed, flinch-only path not yet, see T10 note)
+**Status:** 🔄 In progress · next **M2-S12** (`M2-T12`) · S01–S11 done · ▶ Checkpoint E confirmed (e2e); Checkpoint F mostly confirmed live (T10, first real fight in `GameScene` — poise-break→HURT observed, flinch-only path not yet, see T10 note)
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
@@ -57,7 +57,7 @@ A–D lettering (E, F, G) and mark the points where combat becomes observable.
 | [x] **M2-S08** | M2-T8 Layers 6, 7, 9                | 6   | Buildable pieces done; ▶ **Checkpoint F** pending real combat (T9+) |
 | [x] **M2-S09** | M2-T9 Hardcoded Skeleton            | 10  | Full AI cycle runs; never walks off a ledge                         |
 | [x] **M2-S10** | M2-T10 Player damage/i-frames/death | 8   | i-frames block exactly 800 ms; 100 ms flicker                       |
-| [ ] **M2-S11** | M2-T11 Four abilities               | 10  | Each ability works on its hero; parry → 2× crit                     |
+| [x] **M2-S11** | M2-T11 Four abilities               | 10  | Each ability works on its hero; parry → 2× crit                     |
 | [ ] **M2-S12** | M2-T12 Crouch                       | 2   | ▶ **Checkpoint G** — Skeleton fight playable end to end             |
 | [ ] **M2-S13** | M2-T13 Combat tuning                | 18  | Five day-sessions (see T13); **no features**; muted-recording test  |
 | [ ] **M2-S14** | M2-T14 Debug overlay: combat        | 4   | `F9` renders hitbox/hurtbox/poise/hit-stop                          |
@@ -496,6 +496,79 @@ four implementations.
 rule with margin and validates the interface immediately.
 
 **Verify:** each ability works with all four heroes selectable. Parry produces a 2× critical.
+
+**Status (2026-08-22):** done. `src/entities/player/abilities/Ability.ts` — the interface, matching
+docs/06 §9.1 except `player: FeelPlayer`/`hitQueue: HitQueue` in place of the doc's `Player`/
+`combat: CombatSystem` (ADR-004 — no `Player` abstraction exists yet, and the real pipeline is
+"queue, then resolve once per frame centrally", so abilities queue exactly like a normal attack).
+Four implementations, one per file, all hardcoded per ADR-004: `KnightGuard.ts` (75%/90%
+damage/knockback reduction from the front, 200ms parry window → guaranteed crit + attacker
+stagger, guard break after 3 blocked hits in 2s → 500ms stun), `SamuraiIai.ts` (tap/hold-600ms
+quick-vs-charged slash, reuses `Hitbox`'s own `canHit`/`markHit` dedup rather than a bespoke set,
+kill-during-slash refunds part of the cooldown), `NinjaShadow.ts` (64px teleport, 8-samples-then-
+cancel wall validation, i-frames, decoy marker), `WizardNova.ts` (tap/hold-400ms Nova-vs-Barrier
+on one button, self-contained mana pool with regen delay, Barrier absorbs up to a damage cap).
+`PlayerAbilitySlot.ts` (new, same file-length-budget split as `PlayerDamage.ts`/`PlayerJump.ts`)
+owns the active `Ability`, assembles its `AbilityContext` each frame, and hot-swaps on
+`setCharacter` via `bus.offAllFor(oldAbility)`. `FeelPlayer.onUpdate` fully bypasses its own
+dash/jump/movement block while `moveState === 'SPECIAL'`, handing the body to the active ability
+instead. `CombatVictim` gained `facing` and an optional `onIncomingDamage` hook (docs/07's
+resolution pipeline calls it right after `computeDamage`, before `computeKnockback`, so Knight's
+Guard can mutate `knockbackResist` synchronously and have the same hit's knockback read it).
+`QueuedHit`/`CombatSystem` gained a `critical` flag (2× `attackMultiplier`) for the parry payoff.
+
+**Deviations flagged (no architecture seam existed for the exact documented number):** Knight's
+parry-stagger forces the attacker into `HURT` via the Skeleton's existing fixed 220ms duration,
+not the documented 800ms (no per-hit-duration stagger exists). Ninja's decoy is a visual-only
+marker — no enemy-targeting-priority system exists to retarget onto it, and it isn't a hittable
+entity (would need a third participant in `GameCombatWiring`'s overlap detection). Wizard's
+Barrier-break doesn't force a stagger (no health-neutral stagger seam in `PlayerStates.ts` — its
+only trigger is `damaged`, which always implies HP loss) and doesn't block projectiles (none
+exist yet). SPECIAL is globally uninterruptible by dash/attack in M2; per-ability cancel windows
+(§9.4) are deferred to the T13 tuning pass. All flagged in code comments at the relevant class.
+
+**Tests:** 28 new unit tests across the four ability files (402/54 suite green, typecheck/lint/
+cycles clean), via a shared `abilityTestHarness.ts` (real `EventBus`/`HitQueue`/`IFrames`
+instances, a minimal mock `FeelPlayer`/body cast through `unknown` — abilities are typed against
+the real `FeelPlayer` per ADR-004, so a full mock only needs the handful of fields each ability
+actually touches). Covers: Guard's front/behind/parry/guard-break math and the knockbackResist
+reset-every-hit invariant; Iai's quick-vs-charged threshold (verified via real queued-hit damage,
+not internal state), cooldown, and the kill-refund/no-refund-for-other-kills split; Shadow Step's
+wall-sample-then-cancel logic in all four directions plus the decoy lifetime; Nova/Barrier's
+phase split, radius cutoff, absorption cap, mana regen, and kill-mana-gain.
+
+**Real bug found and fixed, twice:**
+
+1. **Deferred-init ordering.** `GameScene.create()` calls `player.setCharacter('samurai')` (needed
+   before `buildCombatVictims` reads `player.health`/`armour`) before the Skeleton/HitQueue/
+   VfxSystem exist to build `AbilityDeps` from — so the very first `PlayerAbilitySlot.setAbility`
+   call had no deps yet, and `SamuraiIai.init()` (which subscribes to `combat:kill` for the kill
+   refund) silently no-op'd. Confirmed live: `scene.bus['listeners'].get('combat:kill').length`
+   was 0 for the default hero. Fixed by having `setDeps` run the deferred `init` for real once
+   deps arrive, tracked via an `initialized` flag — verified the listener count is 1 after the fix,
+   and drops back to 0 on a hot-swap to Knight (which subscribes to nothing).
+2. **Shadow Step teleported ~0px while grounded.** `NinjaShadow.findValidDestination` probed
+   `ctx.isSolidAt(candidate, ctx.player.y)` — the exact foot Y. `LedgeSensor.ts`'s own doc comment
+   already explains why this is wrong: flat ground occupies the surface at/below foot level, so a
+   point probe _at_ foot level is solid on any ground the player is standing on, indistinguishable
+   from a real wall (`LedgeSensor` probes `wallProbeY: -8`, above the feet, for exactly this
+   reason). `NinjaShadow` didn't follow that convention. Caught live — the teleport landed within
+   1px of the origin every time while grounded. Fixed by probing at `footY - 8`, matching
+   `LedgeSensor`'s constant; confirmed live afterward (full 64px teleport, unobstructed).
+
+**UI verified live** — dev server + Browser pane, all four heroes, via a temporary `window.__game`
+hook (removed before commit) since the backgrounded tab pauses Phaser's own rAF loop entirely
+(not just throttles it — `document.hidden` stayed true even after fronting the tab), worked around
+by calling `game.loop.step()` directly to force real engine ticks on demand. Confirmed: hero
+hot-swap via `setCharacter` (bus listener count changes correctly); Samurai's Special selects
+quick vs. charged by real hold duration (`velocityX` 480 vs. 620 matched the spec) and returns to
+`IDLE` on completion; Knight's Guard enters `SPECIAL` and a front hit within the parry window
+returns 0 damage through the exact `abilitySlot.interceptDamage` path `GameCombatWiring` uses;
+Ninja's Shadow Step (post-fix) teleports the full 64px and grants i-frames; Wizard's Nova fires
+and completes on a tap, and Barrier absorbs a hit fully through the same real `interceptDamage`
+path. Precise hit-landing against the Skeleton (exact position/facing) wasn't chased further live
+since the overlap/hitQueue mechanism itself is unchanged from T9/T10's already-verified pipeline
+and unit-tested in isolation here.
 
 ---
 

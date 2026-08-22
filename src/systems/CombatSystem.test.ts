@@ -81,6 +81,7 @@ interface VictimOpts {
   readonly poiseResist: number;
   readonly baseStaggerMs: number;
   readonly centre: { readonly x: number; readonly y: number };
+  readonly facing: -1 | 1;
 }
 
 const VICTIM_DEFAULTS: VictimOpts = {
@@ -96,6 +97,7 @@ const VICTIM_DEFAULTS: VictimOpts = {
   poiseResist: 0,
   baseStaggerMs: 220,
   centre: { x: 0, y: 0 },
+  facing: 1,
 };
 
 function makeVictim(overrides: Partial<VictimOpts> = {}): CombatVictim {
@@ -113,6 +115,7 @@ function makeVictim(overrides: Partial<VictimOpts> = {}): CombatVictim {
     poiseResist: opts.poiseResist,
     baseStaggerMs: opts.baseStaggerMs,
     centre: opts.centre,
+    facing: opts.facing,
   };
 }
 

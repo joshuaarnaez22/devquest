@@ -16,6 +16,8 @@ export interface QueuedHit {
   readonly point: Vec2;
   readonly source: CombatHitSource;
   readonly step: AttackStep | EnemyAttackStep | null;
+  /** §7.1 formula's `attackMultiplier` (2.0) — Knight's parry-critical (M2-T11). */
+  readonly critical?: boolean | undefined;
 }
 
 /**

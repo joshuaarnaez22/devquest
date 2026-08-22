@@ -55,6 +55,12 @@ export interface GameEventMap {
     readonly scaleY: number;
     readonly textureKey: string;
   };
+  /** Knight parry (docs/06 §7.1.4) — GameScene reacts with hit-stop + attacker stagger. */
+  'ability:parried': {
+    readonly attacker: EntityId;
+    readonly victim: EntityId;
+    readonly hitstopMs: number;
+  };
   'boss:defeated': { readonly bossId: BossDefId; readonly timeMs: number };
   'system:pauseRequested': Record<string, never>;
   'system:resumed': Record<string, never>;
