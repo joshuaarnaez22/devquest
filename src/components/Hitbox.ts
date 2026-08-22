@@ -38,6 +38,12 @@ export class Hitbox {
     return this.activeFlag;
   }
 
+  /** True during the windup window, before the active window opens — the debug
+   * overlay's "inactive scheduled hitbox" telegraph (docs/07 §11.4). */
+  isPending(now: number): boolean {
+    return this.spec !== null && now < this.activateAt;
+  }
+
   /** Bumped on every `schedule` — identifies the current activation. */
   get instance(): number {
     return this.instanceId;

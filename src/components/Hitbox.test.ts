@@ -16,6 +16,15 @@ describe('Hitbox active window (§5.1, §5.5)', () => {
     expect(hb.update(183)).toBe(false); // deactivateAt is exclusive
   });
 
+  it('isPending is true only during windup, false before any schedule and once active', () => {
+    const hb = new Hitbox();
+    expect(hb.isPending(0)).toBe(false); // never scheduled
+    hb.schedule(0, 100, 83, SPEC); // windup 0..100, active 100..183
+    expect(hb.isPending(0)).toBe(true);
+    expect(hb.isPending(99)).toBe(true);
+    expect(hb.isPending(100)).toBe(false); // active now, no longer "pending"
+  });
+
   it('cancel deactivates immediately with no lingering window', () => {
     const hb = new Hitbox();
     hb.schedule(0, 0, 83, SPEC);

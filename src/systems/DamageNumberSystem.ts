@@ -47,6 +47,11 @@ export class DamageNumberSystem implements System {
     this.pool = new ObjectPool(() => this.make(scene), POOL_INITIAL, POOL_MAX);
   }
 
+  /** Debug overlay readout (docs/07 §11.4 — "live damage numbers"). */
+  get liveCount(): number {
+    return this.live.length;
+  }
+
   /** `CombatSinks.spawnDamageNumber` — stacks against currently-live numbers (§6.8). */
   spawn(damage: number, point: Readonly<Vec2>, style: DamageNumberStyle): void {
     const pool = this.pool;

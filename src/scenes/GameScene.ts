@@ -28,6 +28,7 @@ import type { SystemRegistry } from '@core/SystemRegistry';
 import type { CharacterId } from '@data/CharacterTypes';
 import type { TargetSource } from '@entities/enemy/Skeleton';
 import type { CameraFollowTarget, CameraSystem } from '@systems/CameraSystem';
+import type { CombatDebugSnapshot, CombatEntityDebugSnapshot } from '@systems/CombatDebugRender';
 import type { DamageNumberSystem } from '@systems/DamageNumberSystem';
 import type { DebugSystem } from '@systems/DebugSystem';
 import type { InputSystem } from '@systems/InputSystem';
@@ -60,8 +61,13 @@ export class GameScene extends Phaser.Scene {
   private hitStop: HitStopSystem | undefined;
   private hitQueue: HitQueue | undefined;
   private combat: CombatSystem | undefined;
+  private damageNumbers: DamageNumberSystem | undefined;
   private solidGroups: Phaser.Physics.Arcade.StaticGroup[] = [];
   private heroKeys: Phaser.Input.Keyboard.Key[] = [];
+  /** Sampled in `update()` (queue drains there), read back in `postUpdate()` for the
+   * combat debug snapshot (docs/07 §11.4, M2-T14). */
+  private lastQueuedHits = 0;
+  private lastResolutionMs = 0;
 
   constructor() {
     super('Game');
@@ -133,6 +139,7 @@ export class GameScene extends Phaser.Scene {
 
     const knockbackSys = this.systems.get<KnockbackSystem>('knockback');
     const damageNumbers = this.systems.get<DamageNumberSystem>('damageNumbers');
+    this.damageNumbers = damageNumbers;
     damageNumbers.bind(this);
     knockbackSys.register(
       this.player.id,
@@ -197,7 +204,10 @@ export class GameScene extends Phaser.Scene {
     this.readout = new FeelDebugReadout();
     this.bindHeroHotkeys();
 
-    setDomHudText('hint', 'A/D move   Space jump   K dash   F1–F4 hero   Ctrl+Shift+D debug');
+    setDomHudText(
+      'hint',
+      'A/D move   Space jump   K dash   F1–F4 hero   Ctrl+Shift+D debug   F9 hitboxes',
+    );
     setDomHudVisible('hint', true);
   }
 
@@ -308,7 +318,10 @@ export class GameScene extends Phaser.Scene {
     if (skeleton !== undefined && queue !== undefined) {
       detectCombatOverlaps(player, skeleton, queue);
     }
+    this.lastQueuedHits = queue?.size ?? 0;
+    const resolveStart = now();
     this.combat?.resolveQueuedHits();
+    this.lastResolutionMs = now() - resolveStart;
 
     systems.postPhysics(time, dt);
   }
@@ -347,7 +360,50 @@ export class GameScene extends Phaser.Scene {
       vy: snap.vy,
       grounded: snap.grounded,
     });
+    debug?.setCombat(this.buildCombatDebugSnapshot());
     void time;
+  }
+
+  /** F9 overlay + the `Ctrl+Shift+D` combat stats readout (docs/07 §11.4, M2-T14). */
+  private buildCombatDebugSnapshot(): CombatDebugSnapshot | null {
+    const player = this.player;
+    const skeleton = this.skeleton;
+    const hitStop = this.hitStop;
+    if (player === undefined || skeleton === undefined || hitStop === undefined) return null;
+    const t = now();
+
+    const playerEntry: CombatEntityDebugSnapshot = {
+      hurtbox: player.hurtbox.rect(player.x, player.y, player.facingDir),
+      attackHitbox: {
+        rect: player.attackHitbox.rect(player.x, player.y, player.facingDir),
+        active: player.attackHitbox.active,
+        pending: player.attackHitbox.isPending(t),
+      },
+      iFramesActive: player.damage.iFrames.isActive(t),
+      hitStopFrozen: hitStop.isFrozen(player.id),
+      poise: null, // §11.4's poise bar is enemy-only
+    };
+
+    const skeletonEntry: CombatEntityDebugSnapshot = {
+      hurtbox: skeleton.hurtbox.rect(skeleton.x, skeleton.y, skeleton.facingDir),
+      attackHitbox: {
+        rect: skeleton.hitbox.rect(skeleton.x, skeleton.y, skeleton.facingDir),
+        active: skeleton.hitbox.active,
+        pending: skeleton.hitbox.isPending(t),
+      },
+      iFramesActive: skeleton.iFrames.isActive(t),
+      hitStopFrozen: hitStop.isFrozen(skeleton.id),
+      poise: { current: skeleton.poise.value, max: skeleton.poise.max },
+    };
+
+    return {
+      player: playerEntry,
+      enemies: [skeletonEntry],
+      queuedHits: this.lastQueuedHits,
+      resolutionMs: this.lastResolutionMs,
+      trauma: this.cameraSys?.traumaLevel ?? 0,
+      liveDamageNumbers: this.damageNumbers?.liveCount ?? 0,
+    };
   }
 
   shutdown(): void {
@@ -369,6 +425,7 @@ export class GameScene extends Phaser.Scene {
     this.hitStop = undefined;
     this.hitQueue = undefined;
     this.combat = undefined;
+    this.damageNumbers = undefined;
     this.solidGroups = [];
     this.content = undefined;
   }

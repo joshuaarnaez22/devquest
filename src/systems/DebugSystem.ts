@@ -6,9 +6,11 @@ import { FrameTimeRing } from '@core/FrameTimeRing';
 import { setDomHudText, setDomHudVisible } from '@platform/DebugDomHud';
 import { formatHeapMb, heapUsedBytes } from '@platform/Heap';
 import * as Keyboard from '@platform/Keyboard';
+import { combatDebugText, drawCombatBoxes } from '@systems/CombatDebugRender';
 import type { PoolStats } from '@core/ObjectPool';
 import type { Profiler } from '@core/Profiler';
 import type { System } from '@core/SystemRegistry';
+import type { CombatDebugSnapshot } from '@systems/CombatDebugRender';
 import type Phaser from 'phaser';
 
 export interface DebugPlayerSnapshot {
@@ -44,6 +46,7 @@ export class DebugSystem implements System {
   private frameStepOn = false;
   private stepArmed = false;
   private cullVizOn = false;
+  private hitboxVizOn = false;
 
   private readonly frameRing = new FrameTimeRing(DEBUG.SPARKLINE_FRAMES);
   private readonly sparkScratch: number[] = new Array<number>(DEBUG.SPARKLINE_FRAMES).fill(0);
@@ -56,11 +59,14 @@ export class DebugSystem implements System {
   private displayFrameMs = 16.67;
 
   private cullGfx: Phaser.GameObjects.Graphics | null = null;
+  private combatGfx: Phaser.GameObjects.Graphics | null = null;
   private onVisibility: ((visible: boolean) => void) | null = null;
 
   private player: DebugPlayerSnapshot | null = null;
+  private combat: CombatDebugSnapshot | null = null;
   private prevToggle = false;
   private prevF8 = false;
+  private prevF9 = false;
   private prevF10 = false;
   private prevEsc = false;
 
@@ -79,10 +85,16 @@ export class DebugSystem implements System {
     this.onVisibility = opts.onVisibility ?? null;
     Keyboard.ensureListening();
     this.cullGfx = scene.add.graphics().setDepth(Depth.VFX_WORLD).setVisible(false);
+    this.combatGfx = scene.add.graphics().setDepth(Depth.DEBUG).setVisible(false);
   }
 
   setPlayer(snap: DebugPlayerSnapshot | null): void {
     this.player = snap;
+  }
+
+  /** Fed every frame from `GameScene` (F9 layer + the combat text stats, M2-T14). */
+  setCombat(snap: CombatDebugSnapshot | null): void {
+    this.combat = snap;
   }
 
   allowsSimulation(): boolean {
@@ -108,6 +120,7 @@ export class DebugSystem implements System {
     this.pollOverlayToggle();
     this.pollFrameStep();
     this.pollCullToggle();
+    this.pollHitboxToggle();
   }
 
   private pollOverlayToggle(): void {
@@ -151,6 +164,15 @@ export class DebugSystem implements System {
     this.prevF10 = f10;
   }
 
+  private pollHitboxToggle(): void {
+    const f9 = Keyboard.isDown('F9');
+    if (f9 && !this.prevF9) {
+      this.hitboxVizOn = !this.hitboxVizOn;
+      this.combatGfx?.setVisible(this.hitboxVizOn);
+    }
+    this.prevF9 = f9;
+  }
+
   recordFrameMs(deltaMs: number): void {
     this.frameRing.push(deltaMs);
     // EMA — display stays readable while sparkline keeps raw history.
@@ -169,6 +191,9 @@ export class DebugSystem implements System {
       setDomHudText('perf', this.buildText());
     }
     if (this.cullVizOn) this.redrawCullMargins();
+    if (this.hitboxVizOn && this.combatGfx !== null && this.combat !== null) {
+      drawCombatBoxes(this.combatGfx, this.combat);
+    }
   }
 
   destroy(): void {
@@ -176,6 +201,8 @@ export class DebugSystem implements System {
     setDomHudText('perf', '');
     this.cullGfx?.destroy();
     this.cullGfx = null;
+    this.combatGfx?.destroy();
+    this.combatGfx = null;
     this.profiler = null;
     this.pools = null;
     this.cam = null;
@@ -229,6 +256,7 @@ export class DebugSystem implements System {
         `  vx ${p.vx.toFixed(1)}   vy ${p.vy.toFixed(1)}   ${p.grounded ? 'grounded' : 'airborne'}`,
       );
     }
+    if (this.combat !== null) lines.push(...combatDebugText(this.combat));
     return lines.join('\n');
   }
 
