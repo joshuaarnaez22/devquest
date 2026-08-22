@@ -1,6 +1,6 @@
 # M2 — Combat Feel
 
-**Status:** 🔄 In progress · next **M2-S12** (`M2-T12`) · S01–S11 done · ▶ Checkpoint E confirmed (e2e); Checkpoint F mostly confirmed live (T10, first real fight in `GameScene` — poise-break→HURT observed, flinch-only path not yet, see T10 note)
+**Status:** 🔄 In progress · next **M2-T13** (Combat tuning — playtest-driven, unstarted) · S01–S11, T12, T14, T15 done (T13/T16 remain) · ▶ Checkpoint E confirmed (e2e); Checkpoint F mostly confirmed live (T10, first real fight in `GameScene` — poise-break→HURT observed, flinch-only path not yet, see T10 note) · T12/T14/T15 built but not yet live-verified — see `docs/audits/m2-manual-test-checklist.md`
 **Duration:** 4 weeks (~120 h) · **Dates:** 2026-10-05 → 2026-10-30 · **Detail:** 🔵 Full
 **Roadmap:** `docs/17-Roadmap.md` M2 · **Risk:** 🔴 **HIGH — second only to M1**
 
