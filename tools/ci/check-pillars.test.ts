@@ -5,17 +5,28 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BUDGET, FEEL } from '@config/GameConstants';
 import { Rng } from '@core/Rng';
+import { Health } from '@components/Health';
+import { Hitbox } from '@components/Hitbox';
+import { IFrames } from '@components/IFrames';
+import { Poise } from '@components/Poise';
+import { SAMURAI_COMBO } from '@entities/player/CharacterCombat';
 import { SAMURAI_MOVEMENT } from '@entities/player/CharacterMovement';
+import { FrozenInputLatch } from '@entities/player/FrozenInputLatch';
 import { PlayerController } from '@entities/player/PlayerController';
 import { PLAYER_STATE_DURATION_MS } from '@entities/player/PlayerStates';
 import * as Clock from '@platform/Clock';
 import * as GamepadAdapter from '@platform/GamepadAdapter';
 import * as Keyboard from '@platform/Keyboard';
+import { CameraSystem } from '@systems/CameraSystem';
+import { CombatSystem } from '@systems/CombatSystem';
+import { HitQueue } from '@systems/HitQueue';
+import { HitStopSystem } from '@systems/HitStopSystem';
 import { INPUT_LATENCY_BUDGET_MS, InputSystem } from '@systems/InputSystem';
 import type { InputFrame } from '@core/InputFrame';
+import type { CombatSinks, CombatVictim } from '@systems/CombatSystem';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -244,5 +255,140 @@ describe('p1.animatorReadonly — animator has no body access', () => {
   it('PlayerAnimator.ts never references .body', () => {
     const src = readFileSync(join(repoRoot, 'src/entities/player/PlayerAnimator.ts'), 'utf8');
     expect(src.includes('.body')).toBe(false);
+  });
+});
+
+/**
+ * Pillar 2 automated targets — docs/02-Game-Pillars.md, docs/07-Combat.md §6 · M2-T15.
+ */
+
+function makeVictim(overrides: Partial<CombatVictim> = {}): CombatVictim {
+  return {
+    id: 2,
+    isPlayer: false,
+    active: true,
+    health: new Health(100),
+    // High enough that this test's single hit never breaks poise — a break fires
+    // a second `burstParticles` (poise_break), which isn't one of the nine layers.
+    poise: new Poise(999, 1500),
+    iFrames: new IFrames(),
+    knockbackTaken: 1,
+    knockbackResist: 0,
+    armour: 0,
+    poiseResist: 0,
+    baseStaggerMs: 400,
+    centre: { x: 10, y: 0 },
+    facing: 1,
+    ...overrides,
+  };
+}
+
+describe('p2.nineLayers — every HitResolution fires all nine feedback layers (§6.1)', () => {
+  it('resolveQueuedHits invokes every CombatSinks layer exactly once for one hit', () => {
+    const step = SAMURAI_COMBO[0];
+    expect(step).toBeDefined();
+    if (!step) return;
+
+    const hitbox = new Hitbox();
+    hitbox.schedule(0, 0, 83, { width: 20, height: 16, offsetX: 12, offsetY: 0 });
+    hitbox.update(0);
+
+    const queue = new HitQueue();
+    queue.queue({
+      hitbox,
+      attackerId: 1,
+      victimId: 2,
+      point: { x: 5, y: 0 },
+      source: 'melee',
+      step,
+    });
+
+    const victims = new Map<number, CombatVictim>([
+      [2, makeVictim()],
+      [1, makeVictim({ id: 1, isPlayer: true, centre: { x: 0, y: 0 } })],
+    ]);
+
+    const sinks: CombatSinks = {
+      requestHitStop: vi.fn(),
+      applyFlash: vi.fn(),
+      applyKnockback: vi.fn(),
+      spawnSlashVfx: vi.fn(),
+      addCameraTrauma: vi.fn(),
+      burstParticles: vi.fn(),
+      applyStagger: vi.fn(),
+      spawnDamageNumber: vi.fn(),
+      applyDeath: vi.fn(),
+      emitHit: vi.fn(),
+      // `delay` is scheduling infra, not a layer (HitResolution's own doc comment)
+      // — run synchronously so the deferred layers are observable here too.
+      delay: (_ms, cb) => cb(),
+    };
+
+    new CombatSystem(queue, victims, sinks, () => 0).resolveQueuedHits();
+
+    // The nine feedback layers (§6.1). `applyDeath` is excluded — it only fires
+    // when `res.fatal`, not on every hit.
+    expect(sinks.requestHitStop).toHaveBeenCalledTimes(1);
+    expect(sinks.applyFlash).toHaveBeenCalledTimes(1);
+    expect(sinks.applyKnockback).toHaveBeenCalledTimes(1);
+    expect(sinks.spawnSlashVfx).toHaveBeenCalledTimes(1);
+    expect(sinks.addCameraTrauma).toHaveBeenCalledTimes(1);
+    expect(sinks.burstParticles).toHaveBeenCalledTimes(1);
+    expect(sinks.applyStagger).toHaveBeenCalledTimes(1);
+    expect(sinks.spawnDamageNumber).toHaveBeenCalledTimes(1);
+    expect(sinks.emitHit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('p2.hitStopNotAdditive — two 110 ms requests freeze for 110 ms, not 220 ms (§6.2 P2)', () => {
+  beforeEach(() => Clock.__resetOffset());
+  afterEach(() => Clock.__resetOffset());
+
+  it('longest wins — a second same-instant request never extends the freeze', () => {
+    const hs = new HitStopSystem();
+    hs.request(110, [1]);
+    hs.request(110, [1]); // two hits landing the same frame
+
+    Clock.__setOffsetMs(109);
+    expect(hs.isFrozen(1)).toBe(true);
+    Clock.__setOffsetMs(110);
+    expect(hs.isFrozen(1)).toBe(false);
+  });
+});
+
+describe('p2.inputBuffered — input during hit stop applies on the first unfrozen frame (§6.2 P3)', () => {
+  it('a press latched while frozen is honoured exactly once, then cleared', () => {
+    const latch = new FrozenInputLatch();
+    latch.captureWhileFrozen({ attackPressed: false, dashPressed: false, specialPressed: false });
+    latch.captureWhileFrozen({ attackPressed: true, dashPressed: false, specialPressed: false });
+    latch.captureWhileFrozen({ attackPressed: false, dashPressed: false, specialPressed: false });
+
+    const firstUnfrozenFrame = latch.applyAndClear({ attack: false, dash: false, special: false });
+    expect(firstUnfrozenFrame.attack).toBe(true);
+
+    const nextFrame = latch.applyAndClear({ attack: false, dash: false, special: false });
+    expect(nextFrame.attack).toBe(false);
+  });
+});
+
+describe('p2.traumaClamped — camera trauma never exceeds 1.0 (§6.6)', () => {
+  it('repeated large addTrauma calls clamp at MAX_TRAUMA', () => {
+    expect(CameraSystem.MAX_TRAUMA).toBe(1.0);
+    const cam = new CameraSystem();
+    for (let i = 0; i < 20; i++) cam.addTrauma(5);
+    expect(cam.traumaLevel).toBe(1.0);
+  });
+});
+
+describe('p2.noEnemyIFrames — enemies are hittable every overlapping frame (§9.2)', () => {
+  it('Skeleton.ts never grants its own iFrames ("Enemies have none")', () => {
+    const src = readFileSync(join(repoRoot, 'src/entities/enemy/Skeleton.ts'), 'utf8');
+    expect(src.includes('iFrames.grant')).toBe(false);
+  });
+
+  it('an ungranted IFrames is never active, so CombatSystem never skips the hit', () => {
+    const iFrames = new IFrames();
+    expect(iFrames.isActive(0)).toBe(false);
+    expect(iFrames.isActive(1_000_000)).toBe(false);
   });
 });
